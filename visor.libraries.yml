@@ -32,6 +32,8 @@ visor_dashboard:
     js/dashboard/panel-dashboard.js: { weight: -70 }
     js/dashboard/panel-mapa.js: { weight: -65 }
     js/dashboard/tabs.js: { weight: -60 }
+    js/dashboard/social-manager.js: { weight: -55 }
+    js/dashboard/vistas-manager.js: { weight: -55 }
     js/dashboard/main.js: { weight: 0 } # <--- Último, ya conoce a todos
 
   dependencies:

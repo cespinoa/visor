@@ -156,6 +156,11 @@ window.visorProject.estado = {
           if (registroInicial) {
               window.visorProject.difundirDatos(registroInicial);
           }
+
+          // F. Activamos la escucha del historial del navegador
+          if (window.visorProject.utils) {
+              window.visorProject.utils.configurarEscuchaHistorial();
+          }
       });
 
       /**

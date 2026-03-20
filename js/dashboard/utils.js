@@ -4,6 +4,7 @@
   window.visorProject = window.visorProject || {};
 
   let bloqueadoPorHistorial = false;
+  let urlInicializada = false;
 
   window.visorProject.utils = {
     
@@ -37,7 +38,6 @@
       },
 
 
-    // Verifica que en utils.js tengas exactamente esto:
     actualizarURL: function (visorEstado) {
         if (bloqueadoPorHistorial) return;
 
@@ -45,14 +45,28 @@
         params.set('ambito', visorEstado.ambito || 'municipio');
         params.set('tab', visorEstado.tab || 0);
         params.set('indicador', visorEstado.indicador || 'rit');
-        
-        // Si existe etiqueta (rellenada en difundirDatos), la metemos en la URL como 'nombre'
+
         if (visorEstado.etiqueta) {
             params.set('nombre', visorEstado.etiqueta);
         }
 
         const nuevaURL = `${window.location.pathname}?${params.toString()}`;
-        window.history.replaceState(Object.assign({}, visorEstado), '', nuevaURL);
+
+        // Guardamos solo lo mínimo necesario para restaurar el estado (no el registroActivo completo)
+        const estadoParaHistorial = {
+            ambito:    visorEstado.ambito,
+            indicador: visorEstado.indicador,
+            tab:       visorEstado.tab,
+            etiqueta:  visorEstado.etiqueta
+        };
+
+        if (!urlInicializada) {
+            // Primera llamada: reemplazamos la entrada inicial del navegador
+            window.history.replaceState(estadoParaHistorial, '', nuevaURL);
+            urlInicializada = true;
+        } else {
+            window.history.pushState(estadoParaHistorial, '', nuevaURL);
+        }
     },
 
     inicializarDesdeURL: function (visorEstado) {
@@ -67,21 +81,40 @@
     },
 
     configurarEscuchaHistorial: function () {
-      window.onpopstate = (event) => {
-        if (event.state) {
-          bloqueadoPorHistorial = true;
-          // Actualizamos el estado global con el del historial
-          Object.assign(window.visorProject.estado, event.state);
-          
-          // REACCIÓN: Aquí llamamos a la función de aplicar cambios
-          // que crearemos en el orquestador (main.js)
-          if (window.visorProject.aplicarEstadoGlobal) {
+      window.addEventListener('popstate', function(event) {
+        if (!event.state) return;
+
+        bloqueadoPorHistorial = true;
+
+        // 1. Restaurar el estado global con los datos guardados en el historial
+        Object.assign(window.visorProject.estado, event.state);
+
+        // 2. Sincronizar la UI: selectores de ámbito e indicador, filtros del mapa
+        if (window.visorProject.aplicarEstadoGlobal) {
             window.visorProject.aplicarEstadoGlobal();
-          }
-          
-          setTimeout(() => { bloqueadoPorHistorial = false; }, 100);
         }
-      };
+
+        // 3. Refrescar paneles buscando el registro por etiqueta
+        const etiqueta = event.state.etiqueta;
+        if (etiqueta && window.visorProject.buscarRegistro && window.visorProject.difundirDatos) {
+            let registro = window.visorProject.buscarRegistro({ etiqueta: etiqueta });
+            if (!registro) {
+                // Fallback: si el registro ya no existe en los datos, volvemos a Canarias
+                registro = window.visorProject.buscarRegistro({ ambito: 'canarias' });
+            }
+            if (registro) {
+                window.visorProject.difundirDatos(registro);
+            }
+        }
+
+        // 4. Restaurar la pestaña después de que difundirDatos termine de propagarse
+        setTimeout(function() {
+            if (window.visorProject.tabs?.instance && event.state.tab !== undefined) {
+                window.visorProject.tabs.instance.activateTab(parseInt(event.state.tab) || 0);
+            }
+            bloqueadoPorHistorial = false;
+        }, 100);
+      });
     },
 
     

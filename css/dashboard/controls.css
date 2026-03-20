@@ -18,6 +18,12 @@
     color: #a70000;
 }
 
+.btn-share--copiado {
+    background: #fff;
+    border-color: #2e7d32;
+    color: #2e7d32;
+}
+
 .btn-share i {
     font-size: 20px;
     margin-bottom: 4px;
@@ -31,6 +37,99 @@
 }
 
 
+
+/* Vistas guardadas */
+
+.vista-guardada-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.vista-btn-restaurar {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #f8f8f8;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 6px 8px;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    min-width: 0;
+}
+
+.vista-btn-restaurar:hover {
+    background: #fff;
+    border-color: #a70000;
+    color: #a70000;
+}
+
+.vista-ambito-badge {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: #eee;
+    color: #666;
+    border-radius: 3px;
+    padding: 2px 5px;
+    flex-shrink: 0;
+}
+
+.vista-etiqueta {
+    font-size: 12px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vista-indicador {
+    font-size: 10px;
+    color: #999;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+}
+
+.vista-btn-eliminar {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ccc;
+    padding: 4px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: color 0.2s, background 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.vista-btn-eliminar:hover {
+    color: #a70000;
+    background: rgba(167, 0, 0, 0.06);
+}
+
+.vista-btn-eliminar .material-icons {
+    font-size: 16px;
+}
+
+.btn-vista--ok {
+    border-color: #2e7d32 !important;
+    color: #2e7d32 !important;
+}
+
+.btn-vista--info {
+    border-color: #999 !important;
+    color: #999 !important;
+}
 
 /*  Breadcrumb */
 
