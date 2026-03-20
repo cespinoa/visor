@@ -1,0 +1,219 @@
+.row-graficos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.contenedor-grafico {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    text-align: center;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.gauge-canvas {
+    width: 100%;
+    height: auto;
+/*
+    max-height: 150px;
+*/
+}
+
+.grafico-valor-principal {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-top: 8px;
+    color: #333;
+}
+
+.grafico-body {
+    width: 100%;
+/*
+    min-height: 150px;
+*/
+    display: block;
+    clear: both;
+}
+
+.grafico-body.body-area {
+  height: 450px;
+}
+
+.gauge-canvas {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+}
+
+
+
+/* Asegura que el contenedor del gráfico ocupe todo el ancho de la columna */
+.contenedor-grafico {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* El cuerpo donde vive el canvas */
+.grafico-body {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* El canvas debe ser responsivo */
+.gauge-canvas {
+    max-width: 100%;
+    height: auto !important; /* Deja que Gauge.js controle el aspect ratio */
+}
+
+/* Ajuste para los textos de valor */
+.grafico-valor-principal {
+    margin-top: -10px; /* Sube un poco el texto para que quede dentro del arco */
+    text-align: center;
+    width: 100%;
+}
+
+
+.grafico-body {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 180px; /* Asegura un área para el donut */
+}
+
+/* El donut (SVG) ocupará este espacio */
+.grafico-body svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* El KPI central flotando sobre el SVG */
+/* El contenedor del canvas debe ser relativo */
+.grafico-body {
+    position: relative;
+    width: 100%;
+    height: 250px; /* Ajusta según tu diseño */
+}
+
+/* El texto central */
+.grafico-centro-abs {
+    position: absolute;
+    top: 45%; /* Un poco más arriba del 50% porque la leyenda de Chart.js ocupa espacio abajo */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none; /* Crucial: para que los tooltips de Chart.js sigan funcionando */
+    z-index: 5;
+}
+
+.kpi-valor {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #333;
+    display: block;
+}
+
+.kpi-unidades {
+    font-size: 0.6rem;
+    color: #666;
+    text-transform: uppercase;
+    padding-left: 4px;
+}
+
+.kpi-etiqueta {
+    font-size: 0.7rem;
+    color: #666;
+    text-transform: uppercase;
+}
+
+.grafico-maximo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px; /* Espaciado entre elementos */
+    margin-top: 5px;
+}
+
+.text-silver {
+    color: #ccc;
+}
+
+.grafico-maximo span {
+    white-space: nowrap; /* Evita que se rompan en dos líneas */
+}
+
+.text-danger {
+    color: #a70000 !important; /* Rojo Bootstrap o el tuyo de calor */
+}
+
+.text-success {
+    color: #28a745 !important; /* Un verde suave para indicar "bajo la media" */
+}
+
+.text-silver {
+    color: #ccc;
+    margin: 0 5px;
+}
+
+/* Para que el icono y el texto de la media resalten un poco más si hay alerta */
+.fw-bold {
+    font-weight: 600;
+}
+
+
+// Dentro de tu CSS general
+.contenedor-grafico:fullscreen {
+    width: 100vw !important;
+    height: 90vh !important;
+    background: white !important;
+    padding: 40px !important;
+    overflow-y: auto;
+}
+
+.contenedor-grafico:fullscreen .grafico-body {
+    height: 70vh; /* Para dar aire al gráfico en pantalla completa */
+}
+
+
+
+/* Estilos para el contenedor cuando está maximizado */
+.contenedor-grafico:fullscreen, 
+.contenedor-tabla:fullscreen {
+    background-color: #f8f9fa !important;
+    padding: 30px !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    overflow-y: auto; /* Permite scroll si la tabla es muy larga */
+}
+
+/* Ajuste de la tabla en fullscreen */
+.contenedor-tabla:fullscreen table {
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-top: 20px;
+    font-size: 1.1rem; /* Subimos un poco el tamaño de fuente */
+}
+
+/* El botón cambia de icono si estamos dentro (opcional con JS) */
+.contenedor-tabla:fullscreen .btn-fullscreen-toggle svg {
+    transform: rotate(180deg);
+}
+
+.dashboard-main .grafico-body {
+  height:  100%;
+}
+.dashboard-main-reglado-a-no-reglado .grafico-titulo,
+.dashboard-main-reglado-a-no-reglado .tabla-titulo,
+.dashboard-main-dtr .grafico-titulo,
+.dashboard-main-dtr .tabla-titulo {
+  display: none;
+}

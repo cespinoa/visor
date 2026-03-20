@@ -1,0 +1,27 @@
+{# SELECTOR DE ÁMBITOS (ID e Inputs preservados) #}
+<div id="selector-ambito" class="select-ambito sidebar-controls" style="display:none">
+    <label>
+        <input type="radio" name="ambito-mapa" value="canarias" checked>
+        Canarias
+    </label>
+    <label>
+        <input type="radio" name="ambito-mapa" value="isla">
+        Islas
+    </label>
+    <label>
+        <input type="radio" name="ambito-mapa" value="municipio" checked>
+        Municipios
+    </label>
+</div>
+
+{# SELECTOR DE INDICADORES (ID preservado) #}
+<div class="sidebar-group sidebar-controls" style="display:none">
+  <label class="mdc-typography--caption">Indicador Visual</label>
+  <div class="mdc-select-wrapper custom-select">
+    <select id="selector-indicador" class="mdc-select">
+      {% for id, etiqueta in indicadores_visualizables %}
+        <option value="{{ id }}">{{ etiqueta }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</div>

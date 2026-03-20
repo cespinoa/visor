@@ -1,0 +1,14 @@
+visor.dashboard:
+  path: '/dashboard'
+  defaults:
+    _title: 'Dashboard'
+    _controller: '\Drupal\visor\Controller\DashboardController::__invoke'
+  requirements:
+    _permission: 'access content'
+mapa:
+  path: '/mapa'
+  defaults:
+    _title: 'Mapa'
+    _controller: '\Drupal\visor\Controller\VisorController::__invoke'
+  requirements:
+    _permission: 'access content'

@@ -1,0 +1,18 @@
+<?php
+/**
+ * Implements hook_theme().
+ */
+function visor_theme() {
+  return [
+    'visor_mapa_template' => [
+      'variables' => [
+        'indicadores_visualizables' => [],
+      ],
+    ],
+    'visor_dashboard' => [
+      'variables' => [
+        'indicadores_visualizables' => [],
+      ],
+    ],
+  ];
+}

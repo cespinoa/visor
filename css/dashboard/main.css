@@ -1,0 +1,171 @@
+.main-content__container {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
+  margin-top:0px!important;
+  padding: 0px!important;  
+}
+
+.row {
+  width: 100%;
+}
+
+#ficha-tecnica {
+  max-width: 1024px;
+  margin: auto;
+  padding-top: 40px;
+}
+
+#ficha-titulo {
+  margin-bottom: 1em;
+}
+
+#ficha-contenido .row {
+  padding: 10px;
+  margin: 0px;
+}
+
+
+#ficha-contenido table {
+  margin-bottom: 4.5em;
+}
+
+.page-navbar-adjust {
+  padding: 0px!important;
+}
+
+#toolbar-bar,
+header.region-navbar,
+#block-visor-theme-breadcrumbs,
+#block-visor-theme-page-title,
+footer.region-footer {
+  display:none;
+}
+
+.main-content__container {
+  margin-bottom: 0px!important;
+}
+
+/* Layout Principal */
+.visor-dashboard-wrapper {
+  display: flex;
+  height: 99vh;
+  gap: 16px;
+  background-color: #f5f5f5;
+}
+
+/* Sidebar */
+.dashboard-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border-radius: 0 12px 12px 0;
+  background: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.dashboard-sidebar .mdc-typography--headline6 {
+  color: #ffffff;
+}
+
+.sidebar-header {
+  padding: 24px;
+  background: #a70000;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sidebar-group label {
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* Main Content Area */
+.dashboard-main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 12px 0 0 12px;
+  overflow: hidden;
+}
+
+.dashboard-tabs {
+  background: white;
+  border-bottom: 1px solid #eee;
+}
+
+/* Contenedor de los paneles */
+.tab-content-wrapper {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 49px); /* Ajusta según la altura de tus pestañas */
+    overflow: hidden;
+}
+
+/* Estado base de todos los paneles */
+.tab-panel {
+    display: none;    /* ESTO evita que aparezcan debajo */
+    width: 100%;
+    height: 100%;
+    overflow-y: auto; /* Permite scroll solo si el contenido desborda */
+}
+
+/* Estado activo */
+.tab-panel.tab-panel--active {
+    display: block !important;
+}
+
+
+
+
+
+/* Aseguramos que el panel que contiene el mapa tenga dimensiones */
+#panel-mapa {
+    width: 100%;
+    height: 100%; /* 70% de la altura de la ventana, por ejemplo */
+    min-height: 500px;
+    position: relative;
+}
+
+/* El contenedor del mapa debe llenar su panel */
+#mapa-contenedor {
+    width: 100%;
+    height: 100%;
+}
+
+.dashboard-componente .row {
+  padding-right: 40px;
+}
+
+/* Color general para todas las siluetas */
+.silueta-path {
+    fill: #f5dfdf;
+/*
+    stroke: #ffffff;
+    stroke-width: 0.5px;
+*/
+    transition: fill 0.3s ease;
+}
+
+/* Si quieres que al pasar el ratón cambie */
+.contenedor-silueta-svg:hover .silueta-path {
+    fill: #ef7d00;
+}
+
+
+

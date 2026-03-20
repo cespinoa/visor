@@ -1,0 +1,308 @@
+/* Redes sociales */
+.btn-share {
+    background: #f8f8f8;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 8px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #444;
+}
+
+.btn-share:hover {
+    background: #fff;
+    border-color: #a70000;
+    color: #a70000;
+}
+
+.btn-share i {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.label-share {
+    font-size: 10px;
+    font-family: Roboto, sans-serif;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+
+
+/*  Breadcrumb */
+
+#breadcrumb-container {
+    margin-bottom: 8px;
+    margin-left: 20px;
+    margin-top: 8px;
+}
+
+#breadcrumb-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    font-size: 13px;
+/*
+    display: flex; list-style: none; padding: 0; margin: 0;  color: #666;
+*/
+}
+#breadcrumb-list li {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+
+/* Contenedor principal */
+.select-ambito {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    align-items: center; /* Centrado vertical de todos los elementos */
+}
+
+/* Estilo para cada opción (label + input) */
+.select-ambito label {
+    display: flex;
+    align-items: center; /* Centra el texto verticalmente con el radio button */
+    cursor: pointer;
+    font-size: 13px; /* Texto algo más pequeño como pedías */
+    font-family: 'Roboto', sans-serif;
+    color: #555;
+    transition: color 0.2s ease;
+    line-height: 1; /* Evita desplazamientos por altura de línea */
+}
+
+/* Personalización del Radio Button */
+.select-ambito input[type="radio"] {
+    appearance: none; /* Eliminamos el estilo feo del navegador */
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ccc;
+    border-radius: 50%;
+    margin-right: 8px; /* Separación del texto */
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+    background-color: #fff;
+}
+
+/* Efecto Hover */
+.select-ambito label:hover {
+    color: #a70000;
+}
+
+.select-ambito label:hover input[type="radio"] {
+    border-color: #a70000;
+}
+
+/* Estado Seleccionado (Checked) */
+.select-ambito input[type="radio"]:checked {
+    border-color: #a70000;
+    background-color: #fff;
+}
+
+/* El "punto" central del radio seleccionado */
+.select-ambito input[type="radio"]:checked::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #a70000;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Centrado perfecto */
+}
+
+
+/* Control select */
+
+/* Contenedor del grupo */
+.sidebar-group {
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Label estilo Material (Caption) */
+.mdc-typography--caption {
+    font-size: 12px;
+    letter-spacing: 0.4px;
+    color: #a70000; /* Usamos tu rojo corporativo */
+    font-weight: 500;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+/* Wrapper del select para controlar la flecha personalizada */
+.mdc-select-wrapper {
+    position: relative;
+    display: flex;
+    width: 100%;
+    background-color: #f5f5f5; /* Fondo gris sutil MD */
+    border-radius: 4px 4px 0 0;
+    border-bottom: 2px solid #ccc;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.mdc-select-wrapper:hover {
+    background-color: #eeeeee;
+    border-bottom-color: #333;
+}
+
+/* El select nativo */
+.mdc-select {
+    width: 100%;
+    height: 48px;
+    padding: 12px 36px 12px 12px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #333;
+    border: none;
+    background: transparent;
+    appearance: none; /* Quitamos la flecha nativa */
+    -webkit-appearance: none;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.mdc-select:focus {
+    outline: none;
+    border-bottom: none; /* El borde lo maneja el wrapper */
+}
+
+/* Borde inferior activo al hacer focus */
+.mdc-select-wrapper:focus-within {
+    border-bottom-color: #a70000;
+    background-color: #ebebeb;
+}
+
+/* Flecha personalizada (Material Icon style) */
+.mdc-select-wrapper::after {
+    content: "";
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #666; /* Color de la flecha */
+    pointer-events: none;
+    z-index: 1;
+}
+
+
+/*  Leyenda */
+.legend-container {
+    position: absolute;
+    bottom: 30px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    font-family: sans-serif;
+    min-width: 180px;
+    z-index: 1000;
+}
+
+.legend-title {
+    font-weight: bold;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 6px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #444;
+}
+
+.legend-color-box {
+    width: 22px;
+    height: 14px;
+    margin-right: 10px;
+    border-radius: 2px;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+
+/* Estilo para el tooltip "flotante" */
+.map-tooltip .maplibregl-popup-content {
+    padding: 8px 12px;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    font-family: sans-serif;
+    pointer-events: none; /* Para que no interfiera con los clics en el mapa */
+}
+
+.map-tooltip .maplibregl-popup-tip {
+    display: none; /* Quitamos la flechita para que sea más limpio */
+}
+
+
+/* Contenedor del contenido del popup */
+.map-tooltip-content {
+    min-width: 150px;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.tooltip-header {
+    border-bottom: 1px solid #eee;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+}
+
+.tooltip-nombre {
+    display: block;
+    font-size: 14px;
+    color: #333;
+    font-weight: 700;
+}
+
+.tooltip-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.tooltip-indicador {
+    font-size: 11px;
+    color: #777;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tooltip-valor {
+    font-size: 14px;
+    color: #a70000; /* Color corporativo para los datos */
+    font-weight: 700;
+}
+
+/* Ajustes para el contenedor de MapLibre */
+.maplibregl-popup-content {
+    padding: 10px !important;
+    border-radius: 6px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important;
+}

@@ -1,0 +1,5 @@
+name: 'visor'
+type: module
+description: 'Visor de mapas'
+package: VTPC
+core_version_requirement: ^10 || ^11

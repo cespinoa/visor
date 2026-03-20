@@ -1,0 +1,1 @@
+window.visorProject = window.visorProject || {};

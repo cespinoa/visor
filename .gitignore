@@ -1,0 +1,12 @@
+# Drupal
+*.cache
+*.log
+
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/

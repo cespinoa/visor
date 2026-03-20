@@ -1,0 +1,195 @@
+// js/dashboard/panel-datos.js
+(function ($, Drupal) {
+  "use strict";
+  window.visorProject = window.visorProject || {};
+  window.visorProject.orquestadorDatos = {
+
+    /**
+     * Función principal que se dispara desde difundirDatos
+     */
+    actualizarFicha: function(props) {
+      if (!props) return;
+
+      const $contenedor = jQuery('#ficha-contenido');
+      if (!$contenedor.length) return;
+
+       // 0. Colocación del título
+        jQuery('#ficha-titulo').html(props.etiqueta);
+        // 1. Limpieza de contenedores
+        jQuery('#ficha-resumen').empty();
+        //~ jQuery('#ficha-contenido').empty();
+
+      
+      let idSilueta = 'canarias'
+      // Definimos el "Guion Editorial" del Dashboard
+      const esquema = [
+        { 
+          tituloBloque: `Datos de ${props.etiqueta}`,
+          intro: "Resumen de los indicadores clave de intensidad y presión turística en el ámbito seleccionado.",
+          destino: '#ficha-contenido',
+          elementos: [
+            { tipo: 'tabla', id: 'carga-poblacional', ancho: '6' },
+            { tipo: 'tabla', id: 'parque-viviendas', ancho: '6' },
+            { tipo: 'grafico', id: 'presion-humana', ancho: '3' },
+            { tipo: 'imagen', tipo_imagen: 'silueta' , id: idSilueta, ancho: '3'}
+          ]
+        },
+        { 
+          tituloBloque: "Distribución y Capacidad",
+          intro: "Desglose de la oferta alojativa y su impacto en el territorio.",
+          destino: '#ficha-contenido',
+          elementos: [
+            { tipo: 'tabla', id: 'parque-viviendas', ancho: '6' },
+            { tipo: 'tabla', id: 'carga-poblacional', ancho: '6' }
+          ]
+        }
+      ];
+
+      // Llamamos al compositor para que haga todo el trabajo sucio
+      if (window.visorProject.rowCompositor) {
+          window.visorProject.rowCompositor.componer(esquema, props);
+      }
+    }
+
+    //~ /**
+     //~ * Renderiza la ficha completa organizando las tablas en bloques narrativos
+     //~ */
+    //~ actualizarFichaOld: function(props) {
+        //~ if (!props) return;
+
+        //~ // 0. Colocación del título
+        //~ jQuery('#ficha-titulo').html(props.etiqueta);
+        //~ // 1. Limpieza de contenedores
+        //~ jQuery('#ficha-resumen').empty();
+        //~ jQuery('#ficha-contenido').empty();
+
+        //~ var idTabla = 'lista-de-islas'
+        //~ if (props.ambito === 'isla') {
+          //~ idTabla = 'lista-de-municipios';
+        //~ }
+
+        //~ // 2. Definición del Esquema Narrativo (Agrupador)
+        //~ const esquemaFicha = [
+            //~ { 
+                //~ tituloBloque: `Resumen General: ${props.etiqueta}`,
+                //~ destino: '#ficha-resumen',
+                //~ ancho: '12',
+                //~ tablas: [ { id: 'resumen-ambito', ancho: '12' } ] 
+            //~ },
+            //~ { 
+                //~ tituloBloque: "Disponibilidad de vivienda", 
+                //~ destino: '#ficha-contenido',
+                //~ ancho: '12',
+                //~ intro: "Los siguientes indicadores analizan la relación entre la vivienda turística y residencial.",
+                //~ tablas: [
+                    //~ { id: 'parque-viviendas', ancho: '6' },
+                    //~ { id: "distribucion-vv", ancho: '6' },
+                    //~ { id: 'presion-vv-sobre-vivienda', ancho: '6' }
+                //~ ],
+                //~ notas: "Fuente: Elaboración propia a partir de datos del ISTAC (2024)."
+            //~ },
+            //~ { 
+                //~ tituloBloque: "Distribución Territorial", 
+                //~ destino: '#ficha-contenido',
+                //~ ancho: '12',
+                //~ tablas: [ { id: idTabla, ancho: '12' } ],
+                //~ notas: "Datos actualizados según el registro oficial."
+            //~ }
+        //~ ];
+
+        //~ // 3. Iteramos por cada bloque del esquema
+        //~ esquemaFicha.forEach(bloque => {
+            //~ this.construirBloqueNarrativo(bloque, props);
+        //~ });
+    //~ },
+
+    //~ /**
+     //~ * Genera un contenedor (Card) y le inyecta N tablas en rejilla
+     //~ */
+
+    //~ construirBloqueNarrativo: function(bloque, props) {
+        //~ const layout = window.visorProject.utilsLayout;
+        //~ const motorTablas = window.visorProject.utilsTablas;
+
+        //~ if (!layout || !motorTablas) return;
+
+        //~ // A. CREAMOS EL CONTENEDOR ÚNICO (La Card blanca)
+        //~ const wrapper = layout.crearContenedor({
+            //~ id: typeof bloque.tablas[0] === 'string' ? bloque.tablas[0] : bloque.tablas[0].id,
+            //~ titulo: bloque.tituloBloque,
+            //~ intro: bloque.intro,
+            //~ notas: bloque.notas,
+            //~ ancho: bloque.ancho || '12'
+        //~ });
+
+        //~ // B. PROCESAMOS CADA ELEMENTO DEL ARRAY DE TABLAS
+        //~ bloque.tablas.forEach(item => {
+            //~ const idTabla = typeof item === 'string' ? item : item.id;
+            //~ const anchoTabla = typeof item === 'object' && item.ancho ? item.ancho : '12';
+            //~ const config = window.CONFIG_TABLAS[idTabla];
+
+            //~ if (!config) return;
+
+            //~ // --- NOVEDAD: Lógica de filtrado externalizada del motor ---
+            //~ const datosParaMotor = this._obtenerDatosSegunContexto(config, props);
+            //~ const dataset = motorTablas.prepararDataset(config, datosParaMotor);
+            //~ // -----------------------------------------------------------
+          
+            //~ // VALIDACIÓN: Solo si hay datos reales
+            //~ const tieneDatos = dataset.some(fila => 
+                //~ fila.celdas.some(c => c.valor !== "-" && c.valor !== null && c.valor !== undefined)
+            //~ );
+
+            //~ if (tieneDatos) {
+                //~ const tablaDOM = motorTablas.crearTabla(config, dataset);
+             
+                //~ if (tablaDOM) {
+                    //~ const col = document.createElement('div');
+                    //~ col.className = `col-tabla col-${anchoTabla}`;
+                    //~ col.appendChild(tablaDOM);
+                    //~ wrapper.body.appendChild(col);
+                //~ }
+            //~ } else {
+                //~ console.warn(`La tabla ${idTabla} no tiene datos para mostrar en este ámbito.`);
+            //~ }
+        //~ });
+
+        //~ // C. INYECCIÓN FINAL AL DOM
+        //~ if (wrapper.body.hasChildNodes()) {
+            //~ const destino = document.querySelector(bloque.destino);
+            //~ if (destino) {
+                //~ destino.appendChild(wrapper.elemento);
+            //~ }
+        //~ }
+    //~ },
+
+    /**
+     * Función privada para gestionar la lógica de negocio de los datos.
+     * Mantiene el motor de tablas (utils-tablas.js) agnóstico.
+     */
+    _obtenerDatosSegunContexto: function(config, props) {
+        // Si no es modo lista, devolvemos el objeto de datos del ámbito actual (Ficha)
+        if (config.modo !== 'lista') {
+            return props; 
+        }
+
+        // Si es MODO LISTA, filtramos drupalSettings según la jerarquía territorial
+        const todosLosDatos = drupalSettings.visorProject.datosDashboard || [];
+ 
+        return todosLosDatos.filter(item => {
+            if (props.ambito === 'canarias') {
+                return item.ambito === 'isla';
+            }
+            if (props.ambito === 'isla') {
+                return item.ambito === 'municipio' && item.isla_id === props.isla_id;
+            }
+            if (props.ambito === 'municipio') {
+                return item.ambito === 'localidad' && item.municipio_id === props.municipio_id;
+            }
+            return false;
+        });
+    }
+ 
+  };
+
+})(window.jQuery, window.Drupal);

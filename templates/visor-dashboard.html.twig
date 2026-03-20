@@ -1,0 +1,52 @@
+<div class="visor-dashboard-wrapper mdc-typography">
+  
+  {# 1. BARRA LATERAL (DRAWER) #}
+  <aside class="dashboard-sidebar mdc-card">
+
+      <div class="sidebar-header">
+          <span class="material-icons">home_work</span>
+          <h2 class="mdc-typography--headline6">Vivienda Vacacional, Turismo y Población</h2>
+      </div>
+
+      <nav id="breadcrumb-container" aria-label="Breadcrumb">
+          <ol id="breadcrumb-list">
+          </ol>
+      </nav>
+
+      <div class="sidebar-content">
+
+        {# SELECTORES DE ÁMBITO E INDICADOR #}
+        {% include '@visor/includes/selectors.html.twig' %}
+
+        {# VISTAS GUARDADAS (FAVORITOS) #}
+        {% include '@visor/includes/vistas.html.twig' %}
+        
+        {# COMPARTIR EN REDES #}
+        {% include '@visor/includes/compartir.html.twig' %}
+
+      </div>
+  </aside>
+
+  {# 2. CONTENIDO PRINCIPAL #}
+  <main class="dashboard-main">
+    
+    {# Barra de Pestañas #}
+    {% include '@visor/includes/tabs.html.twig' %}
+
+    {# Contenido de las Pestañas #}
+    <div class="tab-content-wrapper dashboard-body">
+
+      {% include '@visor/includes/panel-home.html.twig' %}
+      {% include '@visor/includes/panel-mapa.html.twig' %}
+      {% include '@visor/includes/panel-graficos.html.twig' %}
+      {% include '@visor/includes/panel-datos.html.twig' %}
+      {% include '@visor/includes/tablas-templates.html.twig' %}
+      {% include '@visor/includes/contenedores-templates.html.twig' %}
+      {% include '@visor/includes/graficos-templates.html.twig' %}
+
+    </div>
+    
+  </main>
+  
+</div>
+

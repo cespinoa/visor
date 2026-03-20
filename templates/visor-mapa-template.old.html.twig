@@ -1,0 +1,82 @@
+<div class="visor-container card-elevation-z4">
+  {# Barra de Pestañas #}
+  <div class="mdc-tab-bar" role="tablist">
+    <div class="mdc-tab-scroller">
+      <div class="mdc-tab-scroller__scroll-area">
+        <div class="mdc-tab-scroller__scroll-content">
+          <button class="mdc-tab mdc-tab--active" role="tab" aria-selected="true" id="tab-mapa">
+            <span class="mdc-tab__content">
+              <span class="mdc-tab__icon material-icons" aria-hidden="true">map</span>
+              <span class="mdc-tab__text-label">Mapa</span>
+            </span>
+            <span class="mdc-tab-indicator mdc-tab-indicator--active">
+              <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
+            </span>
+          </button>
+          <button class="mdc-tab" role="tab" id="tab-graficos">
+            <span class="mdc-tab__content">
+              <span class="mdc-tab__icon material-icons" aria-hidden="true">bar_chart</span>
+              <span class="mdc-tab__text-label">Gráficos</span>
+            </span>
+            <span class="mdc-tab-indicator">
+              <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
+            </span>
+          </button>
+          <button class="mdc-tab" role="tab" id="tab-datos">
+            <span class="mdc-tab__content">
+              <span class="mdc-tab__icon material-icons" aria-hidden="true">table_chart</span>
+              <span class="mdc-tab__text-label">Datos</span>
+            </span>
+            <span class="mdc-tab-indicator">
+              <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Contenido de las Pestañas #}
+  <div class="tab-content-wrapper">
+    {# PANEL MAPA #}
+    <div id="panel-mapa" class="tab-panel tab-panel--active">
+      <div class="map-controls-overlay">
+        <div class="mdc-card">
+          <div class="mdc-select-wrapper">
+            <label class="mdc-typography--caption">Indicador Visual</label>
+            <select id="selector-indicador" class="mdc-select">
+              <option value="rit" selected>Intensidad Turística (RIT)</option>
+              <option value="pvv_vh">Presión VV / Vivienda Habitual</option>
+              <option value="dtr">Desplazamiento a Suelo Residencial</option>
+              <option value="patsr">Plazas en Suelo Residencial (%)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="mapa-visor"></div>
+    </div>
+
+    {# PANEL GRÁFICOS (Estructura preparada) #}
+    <div id="panel-graficos" class="tab-panel">
+      <h2 id="grafico-titulo">Gráficos del Ámbito</h2>
+      <div class="chart-container">
+        <canvas id="grafico-evolucion"></canvas>
+        <div id="chart-empty-state">Selecciona un ámbito en el mapa para ver su evolución técnica.</div>
+        <div id="seccion_donuts"></div>
+      </div>
+    </div>
+
+    {# PANEL DATOS (Ficha técnica preparada) #}
+    <div id="panel-datos" class="tab-panel">
+      <div id="ficha-tecnica" class="mdc-card p-1">
+        <h2 id="ficha-titulo">Ficha del Ámbito</h2>
+        <div id="ficha-resumen" class="grid-datos-t">
+        </div>
+        <div id="ficha-contenido" class="grid-datos">
+        </div>
+        <div id="ficha-localidades" class="grid-datos-l">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

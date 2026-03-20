@@ -1,0 +1,41 @@
+<template id="tpl-tabla-base">
+    <div class="contenedor-tabla">
+        <div class="header-tools"></div>
+        <div class="tabla-header">
+          <h3 class="tabla-titulo mdc-typography--headline6"></h3>
+        </div>
+        <table class="tabla-visor">
+            <thead>
+                <tr>
+                    </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+</template>
+
+<template id="tpl-tabla-fila">
+    <tr>
+        <td class="col-etiqueta"></td>
+        </tr>
+</template>
+
+<template id="tpl-tabla-celda">
+    <td class="col-dato">
+        <span class="valor-texto"></span>
+    </td>
+</template>
+
+
+<template id="tpl-export-excel">
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head><meta charset="utf-8" /></head>
+        <body>
+            <table>
+                <thead><tr class="excel-header"></tr></thead>
+                <tbody class="excel-body"></tbody>
+            </table>
+        </body>
+    </html>
+</template>

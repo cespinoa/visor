@@ -1,0 +1,93 @@
+/* * siluetas-variantes.css
+ * Motor de estilos para siluetas geográficas 
+ */
+
+/* 1. CLASE MAESTRA Y RESET */
+.silueta-bg {
+    display: inline-block;
+    vertical-align: middle;
+    background-color: currentColor; /* El color se hereda del texto */
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+    mask-size: contain;
+    -webkit-mask-size: contain;
+    mask-position: center;
+    -webkit-mask-position: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0; /* Evita que se deforme en flexbox */
+}
+
+/* 2. ESCALA DE TAMAÑOS (BASADA EN REM PARA RESPONSIVIDAD) */
+.silueta-bg-sm      { width: 1.5rem;  height: 1.5rem; }
+.silueta-bg-md      { width: 3rem;    height: 3rem;   }
+.silueta-bg-lg      { width: 6rem;    height: 6rem;   }
+.silueta-bg-xl      { width: 12rem;   height: 12rem;  }
+.silueta-bg-fluid   { width: 1.2em;   height: 1.2em;  } /* Especial para títulos */
+
+/* 3. MARCOS Y FORMAS */
+.silueta-box, .silueta-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12%; 
+    border: 2px solid transparent;
+}
+
+.silueta-circle { border-radius: 50%; }
+
+/* 4. VARIANTES DE PRESENTACIÓN */
+
+/* Variación A: Fondo con color, Silueta transparente (Efecto troquelado) */
+.silueta-variant-cut {
+    background-color: currentColor;
+    -webkit-mask: var(--mask-uri) no-repeat center / 75%, 
+                  linear-gradient(#000 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+}
+
+/* Variación B: Borde coloreado, fondo transparente, silueta coloreada */
+.silueta-variant-outline {
+    background-color: transparent;
+    border-color: currentColor;
+}
+.silueta-variant-outline .silueta-bg {
+    width: 75%;
+    height: 75%;
+}
+
+/* 5. REFINAMIENTO PARA TÍTULOS Y TEXTO INLINE */
+h1 .silueta-bg, h2 .silueta-bg, h3 .silueta-bg, 
+h4 .silueta-bg, h5 .silueta-bg, h6 .silueta-bg,
+.silueta-inline {
+    margin-right: 0.3em;
+    position: relative;
+    top: -0.05em; /* Ajuste visual de línea base */
+}
+
+/* 6. ESTADOS INTERACTIVOS (HOVER) */
+.silueta-bg-overed {
+    cursor: pointer;
+}
+
+/* Hover para variante sólida */
+.silueta-bg.silueta-bg-overed:not([class*="variant"]):hover {
+    filter: brightness(1.2) drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    transform: scale(1.05);
+}
+
+/* Hover para variante troquelada (Cut) */
+.silueta-variant-cut.silueta-bg-overed:hover {
+    filter: brightness(0.9);
+    transform: scale(1.05);
+}
+
+/* Hover para variante Outline */
+.silueta-variant-outline.silueta-bg-overed:hover {
+    background-color: currentColor;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+/* Al rellenar el fondo en el hover de outline, la silueta interior debe ser blanca */
+.silueta-variant-outline.silueta-bg-overed:hover .silueta-bg {
+    background-color: #fff !important;
+}

@@ -1,0 +1,788 @@
+/* ==========================================================================
+   1. ESTRUCTURA DE CONTENEDORES (GRID & CARDS)
+   ========================================================================== */
+
+/* Contenedores de destino (donde se inyectan los bloques) */
+#ficha-resumen, #ficha-contenido {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -1rem; /* Compensa el padding de las columnas hijas */
+    align-items: stretch;
+}
+
+/* La Card (Bloque Narrativo) */
+.dashboard-componente {
+    box-sizing: border-box;
+    background: #ffffff;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    border: 1px solid #eef0f2;
+    display: flex;
+    flex-direction: column;
+    width: 100%; /* Por defecto móvil */
+}
+
+/* El cuerpo de la card (Contenedor de Tablas) */
+.componente-body {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -1rem;
+    overflow-x: auto; /* Evita rotura en pantallas muy pequeñas */
+}
+
+/* Columnas generales (para Bloques y para Tablas internas) */
+[class*="col-"] {
+    box-sizing: border-box;
+    padding: 0 1rem;
+}
+
+/* Media Query para Escritorio */
+@media (min-width: 992px) {
+    .col-6 { flex: 0 0 50%; max-width: 50%; }
+    .col-12 { flex: 0 0 100%; max-width: 100%; }
+}
+
+/* Media Query para Móviles/Tablets */
+@media (max-width: 991px) {
+    .col-6, .col-12 { flex: 0 0 100% !important; max-width: 100% !important; }
+    .componente-body { margin-bottom: 0; }
+}
+
+/* ==========================================================================
+   2. ELEMENTOS DE LA CARD (HEADER & FOOTER)
+   ========================================================================== */
+
+.componente-header {
+    margin-bottom: 1.5rem;
+}
+
+.componente-titulo {
+    color: #111;
+    font-size: 1.35rem;
+    font-weight: 800;
+    margin: 0 0 0.5rem 0;
+    border-left: 4px solid #333;
+    padding-left: 12px;
+}
+
+.componente-footer {
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #f0f0f0; /* Línea sutil para separar notas */
+}
+
+/* ==========================================================================
+   3. TABLAS (ZEBRA, HOVER & DESTACADOS)
+   ========================================================================== */
+
+.contenedor-tabla {
+    width: 100%;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.tabla-visor {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+/* Zebra Sutil */
+.tabla-visor tbody tr:nth-child(odd) { background-color: #fcfcfc; }
+.tabla-visor tbody tr:nth-child(even) { background-color: #ffffff; }
+
+/* Hover */
+.tabla-visor tbody tr:hover {
+    background-color: #f0f7ff !important;
+    transition: background-color 0.2s ease;
+}
+
+/* Cabeceras */
+.tabla-visor thead th {
+    text-align: right;
+    padding: 12px;
+    border-bottom: 2px solid #333;
+    font-weight: 700;
+    color: #000;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+
+
+.tabla-visor .col-etiqueta {
+    text-align: left;
+    width: 50%;
+}
+
+.tabla-visor td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    text-align: right;
+}
+
+.tabla-visor .col-etiqueta,
+.tabla-visor thead th:first-child {
+    text-align: left;
+    padding-left: 12px;
+}
+
+/* FILA DESTACADA (Bordes negros y negrita) */
+.fila-resaltada {
+    font-weight: 700;
+    background-color: #f9f9f9 !important;
+}
+
+.fila-resaltada td {
+    border-top: 2px solid #444 !important;
+    border-bottom: 2px solid #444 !important;
+    color: #000;
+}
+
+.fila-resaltada .col-etiqueta { padding-left: 12px; }
+
+/* Unidades */
+/* Columna de datos numéricos: pegada a la derecha */
+.tabla-visor td.col-dato {
+    text-align: right;
+    padding-right: 4px; /* Espacio mínimo con la unidad */
+    width: auto;
+    border-right: none; /* Eliminamos bordes intermedios para unir visualmente */
+}
+
+/* Columna de unidades: pegada a la izquierda */
+.tabla-visor td.col-unidad {
+    text-align: left;
+    padding-left: 4px;
+    color: #777; /* Un tono más suave para la unidad */
+    font-size: 0.85rem;
+    font-weight: normal;
+    width: 1%; /* Fuerza a la columna a ocupar solo lo que necesita su texto */
+    white-space: nowrap;
+    border-left: none;
+}
+
+/* Ajuste para las cabeceras */
+.tabla-visor thead th.col-unidad {
+    text-align: left;
+    padding-left: 4px;
+}
+
+/* Si la fila es destacada, mantenemos la unidad en negrita o color fuerte */
+.fila-resaltada .col-unidad {
+    color: #000;
+    font-weight: 700;
+}
+
+/* Cabecera de unidades: Alineada a la izquierda */
+.tabla-visor thead th.col-unidad {
+    text-align: left;
+    padding-left: 4px;
+/*
+    color: #666;       /* Un poco más tenue que el título principal */
+    font-size: 0.7rem; /* Un punto más pequeña para que no compita */
+*/
+}
+
+/* Contenedor del botón para darle aire */
+.tabla-footer-acciones {
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    background-color: #ffffff;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* El botón estilo Material */
+.btn-ver-mas {
+    /* Reset de estilos */
+    appearance: none;
+    border: none;
+    outline: none;
+    
+    /* Estética MD */
+    background-color: #ffffff;
+    color: #6200ee; /* Color primario MD (puedes cambiarlo) */
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    
+    padding: 10px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    
+    /* Elevación (Shadow) */
+    box-shadow: 0 3px 1px -2px rgba(0,0,0,.2), 
+                0 2px 2px 0 rgba(0,0,0,.14), 
+                0 1px 5px 0 rgba(0,0,0,.12);
+    
+    transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-ver-mas:hover {
+    background-color: rgba(98, 0, 238, 0.04);
+    box-shadow: 0 2px 4px -1px rgba(0,0,0,.2), 
+                0 4px 5px 0 rgba(0,0,0,.14), 
+                0 1px 10px 0 rgba(0,0,0,.12);
+}
+
+.btn-ver-mas:active {
+    background-color: rgba(98, 0, 238, 0.12);
+    box-shadow: 0 5px 5px -3px rgba(0,0,0,.2), 
+                0 8px 10px 1px rgba(0,0,0,.14), 
+                0 3px 14px 2px rgba(0,0,0,.12);
+}
+
+/* Estado base de las filas ocultas */
+.fila-colapsable {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+/* Estado cuando son visibles */
+.fila-colapsable.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Ajuste del botón Material Design con icono */
+.btn-ver-mas {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Espacio entre icono y texto */
+    /* ... (mantén el resto del CSS MD anterior) */
+}
+
+.btn-ver-mas .material-icons {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+}
+
+/* Rotación del icono cuando está expandido */
+.btn-ver-mas.is-expanded .material-icons {
+    transform: rotate(180deg);
+}
+
+.acciones-tabla {
+    display: flex;
+    gap: 8px;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    z-index: 100;
+}
+
+.btn-descarga {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    padding: 4px;
+    border-radius: 50%;
+    transition: background 0.3s, color 0.3s;
+    position: relative;
+    z-index: 101;
+}
+
+.btn-descarga:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #6200ee;
+}
+
+/* Tooltip simple */
+.btn-descarga::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: -80%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: #fff;
+    opacity: 1;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 999999; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* Flechita del tooltip (opcional, para ese look MD total) */
+.btn-descarga::before {
+    content: '';
+    position: absolute;
+    bottom: 75%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(33, 33, 33, 0.95);
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 999999;
+}
+
+.btn-descarga:hover::after,
+.btn-descarga:hover::before {
+    opacity: 1;
+}
+
+/* Sombreado de la columna ordenada */
+.col-ordenada {
+    background-color: rgba(98, 0, 238, 0.03) !important; /* Un tono muy sutil del color primario */
+}
+
+/* Estilo para el ranking MD */
+.ranking-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background-color: #eee; /* Gris neutro por defecto */
+    color: #666;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 50%;
+    margin-right: 12px;
+    flex-shrink: 0;
+    transition: background-color 0.3s ease;
+}
+
+/* Colores destacados para el Top 3 */
+.fila-ranking-0 .ranking-badge { background-color: #FFD700; color: #000; } /* Oro */
+.fila-ranking-1 .ranking-badge { background-color: #C0C0C0; color: #000; } /* Plata */
+.fila-ranking-2 .ranking-badge { background-color: #CD7F32; color: #fff; } /* Bronce */
+
+/* Ajuste para que la etiqueta y el badge se alineen */
+.col-etiqueta-ranking {
+    display: flex;
+    align-items: center;
+}
+
+.tendencia-up { color: #444; font-weight: bold; }
+.tendencia-down { color: #444; }
+.col-porcentaje { 
+    font-size: 0.85em; 
+    white-space: nowrap;
+    background: #f9f9f9; /* Un tono sutil para diferenciar la zona de cálculo */
+}
+/* ==========================================================================
+   4. NARRATIVA E INFO ADICIONAL
+   ========================================================================== */
+
+.texto-explicativo {
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-top: 0.5rem;
+}
+
+.texto-advertencia {
+    color: #999;
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+
+
+
+/* Odómetro */
+.odometer-container {
+    display: flex;
+    justify-content: center;
+    font-family: 'Courier New', Courier, monospace; /* Fuente mono para que no baile el ancho */
+    font-size: 4rem;
+    font-weight: bold;
+    color: #1a237e;
+    overflow: hidden;
+    height: 1.2em;
+    line-height: 1.2em;
+}
+
+.odometer-digit {
+    position: relative;
+    width: 0.7em;
+    height: 1.2em;
+    overflow: hidden;
+    border: 1px solid #ddd;
+    background: linear-gradient(to bottom, #eee 0%, #fff 50%, #eee 100%);
+    border-radius: 4px;
+    margin: 0 2px;
+}
+
+.digit-strip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    transition: transform 2s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.digit-strip span {
+    height: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.odometer-digit {
+/*
+    background: #222; 
+    color: #00ff00;   
+*/
+/*
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+    border: 1px solid #444;
+*/
+}
+
+.titulo-odometro {
+  margin-right: 10px;
+}
+
+.digit-strip span {
+    text-shadow: 0 0 5px rgba(255,255,255,0.2);
+}
+
+/* El separador de miles no debe brillar tanto */
+.odometer-separator {
+    color: #1a237e;
+    font-weight: bold;
+/*
+    margin-bottom: 5px;
+*/
+}
+
+.odometer-container {
+    display: flex;
+    align-items: center; /* Alinea puntos y números */
+    justify-content: center;
+    height: 100%
+}
+
+.odometer-separator {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #1a237e;
+    width: 0.3em;
+    display: flex;
+    justify-content: center;
+    /*  align-self: flex-end; Lo apoya en la base */
+    margin-bottom: -0.2em;
+}
+
+
+
+
+
+/*
+.noticias-slider-wrapper {
+    background: #f8f9fa;
+    border-left: 4px solid #1a237e;
+    padding: 15px 25px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+}
+
+.noticia-item {
+    position: absolute;
+    opacity: 0;
+    transition: all 0.8s ease-in-out;
+    transform: translateY(20px);
+    width: 100%;
+}
+
+.noticia-item.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.noticia-texto {
+    font-size: 1.2rem;
+    color: #333;
+    font-weight: 500;
+}
+*/
+
+/* El contenedor que mantiene el sitio en la página */
+/* EL ANCLA: Este div asegura que la fila de abajo nunca suba */
+/*
+.noticias-slider-wrapper {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    min-height: 60px !important;
+    margin: 15px 0 !important;
+    padding: 0 !important;
+    background: #1a1a1a;
+    overflow: hidden;
+    clear: both;
+    box-sizing: border-box;
+}
+*/
+
+/* LA CINTA: Evitamos que el flex-box rompa el ancho del padre */
+/*
+.noticias-lista {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: max-content; 
+    height: 60px;
+    align-items: center;
+    animation: ticker-scroll 40s linear infinite;
+}
+*/
+
+/*
+.noticia-item {
+    flex-shrink: 0; 
+    padding: 0 50px;
+    white-space: nowrap;
+}
+*/
+
+/*
+.noticia-texto {
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 1.1rem;
+    line-height: 60px;
+}
+
+@keyframes ticker-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+*/
+
+
+@keyframes ticker-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+.noticias-lista {
+    animation: ticker-scroll linear infinite;
+}
+
+.noticias-lista:hover {
+    animation-play-state: paused;
+}
+
+
+.dashboard-main-header {
+  margin-top: 2em;
+  padding-left: 40px;
+}
+
+.dashboard-main-evolucion h3.mdc-typography--headline6 {
+  display: none;
+}
+
+.header-tools {
+  text-align: right;
+  height: 14px;
+  padding-right: 20px;
+  width: 100%;
+}
+
+
+.header-tools {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 10px;
+}
+
+
+
+
+/* Estilo base (el que ya teníamos) */
+.dashboard-pack-container {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(204, 170, 0, 0.15);
+    border-radius: 8px;
+    padding: 15px 20px;
+    transition: all 0.3s ease;
+}
+
+/* EJEMPLO: Pack destacado (puedes pasar 'pack-highlight' en el JS) */
+.dashboard-pack-container.pack-highlight {
+    background: rgba(204, 170, 0, 0.05); /* Fondo ligeramente dorado */
+    border: 1px solid rgba(204, 170, 0, 0.5);
+    box-shadow: 0 0 15px rgba(204, 170, 0, 0.1);
+}
+
+.dashboard-pack-container.pack-highlight .pack-title {
+    color: #fff;
+    background: #ccaa00;
+    padding: 5px 50px;
+    border-radius: 4px;
+    border-bottom: none;
+}
+
+/* EJEMPLO: Pack con borde de atención */
+.dashboard-pack-container.pack-atencion {
+/*
+    border-left: 4px solid #ff4444;
+*/
+    margin: 0px 20px;
+}
+
+
+.card-impacto-total {
+    background: #a70000; // #1a1a1a;
+    border-radius: 8px;
+    padding: 25px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(204, 170, 0, 0.2);
+}
+
+.card-impacto-body {
+    display: flex;
+    align-items: center;
+    z-index: 2;
+    position: relative;
+}
+
+.impacto-icono-principal {
+    font-size: 3rem !important;
+    color: #ffffff; /* #ccaa00;*/
+    margin-right: 20px;
+}
+
+.impacto-titulo {
+    color: #ffffff; /* #ccaa00;*/
+    margin: 0 0 5px 0;
+    font-weight: bold;
+    font-size: 2rem;
+    line-height: 2.1rem;
+}
+
+.impacto-desarrollo {
+    color: #fff;
+    margin: 0;
+    opacity: 0.8;
+}
+
+/* El icono grande de fondo */
+.impacto-bg-decor {
+    position: absolute;
+    right: -10px;
+    bottom: -10px;
+    font-size: 4rem !important;
+    opacity: 0.05;
+    transform: rotate(-15deg);
+    z-index: 1;
+}
+
+
+.noticias-slider-wrapper {
+    display: block !important;
+    position: relative !important;
+    width: 100% !important;
+    padding-top: 30px !important;    /* Forzamos volumen arriba */
+    padding-bottom: 30px !important; /* Forzamos volumen abajo */
+    margin: 10px 0 !important;
+    background: #1a1a1a !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    vertical-align: middle !important;
+}
+
+.noticias-lista {
+    display: flex !important;
+    width: max-content !important;
+    position: absolute !important;
+    top: 0 !important; /* Quitamos el centrado por transform aquí */
+    height: 100% !important;
+    align-items: center !important; /* Centramos verticalmente con flex */
+    padding: 0 20px;
+}
+
+.noticia-item {
+  flex-shrink:0;
+  padding: 0 30px;
+  white-space: nowrap;
+}
+
+.noticia-texto {
+  color:#00ff00;
+  font-family:monospace;
+  font-weight:bold;
+}
+
+/* ==========================================================================
+   BREADCRUMB DE PANEL
+   ========================================================================== */
+
+.panel-breadcrumb {
+    padding: 10px 24px;
+    border-bottom: 1px solid #eee;
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.panel-breadcrumb-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.breadcrumb-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.82rem;
+    color: #666;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: '/';
+    margin-right: 4px;
+    color: #ccc;
+}
+
+.breadcrumb-item--activo {
+    font-weight: 600;
+    color: #111;
+}
+
+.breadcrumb-enlace {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: #a70000;
+    font-size: 0.82rem;
+    font-family: inherit;
+}
+
+.breadcrumb-enlace:hover {
+    text-decoration: underline;
+}

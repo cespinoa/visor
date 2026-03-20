@@ -1,0 +1,281 @@
+<div class="visor-dashboard-wrapper mdc-typography">
+  
+  {# 1. BARRA LATERAL (DRAWER) #}
+  <aside class="dashboard-sidebar mdc-card">
+    <div class="sidebar-header">
+      <span class="material-icons">home_work</span>
+      <h2 class="mdc-typography--headline6">Vivienda Vacacional, Turismo y Población</h2>
+    </div>
+
+    <nav id="breadcrumb-container" aria-label="Breadcrumb">
+      <ol id="breadcrumb-list">
+        </ol>
+    </nav>
+
+    <div class="sidebar-content">
+
+      {# SELECTOR DE ÁMBITOS (ID e Inputs preservados) #}
+      <div class="select-ambito sidebar-controls" style="display:none">
+          <label>
+              <input type="radio" name="ambito-mapa" value="municipio" checked>
+              Municipios
+          </label>
+          <label>
+              <input type="radio" name="ambito-mapa" value="isla">
+              Islas
+          </label>
+      </div>
+
+      {# SELECTOR DE INDICADORES (ID preservado) #}
+      <div class="sidebar-group sidebar-controls" style="display:none">
+        <label class="mdc-typography--caption">Indicador Visual</label>
+        <div class="mdc-select-wrapper custom-select">
+          <select id="selector-indicador" class="mdc-select">
+            <option value="rit" selected>Intensidad Turística</option>
+            <option value="rit_v">Intensidad Turística Vacacional</option>
+            <option value="rit_r">Intensidad Turística Reglada</option>
+            <option value="rit_km2">Intensidad Turística KM²</option>
+            <option value="rit_v_km2">Intensidad Turística Vacacional KM²</option>
+            <option value="rit_r_km2">Intensidad Turística Reglada KM²</option>
+            <option value="res_km2">Residentes por KM²</option>
+            <option value="ph_km2">Presión Humana</option>
+            <option value="pvv_vh">Presión VV sobre Vivienda Habitual</option>
+            <option value="vv_vt">Viviendas vacías sobre el total</option>
+            <option value="ve_vt">Viviendas con bajo uso sobre el total</option>
+            <option value="dtr">Desplazamiento VV a Suelo Residencial</option>
+            <option value="patsr">Plazas alojativas en Suelo Residencial sobre el total (%)</option>
+          </select>
+        </div>
+      </div>
+
+      {# VISTAS GUARDADAS (FAVORITOS) #}
+      <div id="wrapper-vistas" style="padding: 16px; border-top: 1px solid #ddd;">
+    
+        <div id="seccion-vistas-guardadas" style="display:none; margin-bottom: 20px;">
+            <h3 class="mdc-typography--subtitle2" style="margin-bottom: 8px; color: #666;">MIS VISTAS</h3>
+            <div id="lista-vistas-guardadas"></div>
+        </div>
+
+        <button onclick="VistasManager.guardarActual()" class="mdc-button mdc-button--outlined" style="width:100%;">
+            <span class="mdc-button__ripple"></span>
+            <i class="material-icons mdc-button__icon">add_location_alt</i>
+            <span class="mdc-button__label">Guardar vista actual</span>
+        </button>
+    </div>
+
+    {# COMPARTIR EN REDES #}
+    <div id="seccion-compartir" style="padding: 16px; border-top: 1px solid #ddd;">
+      <h3 class="mdc-typography--subtitle2" style="margin-bottom: 12px; color: #666;">COMPARTIR ESTA VISTA</h3>
+      
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+          <button onclick="window.SocialManager.share('whatsapp')" class="btn-share" title="WhatsApp">
+              <i class="material-icons">message</i><span class="label-share">WhatsApp</span>
+          </button>
+          
+          <button onclick="window.SocialManager.share('telegram')" class="btn-share" title="Telegram">
+              <i class="material-icons">send</i><span class="label-share">Telegram</span>
+          </button>
+
+          <button onclick="window.SocialManager.share('bluesky')" class="btn-share" title="BlueSky">
+              <i class="material-icons">cloud</i><span class="label-share">BlueSky</span>
+          </button>
+
+          <button onclick="window.SocialManager.share('twitter')" class="btn-share" title="X (Twitter)">
+              <i class="material-icons">close</i><span class="label-share">X / Twitter</span>
+          </button>
+
+          <button onclick="window.SocialManager.share('facebook')" class="btn-share" title="Facebook">
+              <i class="material-icons">facebook</i><span class="label-share">Facebook</span>
+          </button>
+
+          <button onclick="window.SocialManager.share('copy')" class="btn-share" title="Copiar Link">
+              <i class="material-icons">content_copy</i><span class="label-share">Copiar</span>
+          </button>
+      </div>
+  </div>
+      
+      <div class="sidebar-footer mdc-typography--caption">
+        Radar Turístico de Canarias 2026
+      </div>
+    </div>
+  </aside>
+
+  {# 2. CONTENIDO PRINCIPAL #}
+  <main class="dashboard-main">
+    
+    {# Barra de Pestañas (Estructura MDC original preservada) #}
+    <div class="mdc-tab-bar dashboard-tabs" role="tablist">
+      <div class="mdc-tab-scroller">
+        <div class="mdc-tab-scroller__scroll-area">
+          <div class="mdc-tab-scroller__scroll-content">
+            
+            <button class="mdc-tab mdc-tab--active" role="tab" aria-selected="true" id="tab-dashboard">
+              <span class="mdc-tab__content">
+                <span class="mdc-tab__icon material-icons">home</span>
+                <span class="mdc-tab__text-label">Inicio</span>
+              </span>
+              <span class="mdc-tab-indicator mdc-tab-indicator--active">
+                <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
+              </span>
+            </button>
+            
+            <button class="mdc-tab" role="tab" id="tab-mapa">
+              <span class="mdc-tab__content">
+                <span class="mdc-tab__icon material-icons">map</span>
+                <span class="mdc-tab__text-label">Mapa</span>
+              </span>
+              <span class="mdc-tab-indicator">
+                <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
+              </span>
+            </button>
+            <button class="mdc-tab" role="tab" id="tab-graficos">
+              <span class="mdc-tab__content">
+                <span class="mdc-tab__icon material-icons">bar_chart</span>
+                <span class="mdc-tab__text-label">Gráficos</span>
+              </span>
+              <span class="mdc-tab-indicator">
+                <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
+              </span>
+            </button>
+            <button class="mdc-tab" role="tab" id="tab-datos">
+              <span class="mdc-tab__content">
+                <span class="mdc-tab__icon material-icons">table_chart</span>
+                <span class="mdc-tab__text-label">Datos</span>
+              </span>
+              <span class="mdc-tab-indicator">
+                <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Contenido de las Pestañas #}
+    <div class="tab-content-wrapper dashboard-body">
+
+      {# PANEL HOME #}
+      <div id="panel-dashboard" class="tab-panel tab-panel--active">
+
+        <div class="destacado-global">
+            <h3 class="mdc-typography--headline5">Total de viviendas vacacionales</h3>
+            <div id="odometer-total" class="odometer-container"></div>
+        </div>
+        
+        <div id="dashboard-grafico-area">
+          <div class="mdc-card dashboard-card--evolution">
+            <div class="mdc-card__content">
+              <div class="dashboard-header">
+                <h2 class="mdc-typography--headline6">Evolución del Inventario</h2>
+                <p class="mdc-typography--subtitle2 text-secondary">Viviendas vacacionales registradas por año</p>
+              </div>
+              <div class="dashboard-grid">
+                <div class="chart-container">
+                  <canvas id="evolucionChart"></canvas>
+                </div>
+                <div class="table-container" id="tabla-evolucion-container">
+                  </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section id="zona-titulares" class="dashboard-news-section">
+    
+          <div class="ticker-wrapper">
+              <div id="ticker-content" class="ticker-content">
+                  </div>
+          </div>
+
+          <div id="titulares-cards-container" class="cards-highlights-grid">
+              </div>
+
+      </section>
+
+        <div class="mdc-card table-card--advanced">
+          <div class="table-controls">
+            <div class="mdc-segmented-button" role="radiogroup" id="toggle-dimension">
+              <button class="mdc-segmented-button__segment mdc-segmented-button__segment--selected" data-value="islas">
+                <span class="mdc-segmented-button__label">Islas</span>
+              </button>
+              <button class="mdc-segmented-button__segment" data-value="municipios">
+                <span class="mdc-segmented-button__label">Municipios</span>
+              </button>
+            </div>
+            
+            <div class="table-info">
+              <span class="mdc-typography--caption text-secondary">Mostrando Top 10 según métrica seleccionada</span>
+            </div>
+          </div>
+
+          <div class="mdc-data-table" id="super-tabla-data">
+            <table class="mdc-data-table__table">
+              <thead>
+                <tr class="mdc-data-table__header-row">
+                  <th class="mdc-data-table__header-cell" data-column="nombre">Territorio</th>
+                  <th class="mdc-data-table__header-cell mdc-data-table__header-cell--numeric mdc-data-table__header-cell--sorted" data-column="rit">
+                    RIT <i class="material-icons">arrow_downward</i>
+                  </th>
+                  <th class="mdc-data-table__header-cell mdc-data-table__header-cell--numeric" data-column="ph_km2">
+                    Densidad (hab/km²)
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="mdc-data-table__content" id="super-tabla-body">
+                </tbody>
+            </table>
+          </div>
+        </div>
+        
+      </div>
+      
+      {# PANEL MAPA #}
+      <div id="panel-mapa" class="tab-panel">
+
+          <div id="map-tooltip" style="
+              position: fixed; /* CAMBIO CLAVE */
+              background: rgba(255, 255, 255, 0.95); 
+              padding: 10px 14px; 
+              border-radius: 6px; 
+              box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+              font-size: 13px; 
+              pointer-events: none; 
+              display: none; 
+              z-index: 9999;
+              border-left: 5px solid #a70000;
+              transition: opacity 0.1s ease; /* Suaviza la aparición */
+          "></div>
+
+          <div id="map-legend" class="legend-container">
+              <div id="legend-title" class="legend-title">Cargando indicador...</div>
+              <div id="legend-scale"></div>
+          </div>
+          
+        <div id="mapa-visor"></div>
+      </div>
+
+      {# PANEL GRÁFICOS (IDs preservados) #}
+      <div id="panel-graficos" class="tab-panel">
+        <h2 id="grafico-titulo" class="mdc-typography--headline5">Gráficos del Ámbito</h2>
+        <div class="chart-container">
+          <canvas id="grafico-evolucion"></canvas>
+          <div id="chart-empty-state">Selecciona un ámbito en el mapa para ver su evolución técnica.</div>
+          <div id="seccion_donuts"></div>
+        </div>
+      </div>
+
+      {# PANEL DATOS (IDs preservados) #}
+      <div id="panel-datos" class="tab-panel">
+        <div id="ficha-tecnica" class="table-card-wrapper">
+          <h2 id="ficha-titulo" class="mdc-typography--headline5">Ficha del Ámbito</h2>
+          <div id="ficha-resumen"></div>
+          <div id="ficha-contenido"></div>
+          <div id="ficha-localidades"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+
