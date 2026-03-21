@@ -17,15 +17,26 @@
 
         jQuery('#grafico-titulo').html(props.etiqueta);
 
-        const esquema = [{
-            tituloBloque: "Indicadores de Intensidad Turística",
-            destino: '#panel-graficos-contenido',
-            elementos: [
-              { tipo: 'grafico', id: 'gauge-rit', ancho: '4' },
-              { tipo: 'grafico', id: 'gauge-rit-r', ancho: '4' },
-              { tipo: 'grafico', id: 'gauge-rit-v', ancho: '4' },
-            ]
-        }];
+        const esquema = [
+            {
+                tituloBloque: "Indicadores de Intensidad Turística",
+                destino: '#panel-graficos-contenido',
+                elementos: [
+                    { tipo: 'grafico', id: 'gauge-rit', ancho: '4' },
+                    { tipo: 'grafico', id: 'gauge-rit-r', ancho: '4' },
+                    { tipo: 'grafico', id: 'gauge-rit-v', ancho: '4' },
+                ]
+            },
+            {
+                tituloBloque: "Indicadores de Intensidad Turística por km²",
+                destino: '#panel-graficos-contenido',
+                elementos: [
+                    { tipo: 'grafico', id: 'gauge-rit-km2', ancho: '4' },
+                    { tipo: 'grafico', id: 'gauge-rit-r-km2', ancho: '4' },
+                    { tipo: 'grafico', id: 'gauge-rit-v-km2', ancho: '4' },
+                ]
+            }
+        ];
 
         
 

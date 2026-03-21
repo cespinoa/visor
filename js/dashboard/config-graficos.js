@@ -29,6 +29,36 @@ window.CONFIG_GRAFICOS = {
             tipo_escala: 'calor',
         }
     },    
+    'gauge-rit-km2': {
+        tipo: 'gauge',
+        titulo: 'RIT total / km²',
+        config: {
+            campo_valor: 'rit_km2',
+            campo_max: 'rit_km2_max',
+            campo_media: 'rit_km2_avg',
+            tipo_escala: 'calor',
+        }
+    },
+    'gauge-rit-r-km2': {
+        tipo: 'gauge',
+        titulo: 'RIT reglada / km²',
+        config: {
+            campo_valor: 'rit_r_km2',
+            campo_max: 'rit_r_km2_max',
+            campo_media: 'rit_r_km2_avg',
+            tipo_escala: 'calor',
+        }
+    },
+    'gauge-rit-v-km2': {
+        tipo: 'gauge',
+        titulo: 'RIT vacacional / km²',
+        config: {
+            campo_valor: 'rit_v_km2',
+            campo_max: 'rit_v_km2_max',
+            campo_media: 'rit_v_km2_avg',
+            tipo_escala: 'calor',
+        }
+    },
     'presion-humana': {
         tipo: 'gauge',
         titulo: 'Presión humana',
