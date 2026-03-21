@@ -10,13 +10,18 @@ window.visorProject.utilsGraficos = {
         return dicc[idCampo] || { formato: 'entero', unidades: '' };
     },
 
-    crearContenedorGrafico: function(config, datosRaiz) {
+    crearContenedorGrafico: function(config, datosRaw) {
         const tpl = document.getElementById('tpl-grafico-contenedor');
         if (!tpl) return null;
 
+        // Los gauges usan un registro único; el resto recibe el array completo
+        const datosRaiz = (config.tipo === 'gauge' && Array.isArray(datosRaw))
+            ? datosRaw[datosRaw.length - 1]
+            : datosRaw;
+
         const fragment = tpl.content.cloneNode(true);
         const contenedor = fragment.querySelector('.contenedor-grafico');
-        
+
         contenedor.querySelector('.grafico-titulo').textContent = config.titulo;
         contenedor.querySelector('.grafico-subtitulo').textContent = config.subtitulo || '';
 

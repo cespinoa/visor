@@ -123,6 +123,24 @@
           );
           break;
 
+        case 'PARENTS': {
+          // [self, parent_island (if municipio), canarias (if not canarias)]
+          const regs = [props];
+
+          if (props.ambito === 'municipio') {
+              const isla = snapshot.find(d => d.ambito === 'isla' && d.isla_id === props.isla_id);
+              if (isla) regs.push(isla);
+          }
+
+          if (props.ambito !== 'canarias') {
+              const canarias = snapshot.find(d => d.ambito === 'canarias');
+              if (canarias) regs.push(canarias);
+          }
+
+          resultado = regs;
+          break;
+        }
+
         case 'PARENT_RELATION':
           resultado = snapshot.filter(d => {
             // 1. Siempre Canarias

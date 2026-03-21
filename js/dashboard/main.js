@@ -161,6 +161,11 @@ window.visorProject.estado = {
           if (window.visorProject.utils) {
               window.visorProject.utils.configurarEscuchaHistorial();
           }
+
+          // G. Cargamos las vistas guardadas del usuario
+          if (window.VistasManager) {
+              window.VistasManager.renderizar();
+          }
       });
 
       /**

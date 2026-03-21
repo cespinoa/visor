@@ -171,6 +171,7 @@ window.VistasManager = {
 
 (function($, Drupal, once) {
     "use strict";
+    if (!Drupal || !Drupal.behaviors) return;
     Drupal.behaviors.vistasManager = {
         attach: function(context) {
             once('vistas-init', '#wrapper-vistas', context).forEach(function() {

@@ -37,8 +37,8 @@
           intro: "Caracterizacion del modelo turistico.",
           destino: '#ficha-contenido',
           elementos: [ 
-            { tipo: 'tabla', id: 'tabla-evolucion-plazas', ancho: '12' },
-            { tipo: 'tabla', id: 'resumen-ambito', ancho: '6' },
+            //~ { tipo: 'tabla', id: 'tabla-evolucion-plazas', ancho: '12' },
+            { tipo: 'tabla', id: 'resumen-ambito', ancho: '12' },
             { tipo: 'tabla', id: 'distribucion-plazas-vacacionales', ancho: '6' },
             { tipo: 'tabla', id: 'distribucion-plazas-regladas', ancho: '6' },
             { tipo: 'tabla', id: 'plazas-turistizas-zona-residencial', ancho: '6' }

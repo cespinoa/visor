@@ -12,10 +12,12 @@
      */
     prepararDataset: function(config, registros, props) {
         if (!registros || registros.length === 0) return [];
-        
+
         let resultado = [];
         if (config.modo === 'lista') {
             resultado = this.prepararDatasetLista(config, registros, props);
+        } else if (config.contexto === 'PARENTS') {
+            resultado = this.prepararDatasetFichaParents(config, registros);
         } else {
             resultado = this.prepararDatasetFicha(config, registros);
         }
@@ -214,6 +216,48 @@
         //~ });
     //~ },
 
+    obtenerUnidad: function(idCampo) {
+        const dicc = drupalSettings.visorProject.diccionario;
+        return (dicc && dicc[idCampo] && dicc[idCampo].unidades) ? dicc[idCampo].unidades : '';
+    },
+
+    /**
+     * MODO FICHA + CONTEXTO PARENTS: columnas = ámbitos jerárquicos (self, isla, canarias)
+     */
+    prepararDatasetFichaParents: function(config, registros) {
+        if (!config.filas || !registros || registros.length === 0) return [];
+
+        const usarUnidades = config.unidades === true;
+
+        // Cabeceras dinámicas: Indicador + nombre de cada entidad + Unidades?
+        const cabeceras = ['Indicador', ...registros.map(r => r.etiqueta)];
+        if (usarUnidades) cabeceras.push('Unidades');
+
+        const resultado = config.filas.map(filaConfig => {
+            const [etiqueta, campoSpec, ...rest] = filaConfig;
+            const esDestacada = rest.includes('destacada');
+
+            // campoSpec puede ser string "campo" o array ["campo", "formato"]
+            const idCampo = Array.isArray(campoSpec) ? campoSpec[0] : campoSpec;
+            const formato = this.obtenerFormato(idCampo, Array.isArray(campoSpec) ? campoSpec[1] : null);
+
+            const celdas = registros.map(reg => ({
+                valor: this._f(reg[idCampo], formato),
+                clase: 'col-dato'
+            }));
+
+            if (usarUnidades) {
+                celdas.push({ valor: this.obtenerUnidad(idCampo), clase: 'col-dato col-unidad' });
+            }
+
+            return { etiqueta, celdas, esDestacada };
+        });
+
+        resultado._columnasCSV = cabeceras;
+        resultado._cabecerasTabla = cabeceras;
+        return resultado;
+    },
+
     prepararDatasetFicha: function(config, registros) {
         if (!config.filas || !registros || registros.length === 0) return [];
 
@@ -358,8 +402,12 @@
         let etiquetasFinales = [];
         const fechasRef = dataset[0].fechasCabecera || [];
 
+        // CASO 0: Cabeceras dinámicas pre-calculadas (ej: contexto PARENTS)
+        if (dataset._cabecerasTabla) {
+            etiquetasFinales = dataset._cabecerasTabla;
+        }
         // CASO A: Es una comparativa temporal (hay fechas detectadas)
-        if (fechasRef.length > 0 && config.comparativa) {
+        else if (fechasRef.length > 0 && config.comparativa) {
             // Primera columna: Etiqueta (Ámbito o Ratio)
             etiquetasFinales.push(config.etiquetas ? config.etiquetas[0] : (config.modo === 'ficha' ? 'Ratio' : 'Ámbito'));
             

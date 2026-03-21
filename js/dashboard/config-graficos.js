@@ -1,17 +1,34 @@
 window.CONFIG_GRAFICOS = {
     'gauge-rit': {
         tipo: 'gauge',
-        titulo: 'Intensidad Turística',
-        subtitulo: 'Plazas / 100 habitantes',
+        titulo: 'Ratio de Intensidad Turística (RIT)',
         config: {
             campo_valor: 'rit',
-            campo_max: 'rit_max', // Valor de referencia máximo
+            campo_max: 'rit_max',
             campo_media: 'rit_avg',
-            tipo_escala: 'calor',  // Aplicará tus 12 pasos de rojo
-            //~ unidad: ' turistas/km²',
-            //~ precision: 2
+            tipo_escala: 'calor',
         }
     },
+    'gauge-rit-r': {
+        tipo: 'gauge',
+        titulo: 'RIT reglada',
+        config: {
+            campo_valor: 'rit_r',
+            campo_max: 'rit_r_max',
+            campo_media: 'rit_r_avg',
+            tipo_escala: 'calor',
+        }
+    },
+    'gauge-rit-v': {
+        tipo: 'gauge',
+        titulo: 'RIT vacacional',
+        config: {
+            campo_valor: 'rit_v',
+            campo_max: 'rit_v_max',
+            campo_media: 'rit_v_avg',
+            tipo_escala: 'calor',
+        }
+    },    
     'presion-humana': {
         tipo: 'gauge',
         titulo: 'Presión humana',
@@ -25,30 +42,12 @@ window.CONFIG_GRAFICOS = {
             precision: 2
         }
     },
-    'gauge-rit-r': {
-        tipo: 'gauge',
-        titulo: 'RIT KM2',
-        subtitulo: '% sobre el total de viviendas',
-        config: {
-            campo_valor: 'rit_km2',
-            campo_max: 'rit_km2_max',
-            campo_media: 'rit_km2_avg',
-            tipo_escala: 'calor',
-            unidad: '%',
-            precision: 0
-        }
-    },
-    'gauge-rit-v': {
-        tipo: 'gauge',
-        titulo: 'Presión humana',
-        subtitulo: 'Densidad de poblacion incluyendo turistas',
-        config: {
-            campo_valor: 'presion_humana_km2',
-            campo_max: 'presion_humana_km2',
-            campo_media: 'rit_km2_avg',
-            tipo_escala: 'calor',
-        }
-    },
+
+
+
+
+
+    
     'donut-plazas': {
         tipo: 'donut',
         titulo: 'Distribución de Plazas',

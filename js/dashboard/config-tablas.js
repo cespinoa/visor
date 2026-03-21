@@ -4,17 +4,16 @@ window.CONFIG_TABLAS = {
     
     'resumen-ambito': {
         titulo: "Principales indicadores",
-        contexto: "SELF_HISTORIC",
-        periodo: 'LAST_TWO',
+        contexto: "PARENTS",
         modo: "ficha",
-        cabecera: ["Indicador", "Valor", "Unidad"],
+        unidades: true,
         filas: [
-            ["Población censada", ["poblacion"], ["unidades:poblacion"]],
-            ["Población turística vacacional", ["pte_v"], ["unidades:pte_v"]],
-            ["Demandantes de vivienda", ["consumidores_vivienda"], ["unidades:consumidores_vivienda"]],
-            ["Tamaño medio de los hogares", ["personas_por_hogar", "decimal_1"], ["unidades:personas_por_hogar"]],
-            ["Déficit de viviendas", ["deficit_oferta_viviendas"], ["viviendas", "literal", "unidad"]],
-            ["Ratio de déficit de viviendas", ["r_deficit_oferta_viviendas"], ["porcentaje", "literal", "unidad"]]
+            ["Población censada", "poblacion"],
+            ["Población turística vacacional", "pte_v"],
+            ["Demandantes de vivienda", "consumidores_vivienda"],
+            ["Tamaño medio de los hogares", ["personas_por_hogar", "decimal_1"]],
+            ["Déficit de viviendas", "deficit_oferta_viviendas"],
+            ["Ratio de déficit de viviendas", "r_deficit_oferta_viviendas"]
         ]
     },
     'parque-viviendas': {
