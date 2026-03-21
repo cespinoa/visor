@@ -29,6 +29,16 @@ window.CONFIG_GRAFICOS = {
             tipo_escala: 'calor',
         }
     },    
+    'densidad-de-poblacion': {
+        tipo: 'gauge',
+        titulo: 'Densidad de población',
+        config: {
+            campo_valor: 'residentes_km2',
+            campo_max: 'residentes_km2_max',
+            campo_media: 'residentes_km2_avg',
+            tipo_escala: 'calor',
+        }
+    },
     'gauge-rit-km2': {
         tipo: 'gauge',
         titulo: 'RIT total / km²',

@@ -28,6 +28,15 @@
                 ]
             },
             {
+                tituloBloque: "Presión Humana",
+                destino: '#panel-graficos-contenido',
+                elementos: [
+                    { tipo: 'grafico', id: 'densidad-de-poblacion', ancho: '4' },
+                    { tipo: 'grafico', id: 'gauge-rit-km2', ancho: '4' },
+                    { tipo: 'grafico', id: 'presion-humana', ancho: '4' },
+                ]
+            },
+            {
                 tituloBloque: "Indicadores de Intensidad Turística por km²",
                 destino: '#panel-graficos-contenido',
                 elementos: [
