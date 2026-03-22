@@ -55,7 +55,17 @@
                     { tipo: 'grafico', id: 'gauge-viviendas-vacias', ancho: '3' },
                     { tipo: 'grafico', id: 'gauge-viviendas-esporadicas', ancho: '3' },
                     { tipo: 'grafico', id: 'gauge-viviendas-vacacional', ancho: '3' },
-                    { tipo: 'grafico', id: 'gauge-deficit-viviendas', ancho: '3' },
+                    { tipo: 'grafico', id: 'gauge-uds-vv-habitantes', ancho: '3' },
+                ]
+            },
+            {
+                tituloBloque: "Alteración de la actividad turística",
+                destino: '#panel-graficos-contenido',
+                elementos: [
+                    { tipo: 'grafico', id: 'gauge-plazas-suelo-residencial', ancho: '3' },
+                    { tipo: 'grafico', id: 'gauge-peso-oferta-vacacional', ancho: '3' },
+                    { tipo: 'grafico', id: 'donut-vv-por-zona', ancho: '3' },
+                    { tipo: 'grafico', id: 'donut-regladas-por-zona', ancho: '3' },
                 ]
             }
         ];

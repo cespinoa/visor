@@ -41,6 +41,8 @@ window.CONFIG_GRAFICOS = {
         campo_central: 'rit_v_porc',
         etiqueta_central: 'Porcentaje RIT vacacional'
     },
+
+    
     'gauge-rit-km2': {
         tipo: 'gauge',
         titulo: 'RIT total / km²',
@@ -83,6 +85,8 @@ window.CONFIG_GRAFICOS = {
         campo_central: 'rit_v_km2',
         etiqueta_central: 'Porcentaje RIT vacacional'
     },
+
+    
     'gauge-presion-humana': {
         tipo: 'gauge',
         titulo: 'Presión humana',
@@ -151,6 +155,20 @@ window.CONFIG_GRAFICOS = {
             tipo_escala: 'calor',
         }
     },
+    'gauge-uds-vv-habitantes': {
+        tipo: 'gauge',
+        titulo: 'Viviendas vacacionales por 100 habitantes',
+        config: {
+            campo_valor: 'uds_vv_habitantes',
+            campo_max: 'uds_vv_habitantes_max',
+            campo_media: 'uds_vv_habitantes_avg',
+            tipo_escala: 'calor',
+        }
+    },
+
+
+
+
     'gauge-deficit-viviendas': {
         tipo: 'gauge',
         titulo: 'Déficit teórico de viviendas',
@@ -160,6 +178,49 @@ window.CONFIG_GRAFICOS = {
             campo_media: 'deficit_oferta_viviendas_avg',
             tipo_escala: 'calor',
         }
+    },
+    
+    'gauge-plazas-suelo-residencial': {
+        tipo: 'gauge',
+        titulo: 'Desplazamiento a zonas residenciales',
+        config: {
+            campo_valor: 'plazas_suelo_residencial_porc',
+            campo_max: 'plazas_suelo_residencial_porc_max',
+            campo_media: 'plazas_suelo_residencial_porc_avg',
+            tipo_escala: 'calor',
+        }
+    },
+    'gauge-peso-oferta-vacacional': {
+        tipo: 'gauge',
+        titulo: 'Peso de la oferta vacacional',
+        config: {
+            campo_valor: 'plazas_vacacionales_plazas_total_porc',
+            campo_max: 'plazas_vacacionales_plazas_total_porc_max',
+            campo_media: 'plazas_vacacionales_plazas_total_porc_avg',
+            tipo_escala: 'calor',
+        }
+    },
+    'donut-vv-por-zona': {
+        tipo: 'donut',
+        titulo: 'VV por tipo de zona',
+        config: {
+            campos: ['plazas_vv_residenciales_porc', 'plazas_vv_turisticas_porc'],
+            labels: ['VV en zonas residenciales', 'VV en zonas turísticas'],
+            paleta: 'paleta-donuts',
+        },
+        campo_central: 'plazas_vv_residenciales_porc',
+        etiqueta_central: 'En zonas residenciales'
+    },
+    'donut-regladas-por-zona': {
+        tipo: 'donut',
+        titulo: 'Plazas regladas por tipo de zona',
+        config: {
+            campos: ['plazas_at_residenciales_porc', 'plazas_at_turisticas_porc'],
+            labels: ['Plazas regladas en zonas residenciales', 'Plazas regladas en zonas turísticas'],
+            paleta: 'paleta-donuts',
+        },
+        campo_central: 'plazas_at_residenciales_porc',
+        etiqueta_central: 'En zonas residenciales'
     },
     'donut-plazas': {
         tipo: 'donut',
