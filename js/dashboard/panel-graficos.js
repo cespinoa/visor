@@ -22,32 +22,45 @@
                 tituloBloque: "Indicadores de Intensidad Turística",
                 destino: '#panel-graficos-contenido',
                 elementos: [
-                    { tipo: 'grafico', id: 'gauge-rit', ancho: '4' },
-                    { tipo: 'grafico', id: 'gauge-rit-r', ancho: '4' },
-                    { tipo: 'grafico', id: 'gauge-rit-v', ancho: '4' },
-                ]
-            },
-            {
-                tituloBloque: "Presión Humana",
-                destino: '#panel-graficos-contenido',
-                elementos: [
-                    { tipo: 'grafico', id: 'densidad-de-poblacion', ancho: '4' },
-                    { tipo: 'grafico', id: 'gauge-rit-km2', ancho: '4' },
-                    { tipo: 'grafico', id: 'presion-humana', ancho: '4' },
+                    { tipo: 'grafico', id: 'gauge-rit', ancho: '3' },
+                    { tipo: 'grafico', id: 'gauge-rit-r', ancho: '3' },
+                    { tipo: 'grafico', id: 'gauge-rit-v', ancho: '3' },
+                    { tipo: 'grafico', id: 'donut-rit', ancho: '3' }
                 ]
             },
             {
                 tituloBloque: "Indicadores de Intensidad Turística por km²",
                 destino: '#panel-graficos-contenido',
                 elementos: [
-                    { tipo: 'grafico', id: 'gauge-rit-km2', ancho: '4' },
-                    { tipo: 'grafico', id: 'gauge-rit-r-km2', ancho: '4' },
-                    { tipo: 'grafico', id: 'gauge-rit-v-km2', ancho: '4' },
+                    { tipo: 'grafico', id: 'gauge-rit-km2', ancho: '3' },
+                    { tipo: 'grafico', id: 'gauge-rit-r-km2', ancho: '3' },
+                    { tipo: 'grafico', id: 'gauge-rit-v-km2', ancho: '3' },
+                    { tipo: 'grafico', id: 'donut-rit-km2', ancho: '3' }
+                ]
+            },
+            {
+                tituloBloque: "Presión Humana",
+                destino: '#panel-graficos-contenido',
+                elementos: [
+                    { tipo: 'grafico', id: 'gauge-presion-humana', ancho: '3' },
+                    { tipo: 'grafico', id: 'gauge-densidad-de-poblacion', ancho: '3' },
+                    { tipo: 'grafico', id: 'gauge-rit-km2', ancho: '3' },
+                    { tipo: 'grafico', id: 'donut-presion-humana', ancho: '3' }
+                ]
+            },
+            {
+                tituloBloque: "Indicadores de vivienda",
+                destino: '#panel-graficos-contenido',
+                elementos: [
+                    { tipo: 'grafico', id: 'gauge-viviendas-vacias', ancho: '3' },
+                    { tipo: 'grafico', id: 'gauge-viviendas-esporadicas', ancho: '3' },
+                    { tipo: 'grafico', id: 'gauge-viviendas-vacacional', ancho: '3' },
+                    { tipo: 'grafico', id: 'gauge-deficit-viviendas', ancho: '3' },
                 ]
             }
         ];
 
-        
+
 
         if (window.visorProject.rowCompositor) {
           window.visorProject.rowCompositor.componer(esquema, props);

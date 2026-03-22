@@ -28,16 +28,18 @@ window.CONFIG_GRAFICOS = {
             campo_media: 'rit_v_avg',
             tipo_escala: 'calor',
         }
-    },    
-    'densidad-de-poblacion': {
-        tipo: 'gauge',
-        titulo: 'Densidad de población',
+    },
+    'donut-rit': {
+        tipo: 'donut',
+        titulo: 'Distribución de RIT',
+        porcentaje: false,
         config: {
-            campo_valor: 'residentes_km2',
-            campo_max: 'residentes_km2_max',
-            campo_media: 'residentes_km2_avg',
-            tipo_escala: 'calor',
-        }
+            campos: ['rit_v_porc', 'rit_r_porc'],
+            labels: ['Porcentaje Vacacional', 'Porcentaje reglado'],
+            paleta: 'paleta-donuts', 
+        },
+        campo_central: 'rit_v_porc',
+        etiqueta_central: 'Porcentaje RIT vacacional'
     },
     'gauge-rit-km2': {
         tipo: 'gauge',
@@ -69,18 +71,49 @@ window.CONFIG_GRAFICOS = {
             tipo_escala: 'calor',
         }
     },
-    'presion-humana': {
+    'donut-rit-km2': {
+        tipo: 'donut',
+        titulo: 'Distribución de RIT km²',
+        porcentaje: true,
+        config: {
+            campos: ['rit_v_km2', 'rit_r_km2'],
+            labels: ['Porcentaje Vacacional', 'Porcentaje reglado'],
+            paleta: 'paleta-donuts', 
+        },
+        campo_central: 'rit_v_km2',
+        etiqueta_central: 'Porcentaje RIT vacacional'
+    },
+    'gauge-presion-humana': {
         tipo: 'gauge',
         titulo: 'Presión humana',
-        subtitulo: '% sobre el total de viviendas',
         config: {
             campo_valor: 'presion_humana_km2',
             campo_max: 'presion_humana_km2_max',
             campo_media: 'presion_humana_km2_avg',
             tipo_escala: 'calor',
-            unidad: '%',
-            precision: 2
         }
+    },
+    'gauge-densidad-de-poblacion' : {
+        tipo: 'gauge',
+        titulo: 'Residentes por km²',
+        config: {
+            campo_valor: 'residentes_km2',
+            campo_max: 'residentes_km2_max',
+            campo_media: 'residentes_km2_avg',
+            tipo_escala: 'calor',
+        }
+    },
+    'donut-presion-humana': {
+        tipo: 'donut',
+        titulo: 'Distribución de Presión Humana',
+        porcentaje: true,
+        config: {
+            campos: ['rit_km2', 'residentes_km2'],
+            labels: ['Porcentaje Turistas', 'Porcentaje Residentes'],
+            paleta: 'paleta-donuts', 
+        },
+        campo_central: 'rit_km2',
+        etiqueta_central: 'Porcentaje RIT total'
     },
 
 
@@ -88,6 +121,46 @@ window.CONFIG_GRAFICOS = {
 
 
     
+    'gauge-viviendas-vacias': {
+        tipo: 'gauge',
+        titulo: 'Porc. de viviendas vacías',
+        config: {
+            campo_valor: 'viviendas_vacias_viviendas_total',
+            campo_max: 'viviendas_vacias_viviendas_total_max',
+            campo_media: 'viviendas_vacias_viviendas_total_avg',
+            tipo_escala: 'calor',
+        }
+    },
+    'gauge-viviendas-esporadicas': {
+        tipo: 'gauge',
+        titulo: 'Porc. de viviendas de uso esporádico',
+        config: {
+            campo_valor: 'viviendas_esporadicas_viviendas_total',
+            campo_max: 'viviendas_esporadicas_viviendas_total_max',
+            campo_media: 'viviendas_esporadicas_viviendas_total_avg',
+            tipo_escala: 'calor',
+        }
+    },
+    'gauge-viviendas-vacacional': {
+        tipo: 'gauge',
+        titulo: 'Porc. de viviendas en vacacional',
+        config: {
+            campo_valor: 'vacacional_por_viviendas_habituales',
+            campo_max: 'vacacional_por_viviendas_habituales_max',
+            campo_media: 'vacacional_por_viviendas_habituales_avg',
+            tipo_escala: 'calor',
+        }
+    },
+    'gauge-deficit-viviendas': {
+        tipo: 'gauge',
+        titulo: 'Déficit teórico de viviendas',
+        config: {
+            campo_valor: 'deficit_oferta_viviendas',
+            campo_max: 'deficit_oferta_viviendas_max',
+            campo_media: 'deficit_oferta_viviendas_avg',
+            tipo_escala: 'calor',
+        }
+    },
     'donut-plazas': {
         tipo: 'donut',
         titulo: 'Distribución de Plazas',
