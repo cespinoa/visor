@@ -126,10 +126,16 @@ window.visorProject.utilsGraficos = {
         if (!canvas) return;
 
         const ctx = canvas.getContext('2d');
-        const dataValues = config.config.campos.map(c => parseFloat(datosRaiz[c]) || 0);
+        const esPorc = config.porcentaje === true;
+
+        const valoresBrutos = config.config.campos.map(c => parseFloat(datosRaiz[c]) || 0);
+        const totalBruto = valoresBrutos.reduce((s, v) => s + v, 0);
+        const dataValues = esPorc
+            ? valoresBrutos.map(v => totalBruto > 0 ? (v / totalBruto) * 100 : 0)
+            : valoresBrutos;
 
         // LÓGICA DE COLORES: Prioridad 1: Paleta global, Prioridad 2: Colores manuales, Prioridad 3: Grises
-        let coloresFinales = config.config.colores; // Manuales si existen
+        let coloresFinales = config.config.colores;
         if (config.config.paleta && window.visorProject.paletas[config.config.paleta]) {
             coloresFinales = window.visorProject.paletas[config.config.paleta];
         } else if (!coloresFinales) {
@@ -152,10 +158,12 @@ window.visorProject.utilsGraficos = {
                 cutout: '70%',
                 plugins: {
                     legend: { position: 'bottom' },
-                    // Sincronizamos el tooltip de Chart.js con nuestro formateador
                     tooltip: {
                         callbacks: {
                             label: (context) => {
+                                if (esPorc) {
+                                    return ` ${context.label}: ${context.raw.toFixed(1)}%`;
+                                }
                                 const idCampo = config.config.campos[context.dataIndex];
                                 const meta = this._getMeta(idCampo);
                                 const val = window.visorProject.utils.formatearDato(context.raw, meta.formato);
@@ -174,15 +182,25 @@ window.visorProject.utilsGraficos = {
 
             const kpiDiv = document.createElement('div');
             kpiDiv.className = 'grafico-centro-abs';
-            
+
             const idCentral = config.campo_central;
-            const metaCentral = this._getMeta(idCentral);
-            const valor = window.visorProject.utils.formatearDato(datosRaiz[idCentral], metaCentral.formato);
-            const unidad = metaCentral.unidades || '';
+            let valorTexto, unidad;
+
+            if (esPorc) {
+                const idxCentral = config.config.campos.indexOf(idCentral);
+                const porcCentral = idxCentral >= 0 ? dataValues[idxCentral] : 0;
+                valorTexto = porcCentral.toFixed(1) + '%';
+                unidad = '';
+            } else {
+                const metaCentral = this._getMeta(idCentral);
+                valorTexto = window.visorProject.utils.formatearDato(datosRaiz[idCentral], metaCentral.formato);
+                unidad = metaCentral.unidades || '';
+            }
+
             const etiqueta = config.etiqueta_central || '';
 
             kpiDiv.innerHTML = `
-                <div class="kpi-valor">${valor}<span class="kpi-unidades">${unidad}<span></div>
+                <div class="kpi-valor">${valorTexto}<span class="kpi-unidades">${unidad}</span></div>
                 <div class="kpi-etiqueta">${etiqueta}</div>
             `;
             
