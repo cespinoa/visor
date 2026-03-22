@@ -11,6 +11,11 @@ window.visorProject.utilsGraficos = {
     },
 
     crearContenedorGrafico: function(config, datosRaw) {
+        // El radar tiene su propio contenedor
+        if (config.tipo === 'radar') {
+            return this.crearContenedorRadar(config, datosRaw);
+        }
+
         const tpl = document.getElementById('tpl-grafico-contenedor');
         if (!tpl) return null;
 
@@ -206,6 +211,153 @@ window.visorProject.utilsGraficos = {
             
             contenedorBody.appendChild(kpiDiv);
         }
+    },
+
+    crearContenedorRadar: function(config, datosRaw) {
+        const datosRaiz = Array.isArray(datosRaw) ? datosRaw[datosRaw.length - 1] : datosRaw;
+        const campos = config.config.campos;
+        const etiquetas = config.config.etiquetas;
+        const etiquetasPunto = config.config.etiquetas_punto;
+
+        // Pre-calculamos los valores normalizados para la tabla
+        const filas = campos.map((campo, i) => {
+            const valorBruto = parseFloat(datosRaiz[campo]) || 0;
+            const maximo = parseFloat(datosRaiz[campo + '_max']) || 1;
+            const meta = this._getMeta(campo);
+            return {
+                punto: etiquetasPunto[i],
+                etiqueta: etiquetas[i],
+                valorFormateado: window.visorProject.utils.formatearDato(valorBruto, meta.formato),
+                valorNorm: maximo > 0 ? (valorBruto / maximo) * 100 : 0,
+            };
+        });
+
+        // Contenedor principal (mismo aspecto que .contenedor-grafico)
+        const wrapper = document.createElement('div');
+        wrapper.className = 'contenedor-grafico contenedor-radar';
+
+        // header-tools para fullscreen
+        const headerTools = document.createElement('div');
+        headerTools.className = 'header-tools';
+        wrapper.appendChild(headerTools);
+
+        // Título
+        const titulo = document.createElement('div');
+        titulo.className = 'grafico-titulo';
+        titulo.textContent = config.titulo;
+        wrapper.appendChild(titulo);
+
+        // Body: chart (izquierda) + tabla (derecha)
+        const body = document.createElement('div');
+        body.className = 'radar-body';
+
+        // Columna del gráfico
+        const chartCol = document.createElement('div');
+        chartCol.className = 'radar-chart-col';
+        const canvas = document.createElement('canvas');
+        canvas.id = config.canvasId;
+        chartCol.appendChild(canvas);
+        body.appendChild(chartCol);
+
+        // Columna de la tabla
+        const tableCol = document.createElement('div');
+        tableCol.className = 'radar-table-col';
+
+        const table = document.createElement('table');
+        table.className = 'radar-tabla';
+        table.innerHTML = '<thead><tr><th>Clave</th><th>Indicador</th><th>Valor</th><th>%</th></tr></thead>';
+        const tbody = document.createElement('tbody');
+
+        filas.forEach(fila => {
+            const tr = document.createElement('tr');
+            const td1 = document.createElement('td');
+            td1.innerHTML = `<strong>${fila.punto}</strong>`;
+            const td2 = document.createElement('td');
+            td2.textContent = fila.etiqueta;
+            const td3 = document.createElement('td');
+            td3.textContent = fila.valorFormateado;
+            const td4 = document.createElement('td');
+            td4.textContent = fila.valorNorm.toFixed(1) + '%';
+            tr.append(td1, td2, td3, td4);
+            tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
+        tableCol.appendChild(table);
+        body.appendChild(tableCol);
+        wrapper.appendChild(body);
+
+        return wrapper;
+    },
+
+    dibujarRadar: function(config, datosRaiz) {
+        const canvas = document.getElementById(config.canvasId);
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const campos = config.config.campos;
+        const etiquetasPunto = config.config.etiquetas_punto;
+
+        const valoresNorm = campos.map(campo => {
+            const v = parseFloat(datosRaiz[campo]) || 0;
+            const max = parseFloat(datosRaiz[campo + '_max']) || 1;
+            return max > 0 ? (v / max) * 100 : 0;
+        });
+
+        const avgNorm = campos.map(campo => {
+            const avg = parseFloat(datosRaiz[campo + '_avg']) || 0;
+            const max = parseFloat(datosRaiz[campo + '_max']) || 1;
+            return max > 0 ? (avg / max) * 100 : 0;
+        });
+
+        new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: etiquetasPunto,
+                datasets: [
+                    {
+                        label: datosRaiz.etiqueta || 'Valor',
+                        data: valoresNorm,
+                        backgroundColor: 'rgba(167, 0, 0, 0.15)',
+                        borderColor: '#a70000',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#a70000',
+                        pointRadius: 3,
+                    },
+                    {
+                        label: 'Media Canarias',
+                        data: avgNorm,
+                        backgroundColor: 'rgba(150, 150, 150, 0.12)',
+                        borderColor: '#aaaaaa',
+                        borderWidth: 1,
+                        borderDash: [4, 4],
+                        pointBackgroundColor: '#aaaaaa',
+                        pointRadius: 2,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    r: {
+                        min: 0,
+                        max: 100,
+                        ticks: { display: false, stepSize: 25 },
+                        grid: { color: 'rgba(0,0,0,0.08)' },
+                        pointLabels: { font: { size: 11, weight: 'bold' } }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => ` ${context.dataset.label}: ${context.raw.toFixed(1)}%`
+                        }
+                    }
+                }
+            }
+        });
     },
 
     dibujarSeries: function(config, registros) {
@@ -426,6 +578,9 @@ window.visorProject.utilsGraficos = {
                         case 'bar' :
                             // La evolución necesita TODO el array de la serie
                             self.dibujarSeries(config, datos);
+                            break;
+                        case 'radar':
+                            self.dibujarRadar(config, Array.isArray(datos) ? datos[datos.length - 1] : datos);
                             break;
                     }
                     observer.unobserve(entry.target);

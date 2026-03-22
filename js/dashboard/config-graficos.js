@@ -1,4 +1,42 @@
 window.CONFIG_GRAFICOS = {
+
+    'radar-sintesis': {
+        tipo: 'radar',
+        titulo: 'Síntesis de indicadores',
+        config: {
+            campos: [
+                'vacacional_por_viviendas_habituales',
+                'plazas_vv_residenciales_porc',
+                'plazas_suelo_residencial_porc',
+                'plazas_vacacionales_plazas_total_porc',
+                'rit_v',
+                'uds_vv_habitantes',
+                'rit_km2',
+                'residentes_km2',
+            ],
+            etiquetas: [
+                'Porc de viviendas en vacacional',
+                'Porc de VV en zona residencial',
+                'Plazas en zona residencial',
+                'Plazas vacacionales',
+                'RIT vacacional',
+                'VV por 100 hab.',
+                'RIT Km²',
+                'Residentes Km²',
+            ],
+            etiquetas_punto: [
+                'PVV',
+                'PVR',
+                'PZR',
+                'PV',
+                'RITv',
+                'VV/100hab',
+                'RIT_Km²',
+                'Res_Km²',
+            ],
+        }
+    },
+
     'gauge-rit': {
         tipo: 'gauge',
         titulo: 'Ratio de Intensidad Turística (RIT)',

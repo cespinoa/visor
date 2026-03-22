@@ -67,6 +67,13 @@
                     { tipo: 'grafico', id: 'donut-vv-por-zona', ancho: '3' },
                     { tipo: 'grafico', id: 'donut-regladas-por-zona', ancho: '3' },
                 ]
+            },
+            {
+                tituloBloque: "Síntesis de indicadores",
+                destino: '#panel-graficos-contenido',
+                elementos: [
+                    { tipo: 'grafico', id: 'radar-sintesis', ancho: '12' },
+                ]
             }
         ];
 

@@ -98,7 +98,7 @@
 
 /* El KPI central flotando sobre el SVG */
 /* El contenedor del canvas debe ser relativo */
-.grafico-body {
+.grafico-body.body-donut {
     position: relative;
     width: 100%;
     height: 250px; /* Ajusta según tu diseño */
@@ -107,7 +107,7 @@
 /* El texto central */
 .grafico-centro-abs {
     position: absolute;
-    top: 45%; /* Un poco más arriba del 50% porque la leyenda de Chart.js ocupa espacio abajo */
+    top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
@@ -216,4 +216,78 @@
 .dashboard-main-dtr .grafico-titulo,
 .dashboard-main-dtr .tabla-titulo {
   display: none;
+}
+
+
+#panel-graficos-contenido .grafico-body.body-gauge {
+  max-width: 400px;
+}
+
+#panel-graficos-contenido .grafico-body.body-donut {
+  max-width: 200px;
+}
+
+/* =============================================
+   RADAR / POLAR
+   ============================================= */
+.contenedor-radar {
+    text-align: left;
+}
+
+.radar-body {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    padding: 16px;
+    width: 100%;
+}
+
+.radar-chart-col {
+    flex: 0 0 50%;
+    max-width: 50%;
+}
+
+.radar-chart-col canvas {
+    width: 100% !important;
+    height: auto !important;
+}
+
+.radar-table-col {
+    flex: 1 1 auto;
+    overflow-x: auto;
+}
+
+.radar-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.radar-tabla thead th {
+    border-bottom: 2px solid #dee2e6;
+    padding: 4px 8px;
+    text-align: left;
+    color: #666;
+    white-space: nowrap;
+}
+
+.radar-tabla tbody td {
+    padding: 4px 8px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+}
+
+.radar-tabla tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.radar-tabla tbody td:first-child {
+    color: #a70000;
+    white-space: nowrap;
+}
+
+.radar-tabla tbody td:nth-child(3),
+.radar-tabla tbody td:nth-child(4) {
+    text-align: right;
+    white-space: nowrap;
 }
