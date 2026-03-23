@@ -17,6 +17,11 @@
 
         jQuery('#grafico-titulo').html(props.etiqueta);
 
+        if (props.ambito === 'canarias') {
+            this._renderizarVistaCanarias($contenedor);
+            return;
+        }
+
         const esquema = [
             {
                 tituloBloque: "Indicadores de Intensidad Turística",
@@ -82,8 +87,51 @@
         if (window.visorProject.rowCompositor) {
           window.visorProject.rowCompositor.componer(esquema, props);
         }
+    },
 
-        
+    _renderizarVistaCanarias: function($contenedor) {
+        const datos = drupalSettings.visorProject.datosDashboard || [];
+        const islas = datos.filter(d => d.ambito === 'isla');
+
+        const GRUPOS = [
+            { titulo: 'Islas orientales',  nombres: ['Lanzarote', 'Fuerteventura'],            ancho: '6' },
+            { titulo: 'Islas centrales',   nombres: ['Gran Canaria', 'Tenerife'],               ancho: '6' },
+            { titulo: 'Islas occidentales',nombres: ['El Hierro', 'La Gomera', 'La Palma'],    ancho: '4' }
+        ];
+
+        const radarBase = window.CONFIG_GRAFICOS?.['radar-sintesis'];
+        if (!radarBase) return;
+
+        GRUPOS.forEach(grupo => {
+            const islasGrupo = grupo.nombres
+                .map(nombre => islas.find(d => d.etiqueta === nombre))
+                .filter(Boolean);
+            if (!islasGrupo.length) return;
+
+            $contenedor.append(`<h5 class="bloque-titulo mt-4 mb-3">${grupo.titulo}</h5>`);
+            const $row = jQuery('<div class="row g-3 mb-4"></div>');
+
+            islasGrupo.forEach(isla => {
+                const $col = jQuery(`<div class="col-md-${grupo.ancho}"></div>`);
+                const slug = (isla.isla_id || isla.etiqueta).toString()
+                    .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                    .replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+                const configIsla = Object.assign({}, radarBase, {
+                    canvasId: `radar-isla-${slug}`
+                });
+
+                const contenedor = window.visorProject.utilsGraficos.crearContenedorRadar(
+                    configIsla, isla, { vertical: true, titulo: isla.etiqueta }
+                );
+                if (contenedor) {
+                    $col.append(contenedor);
+                    window.visorProject.utilsGraficos.activarObservador(contenedor, configIsla, isla);
+                }
+                $row.append($col);
+            });
+
+            $contenedor.append($row);
+        });
     }
   };
 })(window.jQuery, window.Drupal);

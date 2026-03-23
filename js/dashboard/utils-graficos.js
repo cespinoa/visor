@@ -213,7 +213,7 @@ window.visorProject.utilsGraficos = {
         }
     },
 
-    crearContenedorRadar: function(config, datosRaw) {
+    crearContenedorRadar: function(config, datosRaw, opciones = {}) {
         const datosRaiz = Array.isArray(datosRaw) ? datosRaw[datosRaw.length - 1] : datosRaw;
         const campos = config.config.campos;
         const etiquetas = config.config.etiquetas;
@@ -248,12 +248,12 @@ window.visorProject.utilsGraficos = {
         // Título
         const titulo = document.createElement('div');
         titulo.className = 'grafico-titulo';
-        titulo.textContent = config.titulo;
+        titulo.textContent = opciones.titulo || config.titulo;
         wrapper.appendChild(titulo);
 
-        // Body: chart (izquierda) + tabla (derecha)
+        // Body: chart + tabla (horizontal por defecto, vertical si opciones.vertical)
         const body = document.createElement('div');
-        body.className = 'radar-body';
+        body.className = 'radar-body' + (opciones.vertical ? ' radar-vertical' : '');
 
         // Columna del gráfico
         const chartCol = document.createElement('div');

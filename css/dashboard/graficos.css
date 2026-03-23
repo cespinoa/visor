@@ -230,6 +230,23 @@
 /* =============================================
    RADAR / POLAR
    ============================================= */
+
+/* Layout vertical: gráfico arriba, tabla abajo */
+.radar-body.radar-vertical {
+    flex-direction: column;
+    gap: 16px;
+}
+
+.radar-body.radar-vertical .radar-chart-col {
+    flex: none;
+    max-width: 100%;
+    width: 100%;
+}
+
+.radar-body.radar-vertical .radar-table-col {
+    flex: none;
+    width: 100%;
+}
 .contenedor-radar {
     text-align: left;
 }
