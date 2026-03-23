@@ -222,13 +222,17 @@ window.visorProject.utilsGraficos = {
         // Pre-calculamos los valores normalizados para la tabla
         const filas = campos.map((campo, i) => {
             const valorBruto = parseFloat(datosRaiz[campo]) || 0;
-            const maximo = parseFloat(datosRaiz[campo + '_max']) || 1;
+            const avgBruto   = parseFloat(datosRaiz[campo + '_avg']) || 0;
+            const maximo     = parseFloat(datosRaiz[campo + '_max']) || 1;
             const meta = this._getMeta(campo);
             return {
                 punto: etiquetasPunto[i],
                 etiqueta: etiquetas[i],
                 valorFormateado: window.visorProject.utils.formatearDato(valorBruto, meta.formato),
+                avgFormateado:   window.visorProject.utils.formatearDato(avgBruto,   meta.formato),
+                maxFormateado:   window.visorProject.utils.formatearDato(maximo,      meta.formato),
                 valorNorm: maximo > 0 ? (valorBruto / maximo) * 100 : 0,
+                avgNorm:   maximo > 0 ? (avgBruto   / maximo) * 100 : 0,
             };
         });
 
@@ -265,7 +269,7 @@ window.visorProject.utilsGraficos = {
 
         const table = document.createElement('table');
         table.className = 'radar-tabla';
-        table.innerHTML = '<thead><tr><th>Clave</th><th>Indicador</th><th>Valor</th><th>%</th></tr></thead>';
+        table.innerHTML = '<thead><tr><th>Clave</th><th>Indicador</th><th>Valor</th><th>%val</th><th>Media</th><th>%avg</th><th>Máx</th></tr></thead>';
         const tbody = document.createElement('tbody');
 
         filas.forEach(fila => {
@@ -278,7 +282,14 @@ window.visorProject.utilsGraficos = {
             td3.textContent = fila.valorFormateado;
             const td4 = document.createElement('td');
             td4.textContent = fila.valorNorm.toFixed(1) + '%';
-            tr.append(td1, td2, td3, td4);
+            const td5 = document.createElement('td');
+            td5.textContent = fila.avgFormateado;
+            const td6 = document.createElement('td');
+            td6.textContent = fila.avgNorm.toFixed(1) + '%';
+            td6.style.color = fila.avgNorm > 100 ? '#a70000' : 'inherit';
+            const td7 = document.createElement('td');
+            td7.textContent = fila.maxFormateado;
+            tr.append(td1, td2, td3, td4, td5, td6, td7);
             tbody.appendChild(tr);
         });
 
