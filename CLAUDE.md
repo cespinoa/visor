@@ -190,20 +190,62 @@ Los ítems clickables son `<button>` que llaman a `difundirDatos(record)` con el
 
 ### El panel de gráficos (`panel-graficos.js`)
 
-Define el esquema de bloques para la pestaña Gráficos y delega al `rowCompositor`. Los bloques del esquema usan la clave `elementos` (no `graficos`). Ejemplo de estructura mínima:
+Define el esquema de bloques para la pestaña Gráficos y delega al `rowCompositor`. Los bloques usan la clave `elementos` (nunca `graficos`). Bloques actuales (en orden de aparición):
 
-```js
-const esquema = [{
-    tituloBloque: "Título del bloque",
-    destino: '#panel-graficos-contenido',
-    elementos: [
-        { tipo: 'grafico', id: 'gauge-rit', ancho: '4' },
-        ...
-    ]
-}];
-```
+1. **Indicadores de Intensidad Turística** — `gauge-rit`, `gauge-rit-r`, `gauge-rit-v`, `donut-rit` (ancho 3 c/u)
+2. **Indicadores de Intensidad Turística por km²** — `gauge-rit-km2`, `gauge-rit-r-km2`, `gauge-rit-v-km2` (ancho 3 c/u)
+3. **Presión Humana** — `gauge-presion-humana`, `gauge-densidad-de-poblacion`, `gauge-rit-km2` (ancho 3 c/u)
+4. **Indicadores de vivienda** — `gauge-viviendas-vacias`, `gauge-viviendas-esporadicas`, `gauge-viviendas-vacacional`, `gauge-uds-vv-habitantes` (ancho 3 c/u)
+5. **Alteración de la actividad turística** — `gauge-plazas-suelo-residencial`, `gauge-peso-oferta-vacacional`, `donut-vv-por-zona`, `donut-regladas-por-zona` (ancho 3 c/u)
+6. **Síntesis de indicadores** — `radar-sintesis` (ancho 12)
 
 Los gráficos de tipo `gauge` no tienen `contexto` en su config (usan `SELF` por defecto), de modo que `dataSelector` devuelve `[props]`. `crearContenedorGrafico` en `utils-graficos.js` desenvuelve el array antes de acceder a `campo_max` y `campo_media` con `Array.isArray(datosRaw) ? datosRaw[datosRaw.length - 1] : datosRaw`.
+
+### Gráficos donut con `porcentaje: true` (`utils-graficos.js`)
+
+El parámetro `porcentaje: true` en la config de un donut normaliza los valores brutos a porcentaje de su suma antes de dibujar. Uso: cuando los campos son recuentos crudos (ej. unidades de VV por zona). El tooltip muestra `X.X%` y el valor central (`campo_central`) también se muestra como porcentaje de la rebanada correspondiente.
+
+**Cuándo NO usar `porcentaje: true`**: si los campos ya son `_porc` y suman 100% no hay que normalizar de nuevo (se haría doble normalización). Solo usar para campos de recuento bruto.
+
+### Gráfico radar (`utils-graficos.js` + `config-graficos.js`)
+
+**Tipo de configuración en `CONFIG_GRAFICOS`:**
+```js
+'radar-sintesis': {
+    tipo: 'radar',
+    titulo: 'Síntesis de indicadores',
+    config: {
+        campos: ['campo1', 'campo2', ...],
+        etiquetas: ['Etiqueta larga 1', 'Etiqueta larga 2', ...],   // para la tabla
+        etiquetas_punto: ['PT1', 'PT2', ...],                        // abreviatura para los vértices del radar
+    }
+}
+```
+
+**Renderizado:** `crearContenedorGrafico` detecta `tipo === 'radar'` y delega a `crearContenedorRadar(config, datosRaw)` en lugar de generar el DOM estándar de gauge/donut.
+
+**Layout:** `.radar-body` flex con dos columnas:
+- `.radar-chart-col` (50%) — canvas del radar Chart.js
+- `.radar-table-col` (flex 1) — tabla de equivalencias con columnas: Clave | Indicador | Valor | %val | Media | %avg | Máx
+
+**Normalización (0–100):**
+```js
+// Valor del registro activo
+valorNorm = (datosRaiz[campo] / datosRaiz[campo + '_max']) * 100
+
+// Media canaria de referencia
+avgNorm = (datosRaiz[campo + '_avg'] / datosRaiz[campo + '_max']) * 100
+```
+
+**Dos datasets en el radar:**
+- Polígono rojo `#a70000` — registro activo (relleno semitransparente)
+- Polígono gris `#ccc` discontinuo — media canaria (sin relleno)
+
+El eje va de 0 a 100 sin etiquetas de tick (escala relativa, no absoluta). El tooltip muestra el valor normalizado.
+
+**Nota sobre `_avg > _max`:** en algunos campos la media canaria supera el máximo registrado, causando que el polígono gris salga fuera del radar. Esto es un problema de datos (los valores `_avg` y `_max` se calculan con R fuera de Drupal), no un bug de código. Pendiente de revisión en el pipeline de datos.
+
+**CSS radar** en `css/dashboard/graficos.css`: `.contenedor-radar` (text-align left), `.radar-body` (flex gap 24px), `.radar-chart-col` (flex 0 0 50%), `.radar-table-col` (flex 1 overflow-x auto), `.radar-tabla` (font-size 0.82rem).
 
 ### El mapa (`panel-mapa.js`)
 
@@ -293,7 +335,7 @@ El campo `r_deficit_oferta_viviendas` **no existe** en el diccionario. El campo 
 | Librería | Versión | Uso |
 |---|---|---|
 | MapLibre GL | latest (CDN) | Mapa vectorial interactivo |
-| Chart.js | 4.4.1 | Gráficos (bar, line, donut) |
+| Chart.js | 4.4.1 | Gráficos (bar, line, donut, radar) |
 | Luxon + adapter | 3.4.4 / 1.3.1 | Eje temporal en Chart.js |
 | Gauge.js | 1.3.7 | Widgets tipo velocímetro |
 | simple-statistics | 7.8.3 | Clasificación Jenks para coropletas |
