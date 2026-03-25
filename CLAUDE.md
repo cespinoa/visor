@@ -239,9 +239,11 @@ avgNorm = (datosRaiz[campo + '_avg'] / datosRaiz[campo + '_max']) * 100
 
 **Dos datasets en el radar:**
 - Polígono rojo `#a70000` — registro activo (relleno semitransparente)
-- Polígono gris `#ccc` discontinuo — media canaria (sin relleno)
+- Polígono gris `#ccc` discontinuo — media de referencia (sin relleno). El label es dinámico: `'Media de municipios tipo ' + tipo_municipio` si `ambito === 'municipio'`, `'Media Canarias'` en el resto de casos.
 
 El eje va de 0 a 100 sin etiquetas de tick (escala relativa, no absoluta). El tooltip muestra el valor normalizado.
+
+**Valores que superan `_max`:** el `_max` se calcula excluyendo los valores techo (ej. 100 en porcentajes), por lo que algunos registros pueden tener `valor > _max`. En el gráfico estos valores se capan a `_max` antes de normalizar (resultado = 100 en el radar). En la tabla de equivalencias se mantiene el valor real sin modificar.
 
 **Nota sobre `_avg > _max`:** en algunos campos la media canaria supera el máximo registrado, causando que el polígono gris salga fuera del radar. Esto es un problema de datos (los valores `_avg` y `_max` se calculan con R fuera de Drupal), no un bug de código. Pendiente de revisión en el pipeline de datos.
 

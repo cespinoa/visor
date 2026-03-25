@@ -312,7 +312,8 @@ window.visorProject.utilsGraficos = {
         const valoresNorm = campos.map(campo => {
             const v = parseFloat(datosRaiz[campo]) || 0;
             const max = parseFloat(datosRaiz[campo + '_max']) || 1;
-            return max > 0 ? (v / max) * 100 : 0;
+            const vEfectivo = v > max ? max : v;
+            return max > 0 ? (vEfectivo / max) * 100 : 0;
         });
 
         const avgNorm = campos.map(campo => {
@@ -336,7 +337,9 @@ window.visorProject.utilsGraficos = {
                         pointRadius: 3,
                     },
                     {
-                        label: 'Media Canarias',
+                        label: datosRaiz.ambito === 'municipio'
+                            ? 'Media de municipios tipo ' + datosRaiz.tipo_municipio
+                            : 'Media Canarias',
                         data: avgNorm,
                         backgroundColor: 'rgba(150, 150, 150, 0.12)',
                         borderColor: '#aaaaaa',
