@@ -23,7 +23,13 @@
         //~ jQuery('#ficha-contenido').empty();
 
       
-      let idSilueta = 'canarias'
+      let idSilueta = 'canarias';
+      console.log(props)
+      if (props.ambito == 'isla') {
+        idSilueta = 'isla_' + props.isla_id
+      } else if (props.ambito == 'municipio') {
+        idSilueta = 'muni_' + props.municipio_id
+      }
 
       let listaNivelInferior = 'lista-de-hijos';
       if (props.ambito === 'municipio') {
@@ -33,15 +39,49 @@
       // Definimos el "Guion Editorial" del Dashboard
       const esquema = [
         { 
+          tituloBloque: "Datos principales",
+          intro: "Resumen de los indicadores clave de intensidad y presión turística en el ámbito seleccionado.",
+          destino: '#ficha-contenido',
+          elementos: [
+            { tipo: 'tabla', id: 'resumen-ambito', ancho: '9' },
+            { tipo: 'imagen', tipo_imagen: 'silueta' , id: idSilueta, ancho: '3'}
+          ]
+        },
+        { 
           tituloBloque: "Actividad turistica por tipo de oferta y de zona",
           intro: "Caracterizacion del modelo turistico.",
           destino: '#ficha-contenido',
           elementos: [ 
-            //~ { tipo: 'tabla', id: 'tabla-evolucion-plazas', ancho: '12' },
-            { tipo: 'tabla', id: 'resumen-ambito', ancho: '12' },
+            { tipo: 'tabla', id: 'oferta-alojativa', ancho: '6'},
             { tipo: 'tabla', id: 'distribucion-plazas-vacacionales', ancho: '6' },
             { tipo: 'tabla', id: 'distribucion-plazas-regladas', ancho: '6' },
-            { tipo: 'tabla', id: 'plazas-turistizas-zona-residencial', ancho: '6' }
+            { tipo: 'tabla', id: 'plazas-turisticas-zona-residencial', ancho: '6' },
+            { tipo: 'tabla', id: 'plazas-turisticas-zona-turistica', ancho: '6'},
+            { tipo: 'tabla', id: 'oferta-alojativa-por-zona-ambito', ancho: '6' }
+          ]
+        },
+        { 
+          tituloBloque: "Presión humana",
+          intro: "Resumen de los indicadores clave de intensidad y presión turística en el ámbito seleccionado.",
+          destino: '#ficha-contenido',
+          elementos: [
+            { tipo: 'tabla', id: 'poblacion-turistica-equivalente', ancho: '6' },
+            { tipo: 'tabla', id: 'intensidad-turistica', ancho: '6' },
+            { tipo: 'tabla', id: 'carga-poblacional', ancho: '6' },
+            { tipo: 'tabla', id: 'presion-humana', ancho: '6' },
+            
+          ]
+        },
+        { 
+          tituloBloque: "Vivienda",
+          intro: "Resumen de los indicadores clave de vivienda.",
+          destino: '#ficha-contenido',
+          elementos: [
+            { tipo: 'tabla', id: 'parque-viviendas', ancho: '6' },
+            { tipo: 'tabla', id: 'viviendas-disponibles', ancho: '6' },
+            { tipo: 'tabla', id: 'viviendas-necesarias', ancho: '6' },
+            { tipo: 'tabla', id: 'deficit-de-viviendas', ancho: '6' },
+            { tipo: 'tabla', id: 'presion-vv-sobre-vivienda', ancho: '6'}
           ]
         },
         { 
@@ -49,20 +89,8 @@
           intro: "Resumen de los indicadores clave de intensidad y presión turística en el ámbito seleccionado.",
           destino: '#ficha-contenido',
           elementos: [
-            { tipo: 'tabla', id: 'carga-poblacional', ancho: '6' },
-            { tipo: 'tabla', id: 'parque-viviendas', ancho: '6' },
-            { tipo: 'tabla', id: 'tabla-evolucion-plazas', ancho: '12' },
-            { tipo: 'tabla', id: listaNivelInferior, ancho: '6' },
+            { tipo: 'tabla', id: listaNivelInferior, ancho: '12' },
             { tipo: 'imagen', tipo_imagen: 'silueta' , id: idSilueta, ancho: '3'}
-          ]
-        },
-        { 
-          tituloBloque: "Distribución y Capacidad",
-          intro: "Desglose de la oferta alojativa y su impacto en el territorio.",
-          destino: '#ficha-contenido',
-          elementos: [
-            { tipo: 'tabla', id: 'parque-viviendas', ancho: '6' },
-            { tipo: 'tabla', id: 'carga-poblacional', ancho: '6' }
           ]
         }
       ];

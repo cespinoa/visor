@@ -8,12 +8,18 @@ window.CONFIG_TABLAS = {
         modo: "ficha",
         unidades: true,
         filas: [
-            ["Población censada", "poblacion"],
-            ["Población turística vacacional", "pte_v"],
-            ["Demandantes de vivienda", "consumidores_vivienda"],
-            ["Tamaño medio de los hogares", ["personas_por_hogar", "decimal_1"]],
-            ["Déficit de viviendas", "deficit_oferta_viviendas"],
-            ["Ratio de déficit de viviendas", "r_deficit_oferta_viviendas"]
+            ["Peso de la oferta vacacional", "plazas_vacacionales_plazas_total_porc"],
+            ["Oferta vacacional en zona residencial", "plazas_vv_residenciales_porc"],
+            ["Oferta turística en zona residencial", "plazas_suelo_residencial_porc"],
+            ["Ratio de Intensidad Turística", "rit"],
+            ["Ratio de Intensidad Turística por Km²", "rit_km2"],
+            ["Presión humana", "presion_humana_km2"],
+            ["Viviendas vacías", "viviendas_vacias_viviendas_total"],
+            ["Viviendas de uso esporádico", "viviendas_esporadicas_viviendas_total"],
+            ["Viviendas de uso habitual", "viviendas_habituales_viviendas_total"],
+            ["Vivienda vacacional en zona residencial", "vacacional_por_viviendas_habituales"],
+            ["Vivienda disponible (sobre la vivienda habitual)","viviendas_disponibles_viviendas_habituales"],
+            ["Déficit de viviendas (sobre la vivienda habitual)", "deficit_oferta_viviendas"]
         ]
     },
     'parque-viviendas': {
@@ -24,8 +30,41 @@ window.CONFIG_TABLAS = {
         filas: [
             ["Viviendas vacías", ["viviendas_vacias"], ["viviendas_vacias_viviendas_total"]],
             ["Uso esporádico", ["viviendas_esporadicas"], ["viviendas_esporadicas_viviendas_total"]],
-            ["Uso habitual", ["viviendas_habituales", "entero"], ["viviendas_habituales_viviendas_total"]],
-            ["Total viviendas", ["viviendas_total", "entero"], ["100,00%", "literal"], "destacada" ]
+            ["Uso habitual", ["viviendas_habituales"], ["viviendas_habituales_viviendas_total"]],
+            ["Total viviendas", ["viviendas_total"], ["100,00%", "literal"], "destacada" ]
+        ]
+    },
+    'viviendas-disponibles': {
+        titulo: "Viviendas disponibles",
+        contexto: "SELF",
+        modo: "ficha",
+        cabecera: ["Uso", "Unidades", "Porcentaje"],
+        filas: [
+            ["Vacacional en zona residencial", ["uds_vv_residenciales"], ["vacacional_por_viviendas_habituales"]],
+            ["Viviendas disponibles", ["viviendas_disponibles"],  ["viviendas_disponibles_viviendas_habituales"]],
+            ["Uso habitual", ["viviendas_habituales"], ["100,00%", "literal"], "destacada"],
+        ]
+    },
+    'viviendas-necesarias': {
+        titulo: "Viviendas necesarias",
+        contexto: "SELF",
+        modo: "ficha",
+        cabecera: ["Concepto", "Valor"],
+        filas: [
+            ["Población", ["poblacion"]],
+            ["Personas por hogar", ["personas_por_hogar"]],
+            ["Viviendas necesarias", ["viviendas_necesarias"], "destacada"],
+        ]
+    },
+    'deficit-de-viviendas': {
+        titulo: "Déficit teórico de viviendas",
+        contexto: "SELF",
+        modo: "ficha",
+        cabecera: ["Concepto", "Valor", "Porcentaje"],
+        filas: [
+            ["Viviendas disponibles", ["viviendas_disponibles"]],
+            ["Viviendas necesarias", ["viviendas_necesarias"] ],
+            ["Déficit de viviendas", ["deficit_viviendas"], ['deficit_oferta_viviendas'], "destacada"]
         ]
     },
     'carga-poblacional': {
@@ -51,14 +90,25 @@ window.CONFIG_TABLAS = {
             ["Plazas totales", ["plazas_total", "entero"], ["100,00%", "literal"], "destacada" ]
         ]
     },
-    'intensidad-turistica': {
-        titulo: "Ratio de Intensidad Turística",
+    'oferta-alojativa-por-zona-ambito': {
+        titulo: "Oferta alojativa por zona",
         contexto: "SELF",
         modo: "ficha",
-        cabecera: ["Tipo", "Por 100 hab.", "Por km²"],
+        cabecera: ["Tipo de zona", "Plazas", "Porcentaje"],
         filas: [
-            ["Alojamiento reglado", ["rit_r"], ["rit_r_km2"]],
-            ["Alojamiento vacacional", ["rit_v"], ["rit_v_km2"]],
+            ["Zona turística", ["plazas_suelo_turistico", "entero"], ["plazas_suelo_turistico_porc"]],
+            ["Zona residencial", ["plazas_suelo_residencial", "entero"], ["plazas_suelo_residencial_porc"]],
+            ["Plazas totales", ["plazas_total", "entero"], ["100,00%", "literal"], "destacada" ]
+        ]
+    },
+    'intensidad-turistica': {
+        titulo: "Ratios de Intensidad Turística",
+        contexto: "SELF",
+        modo: "ficha",
+        cabecera: ["Tipo de alojamiento", "Por 100 hab.", "Por km²"],
+        filas: [
+            ["Reglado", ["rit_r"], ["rit_r_km2"]],
+            ["Vacacional", ["rit_v"], ["rit_v_km2"]],
             ["Intensidad total", ["rit"], ["rit_km2"], "destacada" ]
         ]
     },
@@ -68,9 +118,9 @@ window.CONFIG_TABLAS = {
         modo: "ficha",
         cabecera: ["Concepto", "Personas/km²", "Porcentaje"],
         filas: [
-            ["Turistas (PTE/km2))", ["rit_km2", "decimal_1"], ["rit_km2_presion_humana_km2"]],
-            ["Residentes", ["residentes_km2", "decimal_1"], ["residentes_km2_presion_humana_km2"]],
-            ["Total", ["presion_humana_km2", "decimal_1"], ["100,00%", "literal"], "destacada" ]
+            ["Turistas (PTE/km2))", ["rit_km2"], ["rit_km2_presion_humana_km2"]],
+            ["Residentes", ["residentes_km2"], ["residentes_km2_presion_humana_km2"]],
+            ["Total", ["presion_humana_km2"], ["100,00%", "literal"], "destacada" ]
         ]
     },
     'distribucion-vv': {
@@ -88,10 +138,12 @@ window.CONFIG_TABLAS = {
         titulo: "Presión de la Vivienda Vacacional",
         contexto: "SELF",
         modo: "ficha",
-        cabecera: ["Concepto", "Ratio"],
+        cabecera: ["Concepto", "Porcentaje"],
         filas: [
-            ["Sobre la vivienda habital", ["vacacional_por_viviendas_habituales"]],
-            ["Sobre el total de viviendas", ["vacacional_por_viviendas_total"]],
+            ["En zona residencial sobre la vivienda habital", ["vacacional_por_viviendas_habituales"]],
+            ["En todas las zonas sobre el total de viviendas", ["vacacional_por_viviendas_total"]],
+            ["Viviendas vacacionals por cada 100 habitantes", ["uds_vv_habitantes"]],
+            ["Viviendas vacacionals en zonas residenciales por cada 100 habitantes", ["uds_vv_residenciales_habitantes"]],
         ]
     },
     'distribucion-plazas-regladas': {
@@ -116,7 +168,7 @@ window.CONFIG_TABLAS = {
             ["Total", ["plazas_vacacionales", "entero"], ["100,00%", "literal"], "destacada" ]
         ]
     },
-    'plazas-turistizas-zona-residencial': {
+    'plazas-turisticas-zona-residencial': {
         titulo: "Plazas turísticas en zona residencial",
         contexto: "SELF",
         modo: "ficha",
@@ -127,15 +179,26 @@ window.CONFIG_TABLAS = {
             ["Total", ["plazas_suelo_residencial", "entero"], ["100,00%", "literal"], "destacada" ]
         ]
     },
-    'demandantes-de-vivienda': {
-        titulo: "Demandantes de vivienda",
+    'plazas-turisticas-zona-turistica': {
+        titulo: "Plazas turísticas en zona turística",
         contexto: "SELF",
         modo: "ficha",
-        cabecera: ["Tipo", "Personas", "Porcentaje"],
+        cabecera: ["Tipo de oferta", "Plazas", "Porcentaje"],
         filas: [
-            ["Oferta reglada", ["plazas_at_residenciales", "entero"], ["plazas_at_residenciales_oferta_en_residencial"]],
-            ["Oferta vacacional", ["plazas_vv_residenciales", "entero"], ["plazas_vv_residenciales_oferta_en_residencial"]],
-            ["Total", ["plazas_suelo_residencial", "entero"], ["100,00%", "literal"], "destacada" ]
+            ["Oferta reglada", ["plazas_at_turisticas", "entero"], ["plazas_at_turisticas_oferta_en_turistico"]],
+            ["Oferta vacacional", ["plazas_vv_turisticas", "entero"], ["plazas_vv_turisticas_oferta_en_turistico"]],
+            ["Total", ["plazas_suelo_turistico", "entero"], ["100,00%", "literal"], "destacada" ]
+        ]
+    },
+    'poblacion-turistica-equivalente': {
+        titulo: "Población turística equivalente",
+        contexto: "SELF",
+        modo: "ficha",
+        cabecera: ["Tipo de alojamiento", "Personas", "Porcentaje"],
+        filas: [
+            ["Reglado", ["pte_r", "entero"], ["pte_r_porc"]],
+            ["Vacacional", ["pte_v", "entero"], ["pte_v_porc"]],
+            ["Total", ["pte_total", "entero"], ["100,00%", "literal"], "destacada" ]
         ]
     },
     'lista-de-hijos': {

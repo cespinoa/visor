@@ -342,6 +342,55 @@ El campo `r_deficit_oferta_viviendas` **no existe** en el diccionario. El campo 
 | Gauge.js | 1.3.7 | Widgets tipo velocímetro |
 | simple-statistics | 7.8.3 | Clasificación Jenks para coropletas |
 
+## Sistema de informes PDF
+
+### Arquitectura
+
+```
+Visor JS (panel-informe.js)
+  → POST /api/visor/informe/guardar   (InformeController::guardar)
+  → Nodo Drupal tipo 'informe'
+  → POST /api/visor/informe/{nid}/generar-pdf (InformeController::generarPdf)
+  → Microservicio WeasyPrint (http://host.docker.internal:8081/pdf)
+  → Media adjunto al nodo (field_pdf)
+```
+
+### Tipo de contenido `informe`
+
+Campos: `field_contenido` (text_long, full_html), `field_etiqueta` / `field_ambito` / `field_tipo` (entity_reference → taxonomy_term, vocabularios homónimos), `field_pdf` (entity_reference → media bundle `document`, campo `field_media_document`).
+
+Lógica de sobreescritura: un único nodo por combinación `field_tipo + field_ambito + field_etiqueta`. Si ya existe, se actualiza; si no, se crea. El título incorpora la fecha del snapshot.
+
+### Microservicio WeasyPrint
+
+Repositorio independiente en `/home/carlos/weasyprint-service/`. Docker Compose propio, conectado a `nginx-proxy_default`. Expone el puerto 8081 en el host.
+
+- `GET /health` — comprobación de estado
+- `POST /pdf` — body JSON `{ "url": "..." }` o `{ "html": "...", "base_url": "...", "filename": "..." }`, devuelve `application/pdf`
+
+Desde dentro de los contenedores ddev se accede como `http://host.docker.internal:8081`.
+
+### `panel-informe.js` (`orquestadorInforme`)
+
+Método público: `visorProject.orquestadorInforme.generar()` — devuelve Promise con `{ nid, titulo }`.
+
+Flujo interno:
+1. Monta el esquema del informe en un `div` temporal fuera de pantalla (`position:fixed; left:-9999px`).
+2. Parchea temporalmente `utilsGraficos.activarObservador` para dibujar todos los gráficos inmediatamente (sin esperar IntersectionObserver).
+3. Restaura `activarObservador` y espera 200 ms para que Chart.js termine.
+4. Convierte todos los `<canvas>` a `<img>` con `toDataURL('image/png')`.
+5. Recoge todos los `<link rel="stylesheet">` del documento actual.
+6. Construye el documento HTML completo y lo envía a `/api/visor/informe/guardar`.
+
+El esquema del informe (método `_getEsquema`) replica el contenido de `panel-dashboard.js` con el destino redirigido al contenedor temporal. Por diseño, de momento solo hay un tipo de informe: **Canarias / Completo**.
+
+### Lo que está pendiente en el sistema de informes
+
+- CSS de impresión (`informe-print.css`): `@page`, cabeceras/pies, saltos de página.
+- Botón "Generar informe" en el visor JS.
+- Botón "Generar PDF" en el nodo Drupal.
+- Menú de acceso a informes existentes, notas metodológicas y páginas de info (Views + menú Drupal).
+
 ## Lo que está incompleto o en progreso
 
 - `panel-datos.js.antes_de_unificar` — versión anterior del panel de datos, conservada como referencia

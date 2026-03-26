@@ -30,6 +30,7 @@ visor_dashboard:
     js/dashboard/panel-datos.js: { weight: -70 }
     js/dashboard/panel-graficos.js: { weight: -70 }
     js/dashboard/panel-dashboard.js: { weight: -70 }
+    js/dashboard/panel-informe.js: { weight: -70 }
     js/dashboard/panel-mapa.js: { weight: -65 }
     js/dashboard/tabs.js: { weight: -60 }
     js/dashboard/social-manager.js: { weight: -55 }
