@@ -24,6 +24,11 @@
         {# COMPARTIR EN REDES #}
         {% include '@visor/includes/compartir.html.twig' %}
 
+        {# GENERAR INFORME (solo administrador) #}
+        {% if is_admin %}
+          {% include '@visor/includes/informe.html.twig' %}
+        {% endif %}
+
       </div>
   </aside>
 

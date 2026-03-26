@@ -9,10 +9,35 @@ function visor_theme() {
         'indicadores_visualizables' => [],
       ],
     ],
+    'visor_informe_pdf_button' => [
+      'variables' => [
+        'nid' => NULL,
+      ],
+    ],
     'visor_dashboard' => [
       'variables' => [
         'indicadores_visualizables' => [],
+        'is_admin' => FALSE,
       ],
     ],
   ];
+}
+
+/**
+ * Implements hook_node_view().
+ */
+function visor_node_view(array &$build, $node, $display, $view_mode) {
+  if (
+    $node->bundle() === 'informe' &&
+    $view_mode === 'full' &&
+    \Drupal::currentUser()->hasRole('administrator')
+  ) {
+    $nid = $node->id();
+    $build['generar_pdf'] = [
+      '#theme' => 'visor_informe_pdf_button',
+      '#nid' => $nid,
+      '#attached' => ['library' => ['visor/visor_informe_nodo']],
+      '#weight' => -100,
+    ];
+  }
 }

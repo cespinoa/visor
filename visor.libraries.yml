@@ -47,6 +47,14 @@ visor_dashboard:
     - visor/chartjs_adapter_luxon
     - visor/gaugejs
 
+visor_informe_nodo:
+  version: 1.x
+  js:
+    js/dashboard/informe-nodo.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+
 mapa_view:
   version: 1.x
   css:

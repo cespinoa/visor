@@ -24,6 +24,14 @@
     color: #2e7d32;
 }
 
+.btn-share--full {
+    width: 100%;
+    flex-direction: row;
+    gap: 8px;
+    justify-content: center;
+    padding: 10px;
+}
+
 .btn-share i {
     font-size: 20px;
     margin-bottom: 4px;

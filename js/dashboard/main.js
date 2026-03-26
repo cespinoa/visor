@@ -166,6 +166,34 @@ window.visorProject.estado = {
           if (window.VistasManager) {
               window.VistasManager.renderizar();
           }
+
+          // H. Botón "Generar informe" (solo presente para administradores)
+          const btnInforme = document.getElementById('btn-generar-informe');
+          if (btnInforme && window.visorProject.orquestadorInforme) {
+              btnInforme.addEventListener('click', async function () {
+                  const label = btnInforme.querySelector('.label-share');
+                  const icon  = btnInforme.querySelector('.material-icons');
+                  btnInforme.disabled = true;
+                  label.textContent = 'Generando…';
+                  icon.textContent = 'hourglass_empty';
+                  try {
+                      const resultado = await window.visorProject.orquestadorInforme.generar();
+                      label.textContent = 'Informe guardado';
+                      icon.textContent = 'check_circle';
+                      btnInforme.style.backgroundColor = '#2e7d32';
+                      setTimeout(() => {
+                          label.textContent = 'Generar informe';
+                          icon.textContent = 'description';
+                          btnInforme.style.backgroundColor = '';
+                          btnInforme.disabled = false;
+                      }, 3000);
+                  } catch (e) {
+                      label.textContent = 'Error — reintentar';
+                      icon.textContent = 'error';
+                      btnInforme.disabled = false;
+                  }
+              });
+          }
       });
 
       /**

@@ -6,6 +6,7 @@ namespace Drupal\visor\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Session\AccountInterface;
 
 /**
  * Returns responses for visor routes.
@@ -71,9 +72,12 @@ final class DashboardController extends ControllerBase {
     // Obtenemos el diccionario de datos
     $diccionario = $this->getDiccionarioDeDatos();
 
+    $is_admin = $this->currentUser()->hasRole('administrator');
+
     return [
       '#theme' => 'visor_dashboard',
       '#indicadores_visualizables' => $indicadores_visualizables,
+      '#is_admin' => $is_admin,
       '#attached' => [
         'library' => [
           'visor/visor_dashboard',
