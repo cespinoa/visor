@@ -71,20 +71,46 @@
       });
 
       // 7. Recoger los <link rel="stylesheet"> del documento actual.
+      //    Usamos pathname (raíz-relativa) para que WeasyPrint los resuelva
+      //    contra el base_url de producción, no contra el dominio de ddev.
       const cssLinks = Array.from(
         document.querySelectorAll('link[rel="stylesheet"]')
-      ).map(l => `<link rel="stylesheet" href="${l.href}">`).join('\n');
+      ).map(l => {
+        try {
+          return `<link rel="stylesheet" href="${new URL(l.href).pathname}">`;
+        } catch (e) {
+          return `<link rel="stylesheet" href="${l.href}">`;
+        }
+      }).join('\n');
 
       // 8. Construir el documento HTML completo.
       const fecha = datos.fecha_calculo || new Date().toISOString().slice(0, 10);
+
+      const portada = `
+<div class="informe-portada">
+  <div class="informe-portada__titulo">Visor VTPC</div>
+  <div class="informe-portada__linea"></div>
+  <div class="informe-portada__subtitulo">Vivienda Vacacional y Turismo en Canarias</div>
+  <div class="informe-portada__fecha">Datos del snapshot: ${fecha}</div>
+</div>`;
+
+      const cabeceraRunning = `
+<div class="informe-running-header">
+  <span class="informe-running-header__titulo">Visor VTPC — Vivienda Vacacional y Turismo en Canarias</span>
+  <span class="informe-running-header__fecha">${fecha}</span>
+</div>`;
+
       const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Informe Canarias — ${fecha}</title>
 ${cssLinks}
+<link rel="stylesheet" href="/modules/custom/visor/css/dashboard/informe-print.css">
 </head>
 <body class="informe-pdf">
+${cabeceraRunning}
+${portada}
 ${tempDiv.innerHTML}
 </body>
 </html>`;

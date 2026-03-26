@@ -1,0 +1,233 @@
+/*
+ * informe-print.css
+ * CSS de impresión para el informe PDF generado con WeasyPrint.
+ * Se incluye como último <link> en el HTML enviado al microservicio,
+ * por lo que puede sobreescribir cualquier regla de los CSS del módulo.
+ */
+
+/* ==========================================================================
+   PÁGINA: tamaño, márgenes y cabecera/pie corriendo
+   ========================================================================== */
+
+@page {
+    size: A4 portrait;
+    margin: 2.5cm 1.5cm 2.5cm 1.5cm;
+
+    @top-left {
+        content: element(informe-running-header);
+        vertical-align: bottom;
+    }
+
+    @bottom-left {
+        content: "Visor de Vivienda Vacacional y Turismo — Canarias";
+        font-size: 7.5pt;
+        color: #999;
+        vertical-align: top;
+        padding-top: 6pt;
+        border-top: 0.5pt solid #ddd;
+    }
+
+    @bottom-right {
+        content: counter(page) " / " counter(pages);
+        font-size: 7.5pt;
+        color: #999;
+        vertical-align: top;
+        padding-top: 6pt;
+        border-top: 0.5pt solid #ddd;
+    }
+}
+
+/* Primera página sin cabecera corriendo */
+@page :first {
+    @top-left { content: none; }
+}
+
+/* ==========================================================================
+   CABECERA CORRIENDO (inyectada por panel-informe.js)
+   ========================================================================== */
+
+.informe-running-header {
+    position: running(informe-running-header);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+    border-bottom: 1.5pt solid #a70000;
+    padding-bottom: 3pt;
+    font-size: 8pt;
+    color: #333;
+}
+
+.informe-running-header__titulo {
+    font-weight: bold;
+    color: #a70000;
+}
+
+.informe-running-header__fecha {
+    color: #666;
+}
+
+/* ==========================================================================
+   PORTADA (primera página)
+   ========================================================================== */
+
+.informe-portada {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 22cm;
+    padding: 2cm 0;
+    break-after: page;
+}
+
+.informe-portada__titulo {
+    font-size: 28pt;
+    font-weight: bold;
+    color: #a70000;
+    margin-bottom: 0.3em;
+}
+
+.informe-portada__subtitulo {
+    font-size: 14pt;
+    color: #555;
+    margin-bottom: 2em;
+}
+
+.informe-portada__fecha {
+    font-size: 11pt;
+    color: #888;
+}
+
+.informe-portada__linea {
+    width: 6cm;
+    height: 3pt;
+    background: #a70000;
+    margin: 1.5em 0;
+}
+
+/* ==========================================================================
+   SALTOS DE PÁGINA
+   ========================================================================== */
+
+/* Evita que una card se parta entre dos páginas */
+.dashboard-componente {
+    break-inside: avoid;
+}
+
+/* Clase utilitaria: fuerza salto antes del bloque */
+.salto-antes {
+    break-before: page;
+}
+
+/* Clase utilitaria: fuerza salto después del bloque */
+.salto-despues {
+    break-after: page;
+}
+
+/* ==========================================================================
+   LAYOUT: ajustes para el ancho A4
+   ========================================================================== */
+
+body.informe-pdf {
+    width: 100%;
+    font-size: 10pt;
+    color: #222;
+    background: #fff;
+}
+
+/* Las filas del compositor son flex; WeasyPrint los soporta bien */
+.dashboard-fila {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 0;
+}
+
+/* Anchos explícitos para WeasyPrint (fallback por si el flex no resuelve) */
+.col-12 { width: 100% !important; }
+.col-6  { width: 50%  !important; }
+.col-4  { width: 33.33% !important; }
+.col-3  { width: 25%  !important; }
+
+/* ==========================================================================
+   COMPONENTES: simplificar sombras y bordes para impresión
+   ========================================================================== */
+
+.dashboard-componente {
+    box-shadow: none !important;
+    border: 0.5pt solid #e0e0e0 !important;
+    padding: 0.8em !important;
+    margin-bottom: 0.8em !important;
+    background: #fff !important;
+}
+
+.componente-titulo {
+    font-size: 11pt;
+    font-weight: bold;
+    color: #a70000;
+    border-bottom: 0.5pt solid #e0e0e0;
+    padding-bottom: 0.3em;
+    margin-bottom: 0.6em;
+}
+
+/* ==========================================================================
+   TABLAS
+   ========================================================================== */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    margin-bottom: 0.8em !important;
+}
+
+th, td {
+    padding: 3pt 5pt;
+    border: 0.5pt solid #ddd;
+    text-align: left;
+}
+
+th {
+    background: #f5f5f5 !important;
+    font-weight: bold;
+    color: #333;
+}
+
+tr.fila-destacada td {
+    font-weight: bold;
+    background: #fafafa !important;
+}
+
+/* ==========================================================================
+   GRÁFICOS: imágenes generadas desde canvas
+   ========================================================================== */
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+.contenedor-grafico {
+    box-shadow: none !important;
+    border: 0.5pt solid #e8e8e8 !important;
+    padding: 0.5em !important;
+}
+
+.grafico-titulo {
+    font-size: 9pt;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 0.3em;
+}
+
+/* ==========================================================================
+   OCULTAR ELEMENTOS NO IMPRIMIBLES
+   ========================================================================== */
+
+button,
+.btn,
+.header-tools,
+.fullscreen-btn,
+.panel-breadcrumb {
+    display: none !important;
+}
