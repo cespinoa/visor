@@ -5,6 +5,25 @@ visor.dashboard:
     _controller: '\Drupal\visor\Controller\DashboardController::__invoke'
   requirements:
     _permission: 'access content'
+visor.informe.guardar:
+  path: '/api/visor/informe/guardar'
+  defaults:
+    _controller: '\Drupal\visor\Controller\InformeController::guardar'
+    _title: 'Guardar informe'
+  requirements:
+    _permission: 'administer content'
+  methods: [POST]
+
+visor.informe.generar_pdf:
+  path: '/api/visor/informe/{nid}/generar-pdf'
+  defaults:
+    _controller: '\Drupal\visor\Controller\InformeController::generarPdf'
+    _title: 'Generar PDF'
+  requirements:
+    _permission: 'administer content'
+    nid: \d+
+  methods: [POST]
+
 mapa:
   path: '/mapa'
   defaults:
