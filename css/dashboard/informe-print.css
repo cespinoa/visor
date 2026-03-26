@@ -176,15 +176,28 @@ body.informe-pdf {
 
 table {
     width: 100%;
-    border-collapse: collapse;
+    /* border-collapse: collapse provoca un AssertionError en WeasyPrint con
+       ciertos layouts de tabla. Usamos separate + spacing 0 que da el mismo
+       resultado visual pero evita el algoritmo de bordes colapsados. */
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 8.5pt;
     margin-bottom: 0.8em !important;
 }
 
 th, td {
     padding: 3pt 5pt;
-    border: 0.5pt solid #ddd;
+    border-right: 0.5pt solid #ddd;
+    border-bottom: 0.5pt solid #ddd;
     text-align: left;
+}
+
+th:first-child, td:first-child {
+    border-left: 0.5pt solid #ddd;
+}
+
+thead th {
+    border-top: 0.5pt solid #ddd;
 }
 
 th {
