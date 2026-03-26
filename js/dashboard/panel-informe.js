@@ -82,7 +82,14 @@
         document.querySelectorAll('link[rel="stylesheet"]')
       ).map(l => {
         try {
-          return `<link rel="stylesheet" href="${new URL(l.href).pathname}">`;
+          const url = new URL(l.href);
+          // CDN externo: URL completa para que WeasyPrint lo resuelva directamente.
+          // Local (mismo origen): pathname raíz-relativa para que WeasyPrint lo
+          // resuelva contra el base_url de producción, no contra el dominio de ddev.
+          const href = url.origin === window.location.origin
+            ? url.pathname
+            : url.href;
+          return `<link rel="stylesheet" href="${href}">`;
         } catch (e) {
           return `<link rel="stylesheet" href="${l.href}">`;
         }
