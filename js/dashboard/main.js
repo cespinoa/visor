@@ -167,31 +167,16 @@ window.visorProject.estado = {
               window.VistasManager.renderizar();
           }
 
-          // H. Botón "Generar informe" (solo presente para administradores)
+          // H. Botón "Generar informe" (solo presente para administradores).
+          //    El feedback visual lo gestiona el propio orquestadorInforme
+          //    mediante un modal de pantalla completa.
           const btnInforme = document.getElementById('btn-generar-informe');
           if (btnInforme && window.visorProject.orquestadorInforme) {
-              btnInforme.addEventListener('click', async function () {
-                  const label = btnInforme.querySelector('.label-share');
-                  const icon  = btnInforme.querySelector('.material-icons');
+              btnInforme.addEventListener('click', function () {
                   btnInforme.disabled = true;
-                  label.textContent = 'Generando…';
-                  icon.textContent = 'hourglass_empty';
-                  try {
-                      const resultado = await window.visorProject.orquestadorInforme.generar();
-                      label.textContent = 'Informe guardado';
-                      icon.textContent = 'check_circle';
-                      btnInforme.style.backgroundColor = '#2e7d32';
-                      setTimeout(() => {
-                          label.textContent = 'Generar informe';
-                          icon.textContent = 'description';
-                          btnInforme.style.backgroundColor = '';
-                          btnInforme.disabled = false;
-                      }, 3000);
-                  } catch (e) {
-                      label.textContent = 'Error — reintentar';
-                      icon.textContent = 'error';
+                  window.visorProject.orquestadorInforme.generar().finally(() => {
                       btnInforme.disabled = false;
-                  }
+                  });
               });
           }
       });

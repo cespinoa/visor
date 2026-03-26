@@ -7,9 +7,10 @@
   window.visorProject.orquestadorInforme = {
 
     /**
-     * Genera el HTML del informe Canarias, lo renderiza en un contenedor
-     * temporal, convierte los canvas a imágenes y lo envía al endpoint
-     * de guardado. Devuelve una Promise con { nid, titulo }.
+     * Genera el HTML del informe Canarias y lo envía al endpoint de guardado.
+     * Muestra un modal visible durante el proceso (necesario para que los
+     * gráficos rendericen con dimensiones reales via IntersectionObserver).
+     * Devuelve una Promise con { nid, titulo }.
      */
     generar: async function () {
       const snapshot = drupalSettings.visorProject.datosDashboard || [];
@@ -19,60 +20,64 @@
         return null;
       }
 
-      // 1. Contenedor temporal: fuera de pantalla pero montado en el DOM
-      //    (necesario para que Chart.js pueda medir el canvas).
-      const tempDiv = document.createElement('div');
-      tempDiv.id = 'informe-render-temp';
-      tempDiv.style.cssText = [
-        'position:fixed',
-        'left:-9999px',
-        'top:0',
-        'width:1200px',
-        'background:#fff',
-        'z-index:-9999',
-        'overflow:hidden',
+      // 1. Modal de progreso: visible, scrollable, cubre toda la pantalla.
+      //    Los gráficos necesitan estar en el viewport para que
+      //    IntersectionObserver los dibuje con dimensiones correctas.
+      const modal = document.createElement('div');
+      modal.id = 'informe-modal';
+      modal.style.cssText = [
+        'position:fixed', 'inset:0', 'z-index:9999',
+        'background:#fff', 'overflow-y:auto', 'padding:24px',
       ].join(';');
-      document.body.appendChild(tempDiv);
 
-      // 2. Parchear activarObservador para dibujar sin esperar visibilidad.
-      const utilsG = window.visorProject.utilsGraficos;
-      const activarOriginal = utilsG.activarObservador.bind(utilsG);
+      const barra = document.createElement('div');
+      barra.id = 'informe-modal-barra';
+      barra.style.cssText = [
+        'position:sticky', 'top:0', 'z-index:1', 'background:#fff',
+        'padding:12px 0 16px', 'border-bottom:2px solid #a70000',
+        'margin-bottom:24px', 'display:flex', 'align-items:center', 'gap:12px',
+      ].join(';');
+      barra.innerHTML = `
+        <span class="material-icons" style="color:#a70000;animation:spin 1s linear infinite">autorenew</span>
+        <span id="informe-modal-estado" style="font-weight:bold;color:#333">Generando informe…</span>`;
 
-      utilsG.activarObservador = function (elemento, config, datosGrafico) {
-        const d = Array.isArray(datosGrafico)
-          ? datosGrafico[datosGrafico.length - 1]
-          : datosGrafico;
-        switch (config.tipo) {
-          case 'gauge':  this.dibujarGauge(config, d);  break;
-          case 'donut':  this.dibujarDonut(config, d);  break;
-          case 'line':
-          case 'area':
-          case 'bar':    this.dibujarSeries(config, datosGrafico); break;
-          case 'radar':  this.dibujarRadar(config, d);  break;
-        }
-      };
+      const contenido = document.createElement('div');
+      contenido.id = 'informe-render-temp';
 
-      // 3. Componer el esquema en el contenedor temporal.
-      const esquema = this._getEsquema(tempDiv.id);
+      modal.appendChild(barra);
+      modal.appendChild(contenido);
+      document.body.appendChild(modal);
+
+      // Animación del icono giratorio
+      if (!document.getElementById('informe-spin-style')) {
+        const st = document.createElement('style');
+        st.id = 'informe-spin-style';
+        st.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+        document.head.appendChild(st);
+      }
+
+      // 2. Componer el esquema en el contenedor visible.
+      const esquema = this._getEsquema('informe-render-temp');
       window.visorProject.rowCompositor.componer(esquema, datos);
 
-      // 4. Restaurar activarObservador.
-      utilsG.activarObservador = activarOriginal;
+      // 3. Hacer scroll programático de arriba a abajo para activar
+      //    IntersectionObserver en todos los gráficos del modal.
+      await this._scrollActivador(modal);
 
-      // 5. Pausa mínima para que Chart.js termine de dibujar.
-      await new Promise(r => setTimeout(r, 200));
+      // 4. Pausa adicional para que los últimos gráficos terminen de dibujar.
+      await new Promise(r => setTimeout(r, 400));
 
-      // 6. Convertir todos los <canvas> a <img> con sus datos embebidos.
-      tempDiv.querySelectorAll('canvas').forEach(canvas => {
+      // 5. Convertir todos los <canvas> a <img> con sus datos embebidos.
+      contenido.querySelectorAll('canvas').forEach(canvas => {
         const img = document.createElement('img');
         img.src = canvas.toDataURL('image/png');
-        img.style.cssText = `width:${canvas.offsetWidth}px;height:${canvas.offsetHeight}px;`;
+        img.style.cssText = `width:${canvas.offsetWidth}px;height:${canvas.offsetHeight}px;display:block;`;
         canvas.parentNode.replaceChild(img, canvas);
       });
 
-      // 7. Recoger los <link rel="stylesheet"> del documento actual.
-      //    Usamos pathname (raíz-relativa) para que WeasyPrint los resuelva
-      //    contra el base_url de producción, no contra el dominio de ddev.
+      // 6. Recoger los <link rel="stylesheet"> del documento.
+      //    Usamos pathname raíz-relativa para que WeasyPrint los resuelva
+      //    contra el base_url de producción, no el dominio de ddev.
       const cssLinks = Array.from(
         document.querySelectorAll('link[rel="stylesheet"]')
       ).map(l => {
@@ -83,7 +88,7 @@
         }
       }).join('\n');
 
-      // 8. Construir el documento HTML completo.
+      // 7. Construir el documento HTML completo.
       const fecha = datos.fecha_calculo || new Date().toISOString().slice(0, 10);
 
       const portada = `
@@ -111,16 +116,14 @@ ${cssLinks}
 <body class="informe-pdf">
 ${cabeceraRunning}
 ${portada}
-${tempDiv.innerHTML}
+${contenido.innerHTML}
 </body>
 </html>`;
 
-      // 9. Limpiar el contenedor temporal.
-      document.body.removeChild(tempDiv);
+      // 8. Enviar al endpoint.
+      document.getElementById('informe-modal-estado').textContent = 'Guardando…';
 
-      // 10. Obtener token CSRF y enviar al endpoint.
       const token = await fetch('/session/token').then(r => r.text());
-
       const response = await fetch('/api/visor/informe/guardar', {
         method: 'POST',
         headers: {
@@ -136,12 +139,48 @@ ${tempDiv.innerHTML}
         }),
       });
 
-      return await response.json();
+      const resultado = await response.json();
+
+      // 9. Transformar el modal en pantalla de éxito.
+      modal.innerHTML = `
+        <div style="
+          display:flex;flex-direction:column;align-items:center;justify-content:center;
+          min-height:100vh;gap:16px;text-align:center;padding:40px;
+        ">
+          <span class="material-icons" style="font-size:64px;color:#2e7d32">check_circle</span>
+          <h2 style="color:#2e7d32;margin:0">Informe generado</h2>
+          <p style="color:#555;margin:0">${resultado.titulo}</p>
+          <div style="display:flex;gap:12px;margin-top:8px">
+            <a href="/node/${resultado.nid}" target="_blank"
+               style="padding:10px 20px;background:#a70000;color:#fff;border-radius:6px;text-decoration:none">
+              Ver informe
+            </a>
+            <button onclick="document.getElementById('informe-modal').remove()"
+               style="padding:10px 20px;background:#eee;color:#333;border:none;border-radius:6px;cursor:pointer">
+              Cerrar
+            </button>
+          </div>
+        </div>`;
+
+      return resultado;
+    },
+
+    /**
+     * Hace scroll programático por el contenedor para que
+     * IntersectionObserver active todos los gráficos.
+     */
+    _scrollActivador: async function (contenedor) {
+      const paso = Math.floor(window.innerHeight * 0.7);
+      const total = contenedor.scrollHeight;
+      for (let y = 0; y <= total + paso; y += paso) {
+        contenedor.scrollTop = y;
+        await new Promise(r => setTimeout(r, 350));
+      }
     },
 
     /**
      * Mismo esquema que panel-dashboard.js con los destinos
-     * apuntando al contenedor temporal.
+     * apuntando al contenedor del modal.
      */
     _getEsquema: function (tempId) {
       const destino = '#' + tempId;
