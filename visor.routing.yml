@@ -23,3 +23,12 @@ visor.informe.generar_pdf:
     _permission: 'administer content'
     nid: \d+
   methods: [POST]
+
+visor.texto.resolver:
+  path: '/api/visor/texto/{id}'
+  defaults:
+    _controller: '\Drupal\visor\Controller\InformeController::resolverTexto'
+    _title: 'Resolver bloque de texto'
+  requirements:
+    _permission: 'administer content'
+  methods: [POST]

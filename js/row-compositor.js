@@ -111,7 +111,10 @@
         case 'widget':
           elementoDOM = this.manejarWidget(item, props);
           break;
-          
+
+        case 'longtext':
+          elementoDOM = this.manejarLongtext(item);
+          break;
 
         default:
           console.warn(`Tipo de elemento no soportado: ${item.tipo}`);
@@ -243,6 +246,18 @@
         return tablaDOM;
     },
 
+
+    /**
+     * Renderiza un bloque de texto narrativo pre-cargado por _prefetchLongtexts.
+     * El HTML ya tiene las sustituciones aplicadas por el servidor.
+     */
+    manejarLongtext: function(item) {
+      if (!item._html) return null;
+      const div = document.createElement('div');
+      div.className = 'bloque-texto';
+      div.innerHTML = item._html;
+      return div;
+    },
 
     // row-compositor.js -> manejarImagen
     manejarImagen: function(item, props) {

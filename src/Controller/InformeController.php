@@ -91,7 +91,7 @@ final class InformeController extends ControllerBase {
     // Inyecta informe-print.css inline para que WeasyPrint no tenga que
     // resolverlo por URL (evita el bug border-collapse en producción).
     $module_path = \Drupal::service('extension.list.module')->getPath('visor');
-    $print_css_path = $module_path . '/css/dashboard/informe-print.css';
+    $print_css_path = $module_path . '/css/informe-print.css';
     if (file_exists($print_css_path)) {
       $print_css = file_get_contents($print_css_path);
       $html = str_replace('</head>', '<style>' . $print_css . '</style></head>', $html);
@@ -151,6 +151,89 @@ final class InformeController extends ControllerBase {
       'nid'      => $node->id(),
       'media_id' => $media->id(),
     ]);
+  }
+
+  /**
+   * Carga un bloque_de_texto por nid o field_id_alternativo, aplica
+   * sustituciones de variables con los datos recibidos y devuelve el HTML.
+   *
+   * Payload JSON esperado:
+   *   datos  object  Registro activo del visor (snapshot)
+   *
+   * Sintaxis de sustitución en el cuerpo del nodo:
+   *   {{ campo }}             → valor sin formato (número: 2 decimales o 0 si entero)
+   *   {{ campo | decimal_2 }} → valor con formato explícito
+   */
+  public function resolverTexto(string $id, Request $request): JsonResponse {
+    if (is_numeric($id)) {
+      $node = Node::load((int) $id);
+    }
+    else {
+      $nids = \Drupal::entityQuery('node')
+        ->condition('type', 'bloque_de_texto')
+        ->condition('field_id_alternativo', $id)
+        ->accessCheck(FALSE)
+        ->execute();
+      $node = !empty($nids) ? Node::load(reset($nids)) : NULL;
+    }
+
+    if (!$node || $node->bundle() !== 'bloque_de_texto') {
+      return new JsonResponse(['error' => 'Bloque no encontrado: ' . $id], 404);
+    }
+
+    $data  = json_decode($request->getContent(), TRUE);
+    $datos = $data['datos'] ?? [];
+
+    $html = $node->get('field_contenido')->value ?? '';
+    $html = $this->aplicarSustituciones($html, $datos);
+
+    return new JsonResponse(['html' => $html]);
+  }
+
+  /**
+   * Sustituye {{ campo }} y {{ campo | formato }} por los valores del registro.
+   */
+  private function aplicarSustituciones(string $texto, array $datos): string {
+    return preg_replace_callback(
+      '/\{\{\s*(\w+)(?:\s*\|\s*([\w_]+))?\s*\}\}/',
+      function (array $m) use ($datos): string {
+        $campo   = $m[1];
+        $formato = $m[2] ?? '';
+        $valor   = $datos[$campo] ?? NULL;
+
+        if ($valor === NULL || $valor === '') {
+          return '';
+        }
+
+        return $this->formatearValor($valor, $formato);
+      },
+      $texto
+    );
+  }
+
+  /**
+   * Formatea un valor numérico o de cadena según el formato indicado.
+   *
+   * Formatos soportados: entero, decimal_0/1/2, porcentaje_0/1/2.
+   * Sin formato: entero si el valor es entero, 2 decimales si no lo es.
+   */
+  private function formatearValor(mixed $valor, string $formato): string {
+    if (!is_numeric($valor)) {
+      return (string) $valor;
+    }
+
+    $num = (float) $valor;
+
+    return match ($formato) {
+      'entero'       => number_format($num, 0, ',', '.'),
+      'decimal_0'    => number_format($num, 0, ',', '.'),
+      'decimal_1'    => number_format($num, 1, ',', '.'),
+      'decimal_2'    => number_format($num, 2, ',', '.'),
+      'porcentaje_0' => number_format($num, 0, ',', '.') . '%',
+      'porcentaje_1' => number_format($num, 1, ',', '.') . '%',
+      'porcentaje_2' => number_format($num, 2, ',', '.') . '%',
+      default        => number_format($num, floor($num) == $num ? 0 : 2, ',', '.'),
+    };
   }
 
   /**

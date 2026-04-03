@@ -58,6 +58,7 @@
 
       // 2. Componer el esquema en el contenedor visible.
       const esquema = this._getEsquema('informe-render-temp');
+      await this._prefetchLongtexts(esquema, datos);
       window.visorProject.rowCompositor.componer(esquema, datos);
 
       // 3. Hacer scroll programático de arriba a abajo para activar
@@ -122,7 +123,7 @@
 <meta charset="UTF-8">
 <title>Informe Canarias — ${fecha}</title>
 ${cssLinks}
-<link rel="stylesheet" href="/modules/custom/visor/css/dashboard/informe-print.css">
+<link rel="stylesheet" href="/modules/custom/visor/css/informe-print.css">
 </head>
 <body class="informe-pdf">
 ${cabeceraRunning}
@@ -174,6 +175,42 @@ ${contenido.innerHTML}
         </div>`;
 
       return resultado;
+    },
+
+    /**
+     * Recorre el esquema buscando elementos tipo 'longtext', los resuelve en
+     * paralelo contra /api/visor/texto/{id} y almacena el HTML resultante en
+     * item._html para que row-compositor pueda usarlo de forma síncrona.
+     */
+    _prefetchLongtexts: async function(esquema, props) {
+      const items = [];
+      const recoger = (elementos) => {
+        elementos.forEach(item => {
+          if (item.tipo === 'longtext') items.push(item);
+          else if (item.tipo === 'pack' && item.elementos) recoger(item.elementos);
+        });
+      };
+      esquema.forEach(bloque => { if (bloque.elementos) recoger(bloque.elementos); });
+
+      if (!items.length) return;
+
+      const token = await fetch('/session/token').then(r => r.text());
+
+      await Promise.all(items.map(async item => {
+        try {
+          const resp = await fetch(`/api/visor/texto/${item.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+            body: JSON.stringify({ datos: props }),
+          });
+          if (resp.ok) {
+            const result = await resp.json();
+            item._html = result.html || '';
+          }
+        } catch (e) {
+          console.warn('[informe] No se pudo cargar bloque de texto:', item.id, e);
+        }
+      }));
     },
 
     /**
@@ -293,6 +330,7 @@ ${contenido.innerHTML}
           destino,
           clases: ['dashboard-main-reglado-a-no-reglado'],
           elementos: [
+            { tipo: 'longtext', id: 'intro-intensidad-turistica', ancho: '12' },
             { tipo: 'tabla', id: 'resumen-ambito', ancho: '12' },
           ]
         },
