@@ -88,6 +88,15 @@ final class InformeController extends ControllerBase {
     $html     = $node->get('field_contenido')->value;
     $filename = 'informe-' . $node->id() . '.pdf';
 
+    // Inyecta informe-print.css inline para que WeasyPrint no tenga que
+    // resolverlo por URL (evita el bug border-collapse en producción).
+    $module_path = \Drupal::service('extension.list.module')->getPath('visor');
+    $print_css_path = $module_path . '/css/dashboard/informe-print.css';
+    if (file_exists($print_css_path)) {
+      $print_css = file_get_contents($print_css_path);
+      $html = str_replace('</head>', '<style>' . $print_css . '</style></head>', $html);
+    }
+
     try {
       $response = \Drupal::httpClient()->post('http://host.docker.internal:8081/pdf', [
         'json' => [
@@ -99,6 +108,14 @@ final class InformeController extends ControllerBase {
       ]);
 
       $pdf_bytes = $response->getBody()->getContents();
+    }
+    catch (\GuzzleHttp\Exception\ClientException $e) {
+      $body = $e->getResponse() ? $e->getResponse()->getBody()->getContents() : '';
+      return new JsonResponse(['error' => 'WeasyPrint 4xx: ' . $e->getMessage(), 'detail' => $body], 500);
+    }
+    catch (\GuzzleHttp\Exception\ServerException $e) {
+      $body = $e->getResponse() ? $e->getResponse()->getBody()->getContents() : '';
+      return new JsonResponse(['error' => 'WeasyPrint 5xx: ' . $e->getMessage(), 'detail' => $body], 500);
     }
     catch (\Exception $e) {
       return new JsonResponse(['error' => 'WeasyPrint: ' . $e->getMessage()], 500);

@@ -75,17 +75,21 @@
         canvas.parentNode.replaceChild(img, canvas);
       });
 
-      // 6. Recoger los <link rel="stylesheet"> del documento.
-      //    Usamos pathname raíz-relativa para que WeasyPrint los resuelva
-      //    contra el base_url de producción, no el dominio de ddev.
+      // 6. Recoger solo los <link rel="stylesheet"> del visor.
+      //    Excluimos CSS del tema admin (Gin, toolbar, etc.) que rompen
+      //    el layout en WeasyPrint. Solo incluimos los del módulo visor
+      //    y los CDN externos que necesitamos (Material Icons).
+      const CSS_PERMITIDOS = [
+        '/modules/custom/visor/css/',
+        'fonts.googleapis.com',
+        'fonts.gstatic.com',
+      ];
       const cssLinks = Array.from(
         document.querySelectorAll('link[rel="stylesheet"]')
-      ).map(l => {
+      ).filter(l => CSS_PERMITIDOS.some(p => l.href.includes(p)))
+      .map(l => {
         try {
           const url = new URL(l.href);
-          // CDN externo: URL completa para que WeasyPrint lo resuelva directamente.
-          // Local (mismo origen): pathname raíz-relativa para que WeasyPrint lo
-          // resuelva contra el base_url de producción, no contra el dominio de ddev.
           const href = url.origin === window.location.origin
             ? url.pathname
             : url.href;
@@ -178,10 +182,11 @@ ${contenido.innerHTML}
      */
     _scrollActivador: async function (contenedor) {
       const paso = Math.floor(window.innerHeight * 0.7);
-      const total = contenedor.scrollHeight;
-      for (let y = 0; y <= total + paso; y += paso) {
+      for (let y = 0; ; y += paso) {
         contenedor.scrollTop = y;
         await new Promise(r => setTimeout(r, 350));
+        // Recalcular scrollHeight en cada paso por si el contenido creció
+        if (contenedor.scrollTop + window.innerHeight >= contenedor.scrollHeight) break;
       }
     },
 
@@ -192,144 +197,153 @@ ${contenido.innerHTML}
     _getEsquema: function (tempId) {
       const destino = '#' + tempId;
       return [
-        {
+        //~ {
+          //~ tituloBloque: 'Desplazamiento de la actividad turística hacia el alojamiento no reglado',
+          //~ destino,
+          //~ clases: ['dashboard-main-reglado-a-no-reglado'],
+          //~ elementos: [
+            //~ {
+              //~ tipo: 'pack', ancho: '6',
+              //~ tituloPack: 'Plazas por tipo de alojamiento',
+              //~ clasePack: 'pack-atencion',
+              //~ elementos: [
+                //~ { tipo: 'widget',  id: 'card-plazas-alojativas-no-regladas', ancho: '12' },
+                //~ { tipo: 'grafico', id: 'bar-reglado-no-reglado',             ancho: '12' },
+                //~ { tipo: 'tabla',   id: 'plazas-regladas-no-regladas',        ancho: '12' },
+              //~ ],
+            //~ },
+            //~ {
+              //~ tipo: 'pack', ancho: '6',
+              //~ tituloPack: 'Población turística equivalente por tipo de alojamiento',
+              //~ clasePack: 'pack-atencion',
+              //~ elementos: [
+                //~ { tipo: 'widget',  id: 'card-ptev-pter', ancho: '12' },
+                //~ { tipo: 'grafico', id: 'bar-ptev-pter',  ancho: '12' },
+                //~ { tipo: 'tabla',   id: 'ptev-pter',      ancho: '12' },
+              //~ ],
+            //~ },
+          //~ ],
+        //~ },
+        //~ {
+          //~ tituloBloque: 'Presión sobre los residentes y el territorio',
+          //~ destino,
+          //~ clases: ['dashboard-main-reglado-a-no-reglado'],
+          //~ elementos: [
+            //~ {
+              //~ tipo: 'pack', ancho: '6',
+              //~ tituloPack: 'Presión sobre los residentes',
+              //~ clasePack: 'pack-atencion',
+              //~ elementos: [
+                //~ { tipo: 'widget',  id: 'card-presion',    ancho: '12' },
+                //~ { tipo: 'grafico', id: 'bar-ritr_ritv',   ancho: '12' },
+                //~ { tipo: 'tabla',   id: 'ritv-ritr',       ancho: '12' },
+              //~ ],
+            //~ },
+            //~ {
+              //~ tipo: 'pack', ancho: '6',
+              //~ tituloPack: 'Presión sobre el territorio',
+              //~ clasePack: 'pack-atencion',
+              //~ elementos: [
+                //~ { tipo: 'widget',  id: 'card-presion-km2',    ancho: '12' },
+                //~ { tipo: 'grafico', id: 'bar-presion-humana',  ancho: '12' },
+                //~ { tipo: 'tabla',   id: 'presion-territorio',  ancho: '12' },
+              //~ ],
+            //~ },
+          //~ ],
+        //~ },
+        //~ {
+          //~ tituloBloque: 'Disponibilidad de viviendas',
+          //~ destino,
+          //~ clases: ['dashboard-main-reglado-a-no-reglado'],
+          //~ elementos: [
+            //~ {
+              //~ tipo: 'pack', ancho: '6',
+              //~ tituloPack: 'Uso de la vivienda',
+              //~ clasePack: 'pack-atencion',
+              //~ elementos: [
+                //~ { tipo: 'widget',  id: 'card-uso-vivienda', ancho: '12' },
+                //~ { tipo: 'grafico', id: 'bar-uso-vivienda',  ancho: '12' },
+                //~ { tipo: 'tabla',   id: 'uso-vivienda',      ancho: '12' },
+              //~ ],
+            //~ },
+            //~ {
+              //~ tipo: 'pack', ancho: '6',
+              //~ tituloPack: 'Presión de la vivienda vacacional en zona residencial sobre la habitual',
+              //~ clasePack: 'pack-atencion',
+              //~ elementos: [
+                //~ { tipo: 'widget',  id: 'card-presion-vivienda',          ancho: '12' },
+                //~ { tipo: 'grafico', id: 'bar-presion-vivienda-habitual',  ancho: '12' },
+                //~ { tipo: 'tabla',   id: 'presion-sobre-la-vivienda',      ancho: '12' },
+              //~ ],
+            //~ },
+          //~ ],
+        //~ },
+        //~ {
+          //~ tituloBloque: 'Déficit de vivienda',
+          //~ destino,
+          //~ clases: ['dashboard-main-reglado-a-no-reglado'],
+          //~ elementos: [
+            //~ { tipo: 'grafico', id: 'bar-cobertura-de-vivienda', ancho: '6' },
+            //~ { tipo: 'tabla',   id: 'necesidad-de-vivienda',     ancho: '6' },
+          //~ ],
+        //~ },
+        { 
+          tituloBloque: "Datos principales",
+          intro: "Resumen de los indicadores clave de intensidad y presión turística en el ámbito seleccionado.",
           destino,
-          clases: ['dashboard-main-header'],
+          clases: ['dashboard-main-reglado-a-no-reglado'],
           elementos: [
-            { tipo: 'widget', id: 'noticias-slider', ancho: '12' },
-            { tipo: 'widget', id: 'odometro-total-vv', ancho: '12' },
-          ],
+            { tipo: 'tabla', id: 'resumen-ambito', ancho: '12' },
+          ]
         },
-        {
-          tituloBloque: 'Evolución de la vivienda vacacional',
-          notas: 'Datos del Registro General Turístico de Canarias.',
+        { 
+          tituloBloque: "Actividad turistica por tipo de oferta y de zona",
+          intro: "Caracterizacion del modelo turistico.",
           destino,
-          clases: ['dashboard-main-evolucion'],
-          elementos: [
-            { tipo: 'widget', id: 'card-crecimiento-canarias', ancho: '4' },
-            { tipo: 'widget', id: 'card-isla-mayor-crecimiento', ancho: '4' },
-            { tipo: 'widget', id: 'card-isla-mayor-crecimiento-porcentual', ancho: '4' },
-            { tipo: 'grafico', id: 'evolucion-vivienda-vacacional', ancho: '6' },
-            { tipo: 'tabla', id: 'tabla-evolucion-plazas', ancho: '6' },
-          ],
+          clases: ['dashboard-main-reglado-a-no-reglado'],
+          elementos: [ 
+            { tipo: 'tabla', id: 'oferta-alojativa', ancho: '6'},
+            { tipo: 'tabla', id: 'distribucion-plazas-vacacionales', ancho: '6' },
+            { tipo: 'tabla', id: 'distribucion-plazas-regladas', ancho: '6' },
+            { tipo: 'tabla', id: 'plazas-turisticas-zona-residencial', ancho: '6' },
+            { tipo: 'tabla', id: 'plazas-turisticas-zona-turistica', ancho: '6'},
+            { tipo: 'tabla', id: 'oferta-alojativa-por-zona-ambito', ancho: '6' }
+          ]
         },
-        {
-          tituloBloque: 'Desplazamiento de la actividad turística a zonas residenciales',
+        { 
+          tituloBloque: "Presión humana",
+          intro: "Resumen de los indicadores clave de intensidad y presión turística en el ámbito seleccionado.",
           destino,
-          clases: ['dashboard-main-dtr', 'dashboard-main'],
+          clases: ['dashboard-main-reglado-a-no-reglado'],
           elementos: [
-            {
-              tipo: 'pack', ancho: '6',
-              tituloPack: 'Viviendas vacacionales por zona',
-              clasePack: 'pack-atencion',
-              elementos: [
-                { tipo: 'widget',  id: 'card-vv-en-zonas-residenciales', ancho: '12' },
-                { tipo: 'grafico', id: 'bar-vv-por-zona',                ancho: '12' },
-                { tipo: 'tabla',   id: 'viviendas-vacacionales-por-zonas', ancho: '12' },
-              ],
-            },
-            {
-              tipo: 'pack', ancho: '6',
-              tituloPack: 'Plazas alojativas por zona',
-              clasePack: 'pack-atencion',
-              elementos: [
-                { tipo: 'widget',  id: 'card-plazas-alojativas-en-zonas-residenciales', ancho: '12' },
-                { tipo: 'grafico', id: 'bar-plazas',                                   ancho: '12' },
-                { tipo: 'tabla',   id: 'plazas-alojativas-por-zonas',                  ancho: '12' },
-              ],
-            },
-          ],
+            { tipo: 'tabla', id: 'poblacion-turistica-equivalente', ancho: '6' },
+            { tipo: 'tabla', id: 'intensidad-turistica', ancho: '6' },
+            { tipo: 'tabla', id: 'carga-poblacional', ancho: '6' },
+            { tipo: 'tabla', id: 'presion-humana', ancho: '6' },
+            
+          ]
         },
-        {
-          tituloBloque: 'Desplazamiento de la actividad turística hacia el alojamiento no reglado',
+        { 
+          tituloBloque: "Vivienda",
+          intro: "Resumen de los indicadores clave de vivienda.",
           destino,
-          clases: ['dashboard-main-reglado-a-no-reglado', 'dashboard-main'],
+          clases: ['dashboard-main-reglado-a-no-reglado'],
           elementos: [
-            {
-              tipo: 'pack', ancho: '6',
-              tituloPack: 'Plazas por tipo de alojamiento',
-              clasePack: 'pack-atencion',
-              elementos: [
-                { tipo: 'widget',  id: 'card-plazas-alojativas-no-regladas', ancho: '12' },
-                { tipo: 'grafico', id: 'bar-reglado-no-reglado',             ancho: '12' },
-                { tipo: 'tabla',   id: 'plazas-regladas-no-regladas',        ancho: '12' },
-              ],
-            },
-            {
-              tipo: 'pack', ancho: '6',
-              tituloPack: 'Población turística equivalente por tipo de alojamiento',
-              clasePack: 'pack-atencion',
-              elementos: [
-                { tipo: 'widget',  id: 'card-ptev-pter', ancho: '12' },
-                { tipo: 'grafico', id: 'bar-ptev-pter',  ancho: '12' },
-                { tipo: 'tabla',   id: 'ptev-pter',      ancho: '12' },
-              ],
-            },
-          ],
+            { tipo: 'tabla', id: 'parque-viviendas', ancho: '6' },
+            { tipo: 'tabla', id: 'viviendas-disponibles', ancho: '6' },
+            { tipo: 'tabla', id: 'viviendas-necesarias', ancho: '6' },
+            { tipo: 'tabla', id: 'deficit-de-viviendas', ancho: '6' },
+            { tipo: 'tabla', id: 'presion-vv-sobre-vivienda', ancho: '6'}
+          ]
         },
-        {
-          tituloBloque: 'Presión sobre los residentes y el territorio',
-          destino,
-          clases: ['dashboard-main-reglado-a-no-reglado', 'dashboard-main'],
-          elementos: [
-            {
-              tipo: 'pack', ancho: '6',
-              tituloPack: 'Presión sobre los residentes',
-              clasePack: 'pack-atencion',
-              elementos: [
-                { tipo: 'widget',  id: 'card-presion',    ancho: '12' },
-                { tipo: 'grafico', id: 'bar-ritr_ritv',   ancho: '12' },
-                { tipo: 'tabla',   id: 'ritv-ritr',       ancho: '12' },
-              ],
-            },
-            {
-              tipo: 'pack', ancho: '6',
-              tituloPack: 'Presión sobre el territorio',
-              clasePack: 'pack-atencion',
-              elementos: [
-                { tipo: 'widget',  id: 'card-presion-km2',    ancho: '12' },
-                { tipo: 'grafico', id: 'bar-presion-humana',  ancho: '12' },
-                { tipo: 'tabla',   id: 'presion-territorio',  ancho: '12' },
-              ],
-            },
-          ],
-        },
-        {
-          tituloBloque: 'Disponibilidad de viviendas',
-          destino,
-          clases: ['dashboard-main-reglado-a-no-reglado', 'dashboard-main'],
-          elementos: [
-            {
-              tipo: 'pack', ancho: '6',
-              tituloPack: 'Uso de la vivienda',
-              clasePack: 'pack-atencion',
-              elementos: [
-                { tipo: 'widget',  id: 'card-uso-vivienda', ancho: '12' },
-                { tipo: 'grafico', id: 'bar-uso-vivienda',  ancho: '12' },
-                { tipo: 'tabla',   id: 'uso-vivienda',      ancho: '12' },
-              ],
-            },
-            {
-              tipo: 'pack', ancho: '6',
-              tituloPack: 'Presión de la vivienda vacacional en zona residencial sobre la habitual',
-              clasePack: 'pack-atencion',
-              elementos: [
-                { tipo: 'widget',  id: 'card-presion-vivienda',          ancho: '12' },
-                { tipo: 'grafico', id: 'bar-presion-vivienda-habitual',  ancho: '12' },
-                { tipo: 'tabla',   id: 'presion-sobre-la-vivienda',      ancho: '12' },
-              ],
-            },
-          ],
-        },
-        {
-          tituloBloque: 'Déficit de vivienda',
-          destino,
-          clases: ['dashboard-main-reglado-a-no-reglado', 'dashboard-main'],
-          elementos: [
-            { tipo: 'grafico', id: 'bar-cobertura-de-vivienda', ancho: '6' },
-            { tipo: 'tabla',   id: 'necesidad-de-vivienda',     ancho: '6' },
-          ],
-        },
+        //~ { 
+          //~ tituloBloque: "Datos principales",
+          //~ intro: "Resumen de los indicadores clave de intensidad y presión turística en el ámbito seleccionado.",
+          //~ destino: '#ficha-contenido',
+          //~ elementos: [
+            //~ { tipo: 'tabla', id: listaNivelInferior, ancho: '12' },
+          //~ ]
+        //~ }
       ];
     },
   };

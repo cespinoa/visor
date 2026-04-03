@@ -135,6 +135,23 @@ body.informe-pdf {
     background: #fff;
 }
 
+/* .dashboard-main usa overflow:hidden y flex-grow en el visor interactivo.
+   En impresión resetear para que WeasyPrint no recorte el contenido.
+   No cambiamos display para no romper el flex de .dashboard-fila
+   que comparte el mismo elemento. */
+.dashboard-main {
+    overflow: visible !important;
+    height: auto !important;
+    flex-grow: 0 !important;
+}
+
+/* .tab-content-wrapper también tiene overflow:hidden y height:calc(100vh).
+   En impresión no debería afectar pero por seguridad lo reseteamos. */
+.tab-content-wrapper {
+    overflow: visible !important;
+    height: auto !important;
+}
+
 /* Las filas del compositor son flex; WeasyPrint los soporta bien */
 .dashboard-fila {
     display: flex;
@@ -179,8 +196,8 @@ table {
     /* border-collapse: collapse provoca un AssertionError en WeasyPrint con
        ciertos layouts de tabla. Usamos separate + spacing 0 que da el mismo
        resultado visual pero evita el algoritmo de bordes colapsados. */
-    border-collapse: separate;
-    border-spacing: 0;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
     font-size: 8.5pt;
     margin-bottom: 0.8em !important;
 }
@@ -224,6 +241,32 @@ img {
     box-shadow: none !important;
     border: 0.5pt solid #e8e8e8 !important;
     padding: 0.5em !important;
+    /* height: 100% en graficos.css crea referencia circular en WeasyPrint */
+    height: auto !important;
+}
+
+/* Resetear altura circular en grafico-body y sus variantes */
+.grafico-body,
+.grafico-body.body-donut,
+.grafico-body.body-area {
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+/* Las imágenes generadas desde canvas tienen height inline; respetarla */
+.grafico-body img {
+    height: auto !important;
+    max-width: 100% !important;
+    display: block !important;
+    margin: 0 auto !important;
+}
+
+/* Mostrar títulos de gráficos y tablas (ocultos en el visor interactivo) */
+.dashboard-main-dtr .grafico-titulo,
+.dashboard-main-dtr .tabla-titulo,
+.dashboard-main-reglado-a-no-reglado .grafico-titulo,
+.dashboard-main-reglado-a-no-reglado .tabla-titulo {
+    display: block !important;
 }
 
 .grafico-titulo {
