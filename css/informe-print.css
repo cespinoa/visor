@@ -136,35 +136,60 @@ body.informe-pdf {
 }
 
 /* .dashboard-main usa overflow:hidden y flex-grow en el visor interactivo.
-   En impresión resetear para que WeasyPrint no recorte el contenido.
-   No cambiamos display para no romper el flex de .dashboard-fila
-   que comparte el mismo elemento. */
+   En impresión resetear para que WeasyPrint no recorte el contenido. */
 .dashboard-main {
     overflow: visible !important;
     height: auto !important;
     flex-grow: 0 !important;
 }
 
-/* .tab-content-wrapper también tiene overflow:hidden y height:calc(100vh).
-   En impresión no debería afectar pero por seguridad lo reseteamos. */
 .tab-content-wrapper {
     overflow: visible !important;
     height: auto !important;
 }
 
-/* Las filas del compositor son flex; WeasyPrint los soporta bien */
-.dashboard-fila {
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
-    gap: 0;
+/* Las filas Bootstrap y del compositor necesitan flex explícito.
+   WeasyPrint renderiza a ~680px (A4 menos márgenes), por debajo del
+   breakpoint 768px de Bootstrap, así que las reglas col-md-* de Bootstrap
+   (dentro de @media min-width:768px) no se aplican. Las sobreescribimos
+   aquí sin media query. */
+/* Resetear el patrón de gutter negativo de components.css:
+   .componente-body tiene margin: 0 -1rem y [class*="col-"] tiene padding: 0 1rem.
+   En WeasyPrint esto hace que .componente-body se desborde y el layout falle. */
+.componente-body {
+    margin: 0 !important;
+    overflow-x: visible !important;
 }
 
-/* Anchos explícitos para WeasyPrint (fallback por si el flex no resuelve) */
-.col-12 { width: 100% !important; }
-.col-6  { width: 50%  !important; }
-.col-4  { width: 33.33% !important; }
-.col-3  { width: 25%  !important; }
+/* Técnica de gutter sin gap (compatibilidad total con WeasyPrint).
+   Área de contenido = 680px (A4 794px − padding/márgenes 114px).
+   Row: margin -4px a cada lado → ancho natural del row = 688px.
+   Columnas: padding 4px a cada lado (box-sizing:border-box incluido en flex-basis).
+   Gap visual entre columnas = 4px + 4px = 8px.
+
+   Verificación de anchos (flex-basis incluye el padding):
+     2 cols: 344 + 344 = 688 ✓
+     3 cols: 229 + 229 + 229 = 687 (1px de slack, inapreciable) ✓
+     4 cols: 172 × 4 = 688 ✓                                                */
+.row,
+.dashboard-fila {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    margin: 0 -4px !important;
+}
+
+/* Override del padding de [class*="col-"] de components.css */
+[class*="col-"] {
+    padding: 0 4px !important;
+    box-sizing: border-box !important;
+}
+
+/* Selector doble col-md-X.col-sm-12 (especificidad 0-2-0) para ganar
+   a la regla col-sm-12 sola que también coincide con estos elementos. */
+.col-md-12.col-sm-12 { flex: 0 0 688px !important; }
+.col-md-6.col-sm-12  { flex: 0 0 344px !important; }
+.col-md-4.col-sm-12  { flex: 0 0 229px !important; }
+.col-md-3.col-sm-12  { flex: 0 0 172px !important; }
 
 /* ==========================================================================
    COMPONENTES: simplificar sombras y bordes para impresión
@@ -172,19 +197,26 @@ body.informe-pdf {
 
 .dashboard-componente {
     box-shadow: none !important;
-    border: 0.5pt solid #e0e0e0 !important;
-    padding: 0.8em !important;
-    margin-bottom: 0.8em !important;
-    background: #fff !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin-bottom: 1.2em !important;
+    background: transparent !important;
 }
 
 .componente-titulo {
-    font-size: 11pt;
+    font-size: 13pt;
     font-weight: bold;
     color: #a70000;
-    border-bottom: 0.5pt solid #e0e0e0;
-    padding-bottom: 0.3em;
-    margin-bottom: 0.6em;
+    border-bottom: 1.5pt solid #a70000;
+    padding-bottom: 0.25em;
+    margin-bottom: 0.7em;
+}
+
+.componente-intro {
+    font-size: 9pt;
+    color: #555;
+    margin-bottom: 0.8em;
 }
 
 /* ==========================================================================
@@ -286,4 +318,116 @@ button,
 .fullscreen-btn,
 .panel-breadcrumb {
     display: none !important;
+}
+
+/* ==========================================================================
+   PREVIEW EN PANTALLA: simula la hoja A4 en el navegador.
+   Estas reglas solo aplican en screen; WeasyPrint las ignora.
+   ========================================================================== */
+
+@media screen {
+    body.informe-pdf {
+        background: #a0a0a0;
+        margin: 0;
+        padding: 40px 0 60px;
+    }
+
+    /* La cabecera corriendo es un elemento de impresión; ocultarla en pantalla */
+    .informe-running-header {
+        display: none;
+    }
+
+    /* Papel A4: 794px = 210mm a 96dpi. Padding: 96px ≈ 2.5cm, 57px ≈ 1.5cm */
+    .informe-paginas {
+        position: relative;
+        width: 794px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 96px 57px;
+        box-sizing: border-box;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Gradiente de saltos naturales usando ::before posicionado en absoluto.
+       Empieza en top:96px (inicio del área de contenido) y se repite cada
+       935px (297mm - 2×25mm de margen = 247mm ≈ 935px a 96dpi).
+       Usar ::before evita el artefacto de background-position con repeating-gradient. */
+    .informe-paginas::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 96px;
+        bottom: 0;
+        pointer-events: none;
+        z-index: 0;
+        background-image: repeating-linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent calc(935px - 3px),
+            rgba(167, 0, 0, 0.13) calc(935px - 3px),
+            rgba(167, 0, 0, 0.13) 935px
+        );
+    }
+
+    /* Todo el contenido por encima del gradiente */
+    .informe-paginas > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* La portada ocupa el alto de una página A4: 1123px = 297mm a 96dpi */
+    .informe-portada {
+        min-height: calc(1123px - 96px - 96px);
+    }
+
+    /* ── Indicadores de salto forzado ────────────────────────────────────── */
+    /* Usamos position:absolute en el pseudoelemento para abarcar el ancho
+       completo del papel (left:-57px / right:-57px), sin depender de
+       overflow:visible en los ancestros. */
+
+    .informe-portada,
+    .salto-antes,
+    .salto-despues {
+        position: relative;
+    }
+
+    /* Línea tras la portada y tras .salto-despues */
+    .informe-portada::after,
+    .salto-despues::after {
+        content: 'salto de página';
+        position: absolute;
+        bottom: -20px;
+        left: -57px;
+        right: -57px;
+        padding: 5px 0;
+        border-top: 2px dashed rgba(167, 0, 0, 0.7);
+        background: rgba(167, 0, 0, 0.05);
+        font-size: 9px;
+        font-family: monospace;
+        letter-spacing: 2px;
+        color: rgba(167, 0, 0, 0.8);
+        text-transform: uppercase;
+        text-align: center;
+        z-index: 2;
+    }
+
+    /* Línea antes de .salto-antes */
+    .salto-antes::before {
+        content: 'salto de página';
+        position: absolute;
+        top: -20px;
+        left: -57px;
+        right: -57px;
+        padding: 5px 0;
+        border-bottom: 2px dashed rgba(167, 0, 0, 0.7);
+        background: rgba(167, 0, 0, 0.05);
+        font-size: 9px;
+        font-family: monospace;
+        letter-spacing: 2px;
+        color: rgba(167, 0, 0, 0.8);
+        text-transform: uppercase;
+        text-align: center;
+        z-index: 2;
+    }
 }

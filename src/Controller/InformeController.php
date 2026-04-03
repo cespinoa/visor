@@ -11,6 +11,8 @@ use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Gestiona la generación y persistencia de informes.
@@ -151,6 +153,26 @@ final class InformeController extends ControllerBase {
       'nid'      => $node->id(),
       'media_id' => $media->id(),
     ]);
+  }
+
+  /**
+   * Sirve el HTML del informe directamente como página, sin envoltorio Drupal.
+   * Permite previsualizar en pantalla cómo quedará el PDF, aprovechando las
+   * reglas @media screen de informe-print.css.
+   */
+  public function preview(int $nid): Response {
+    $node = Node::load($nid);
+    if (!$node || $node->bundle() !== 'informe') {
+      throw new NotFoundHttpException();
+    }
+
+    $html = $node->get('field_contenido')->value;
+
+    if (!$html) {
+      throw new NotFoundHttpException();
+    }
+
+    return new Response($html, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
   }
 
   /**

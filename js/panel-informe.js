@@ -127,8 +127,10 @@ ${cssLinks}
 </head>
 <body class="informe-pdf">
 ${cabeceraRunning}
+<div class="informe-paginas">
 ${portada}
 ${contenido.innerHTML}
+</div>
 </body>
 </html>`;
 
@@ -338,7 +340,7 @@ ${contenido.innerHTML}
           tituloBloque: "Actividad turistica por tipo de oferta y de zona",
           intro: "Caracterizacion del modelo turistico.",
           destino,
-          clases: ['dashboard-main-reglado-a-no-reglado'],
+          clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes', 'salto-despues'],
           elementos: [ 
             { tipo: 'tabla', id: 'oferta-alojativa', ancho: '6'},
             { tipo: 'tabla', id: 'distribucion-plazas-vacacionales', ancho: '6' },

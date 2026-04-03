@@ -24,6 +24,16 @@ visor.informe.generar_pdf:
     nid: \d+
   methods: [POST]
 
+visor.informe.preview:
+  path: '/visor/informe/{nid}/vista-previa'
+  defaults:
+    _controller: '\Drupal\visor\Controller\InformeController::preview'
+    _title: 'Vista previa del informe'
+  requirements:
+    _permission: 'administer content'
+    nid: \d+
+  methods: [GET]
+
 visor.texto.resolver:
   path: '/api/visor/texto/{id}'
   defaults:
