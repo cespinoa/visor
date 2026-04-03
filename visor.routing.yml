@@ -23,11 +23,3 @@ visor.informe.generar_pdf:
     _permission: 'administer content'
     nid: \d+
   methods: [POST]
-
-mapa:
-  path: '/mapa'
-  defaults:
-    _title: 'Mapa'
-    _controller: '\Drupal\visor\Controller\VisorController::__invoke'
-  requirements:
-    _permission: 'access content'

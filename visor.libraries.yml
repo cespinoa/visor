@@ -3,39 +3,39 @@ visor_dashboard:
   css:
     theme:
       https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css: { type: external, minified: true }
-      css/dashboard/main.css: {weight: 20}
-      css/dashboard/siluetas-variantes.css: {weight: 25}
-      css/dashboard/siluetas.css: {weight: 30}
-      css/dashboard/controls.css: {weight: 30}
-      css/dashboard/components.css: {weight: 30}
-      css/dashboard/graficos.css:  {weight: 30}
+      css/main.css: {weight: 20}
+      css/siluetas-variantes.css: {weight: 25}
+      css/siluetas.css: {weight: 30}
+      css/controls.css: {weight: 30}
+      css/components.css: {weight: 30}
+      css/graficos.css:  {weight: 30}
       
   js:
     https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js: { type: external, minified: true }
     https://cdnjs.cloudflare.com/ajax/libs/gauge.js/1.3.7/gauge.min.js: { type: external, minified: true }
     https://unpkg.com/simple-statistics@7.8.3/dist/simple-statistics.min.js: { type: external, minified: true }
-    js/dashboard/namespace.js: { weight: -100 }
-    js/dashboard/utils.js: { weight: -95 }
-    js/dashboard/config-colores.js: { weight: -95 }
-    js/dashboard/config-tablas.js: { weight: -90 }
-    js/dashboard/config-graficos.js: { weight: -90 }
-    js/dashboard/config-widgets.js: { weight: -90 }
-    js/dashboard/utils-layout.js: { weight: -85 }
-    js/dashboard/utils-tablas.js: { weight: -80 }
-    js/dashboard/utils-graficos.js: { weight: -80 }
-    js/dashboard/utils-imagenes.js: { weight: -80 }
-    js/dashboard/utils-widgets.js: { weight: -80 }
-    js/dashboard/data-selector.js: { weight: -80 }
-    js/dashboard/row-compositor.js: { weight: -75 }
-    js/dashboard/panel-datos.js: { weight: -70 }
-    js/dashboard/panel-graficos.js: { weight: -70 }
-    js/dashboard/panel-dashboard.js: { weight: -70 }
-    js/dashboard/panel-informe.js: { weight: -70 }
-    js/dashboard/panel-mapa.js: { weight: -65 }
-    js/dashboard/tabs.js: { weight: -60 }
-    js/dashboard/social-manager.js: { weight: -55 }
-    js/dashboard/vistas-manager.js: { weight: -55 }
-    js/dashboard/main.js: { weight: 0 } # <--- Último, ya conoce a todos
+    js/namespace.js: { weight: -100 }
+    js/utils.js: { weight: -95 }
+    js/config-colores.js: { weight: -95 }
+    js/config-tablas.js: { weight: -90 }
+    js/config-graficos.js: { weight: -90 }
+    js/config-widgets.js: { weight: -90 }
+    js/utils-layout.js: { weight: -85 }
+    js/utils-tablas.js: { weight: -80 }
+    js/utils-graficos.js: { weight: -80 }
+    js/utils-imagenes.js: { weight: -80 }
+    js/utils-widgets.js: { weight: -80 }
+    js/data-selector.js: { weight: -80 }
+    js/row-compositor.js: { weight: -75 }
+    js/panel-datos.js: { weight: -70 }
+    js/panel-graficos.js: { weight: -70 }
+    js/panel-dashboard.js: { weight: -70 }
+    js/panel-informe.js: { weight: -70 }
+    js/panel-mapa.js: { weight: -65 }
+    js/tabs.js: { weight: -60 }
+    js/social-manager.js: { weight: -55 }
+    js/vistas-manager.js: { weight: -55 }
+    js/main.js: { weight: 0 } # <--- Último, ya conoce a todos
 
   dependencies:
     - core/jquery
@@ -50,44 +50,11 @@ visor_dashboard:
 visor_informe_nodo:
   version: 1.x
   js:
-    js/dashboard/informe-nodo.js: {}
+    js/informe-nodo.js: {}
   dependencies:
     - core/jquery
     - core/drupal
 
-mapa_view:
-  version: 1.x
-  css:
-    theme:
-      https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css: { type: external, minified: true }
-      css/visor_mapa.css: {weight: 21}
-  js:
-    https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js: { type: external, minified: true }
-    https://cdnjs.cloudflare.com/ajax/libs/gauge.js/1.3.7/gauge.min.js: { type: external, minified: true }
-    https://unpkg.com/simple-statistics@7.8.3/dist/simple-statistics.min.js: { type: external, minified: true }
-    js/visor/config_visor.js: {}
-    js/visor/visor_formatters.js: {}
-    js/visor/visor_components.js: {}
-    js/visor/visor_charts.js: {}
-    js/visor/visor_misc.js: {}
-    js/visor/visor_mapa.js: {}
-    
-    
-  dependencies:
-    - core/jquery
-    - core/drupal
-    - core/drupalSettings
-    - core/once
-    - visor/chartjs_core
-    - visor/luxon_core
-    - visor/chartjs_adapter_luxon
-    - visor/gaugejs
-    - visor/dashboard
-
-dashboard:
-  js:
-    js/visor/dashboard.js: {}
-    
 chartjs_core:
   remote: https://github.com/chartjs/Chart.js
   version: 4.4.1
