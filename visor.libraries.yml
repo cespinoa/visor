@@ -27,6 +27,7 @@ visor_dashboard:
     js/utils-widgets.js: { weight: -80 }
     js/data-selector.js: { weight: -80 }
     js/row-compositor.js: { weight: -75 }
+    js/utils-informes.js: { weight: -72 }
     js/panel-datos.js: { weight: -70 }
     js/panel-graficos.js: { weight: -70 }
     js/panel-dashboard.js: { weight: -70 }
