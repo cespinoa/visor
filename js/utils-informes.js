@@ -3,6 +3,8 @@
 // Los orquestadores (panel-informe-*.js) solo definen la configuración
 // editorial (_getConfig) y el esquema de contenidos (_getEsquema), y
 // delegan el proceso completo a utilsInformes.generar().
+//
+// Las estructuras HTML viven en informe-templates.html.twig.
 (function ($, Drupal) {
   "use strict";
 
@@ -41,7 +43,6 @@
      */
     generar: async function (config, esquema, datos) {
       // 1. Modal de progreso visible en pantalla completa.
-      //    Los gráficos necesitan estar en el viewport para IntersectionObserver.
       const { modal, contenido } = this._crearModal();
 
       // 2. Pre-cargar bloques de texto narrativo (longtext) en paralelo.
@@ -81,32 +82,42 @@
     },
 
     // ─────────────────────────────────────────────────────────────────────
+    // HELPERS DE TEMPLATE
+    // ─────────────────────────────────────────────────────────────────────
+
+    /**
+     * Clona el contenido de un <template> y devuelve el DocumentFragment.
+     * Usar cuando el resultado se insertará en el DOM del navegador.
+     */
+    _clonarTpl: function (id) {
+      const tpl = document.getElementById(id);
+      if (!tpl) { console.warn('[informe] Template no encontrado:', id); return null; }
+      return tpl.content.cloneNode(true);
+    },
+
+    /**
+     * Clona un <template>, sustituye los placeholders %%nombre%% por los
+     * valores de `vars` y devuelve el HTML resultante como string.
+     * Usar cuando el resultado se incluirá en el documento enviado a WeasyPrint.
+     */
+    _renderTpl: function (id, vars = {}) {
+      const tpl = document.getElementById(id);
+      if (!tpl) { console.warn('[informe] Template no encontrado:', id); return ''; }
+      const wrap = document.createElement('div');
+      wrap.appendChild(tpl.content.cloneNode(true));
+      return Object.entries(vars).reduce(
+        (html, [k, v]) => html.replaceAll(`%%${k}%%`, v ?? ''),
+        wrap.innerHTML
+      );
+    },
+
+    // ─────────────────────────────────────────────────────────────────────
     // MODAL
     // ─────────────────────────────────────────────────────────────────────
 
     _crearModal: function () {
-      const modal = document.createElement('div');
-      modal.id = 'informe-modal';
-      modal.style.cssText = [
-        'position:fixed', 'inset:0', 'z-index:9999',
-        'background:#fff', 'overflow-y:auto', 'padding:24px',
-      ].join(';');
-
-      const barra = document.createElement('div');
-      barra.style.cssText = [
-        'position:sticky', 'top:0', 'z-index:1', 'background:#fff',
-        'padding:12px 0 16px', 'border-bottom:2px solid #a70000',
-        'margin-bottom:24px', 'display:flex', 'align-items:center', 'gap:12px',
-      ].join(';');
-      barra.innerHTML = `
-        <span class="material-icons" style="color:#a70000;animation:spin 1s linear infinite">autorenew</span>
-        <span id="informe-modal-estado" style="font-weight:bold;color:#333">Generando informe…</span>`;
-
-      const contenido = document.createElement('div');
-      contenido.id = RENDER_ID;
-
-      modal.appendChild(barra);
-      modal.appendChild(contenido);
+      const fragment = this._clonarTpl('tpl-informe-modal');
+      const modal    = fragment.querySelector('#informe-modal');
       document.body.appendChild(modal);
 
       if (!document.getElementById('informe-spin-style')) {
@@ -116,7 +127,10 @@
         document.head.appendChild(st);
       }
 
-      return { modal, contenido };
+      return {
+        modal,
+        contenido: document.getElementById(RENDER_ID),
+      };
     },
 
     _actualizarEstadoModal: function (modal, texto) {
@@ -125,23 +139,17 @@
     },
 
     _mostrarExito: function (modal, resultado) {
-      modal.innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
-                    min-height:100vh;gap:16px;text-align:center;padding:40px">
-          <span class="material-icons" style="font-size:64px;color:#2e7d32">check_circle</span>
-          <h2 style="color:#2e7d32;margin:0">Informe generado</h2>
-          <p style="color:#555;margin:0">${resultado.titulo}</p>
-          <div style="display:flex;gap:12px;margin-top:8px">
-            <a href="/node/${resultado.nid}" target="_blank"
-               style="padding:10px 20px;background:#a70000;color:#fff;border-radius:6px;text-decoration:none">
-              Ver informe
-            </a>
-            <button onclick="document.getElementById('informe-modal').remove()"
-               style="padding:10px 20px;background:#eee;color:#333;border:none;border-radius:6px;cursor:pointer">
-              Cerrar
-            </button>
-          </div>
-        </div>`;
+      const fragment = this._clonarTpl('tpl-informe-exito');
+      const wrapper  = fragment.querySelector('div');
+
+      wrapper.querySelector('.informe-exito__titulo').textContent = resultado.titulo;
+      wrapper.querySelector('.informe-exito__enlace').href = `/node/${resultado.nid}`;
+      wrapper.querySelector('.informe-exito__cerrar').addEventListener('click', () => {
+        document.getElementById('informe-modal').remove();
+      });
+
+      modal.innerHTML = '';
+      modal.appendChild(wrapper);
     },
 
     // ─────────────────────────────────────────────────────────────────────
@@ -196,38 +204,35 @@
 
       if (!entradas.length) return '';
 
-      const items = entradas
-        .map(e => `    <li class="informe-indice__entrada"><a href="#${e.id}">${e.texto}</a></li>`)
-        .join('\n');
+      const fragment = this._clonarTpl('tpl-informe-indice');
+      const nav      = fragment.querySelector('nav');
+      const ol       = nav.querySelector('ol');
 
-      return `
-<nav class="informe-indice">
-  <h2 class="informe-indice__titulo">Índice</h2>
-  <ol class="informe-indice__lista">
-${items}
-  </ol>
-</nav>`;
+      entradas.forEach(e => {
+        ol.insertAdjacentHTML('beforeend',
+          this._renderTpl('tpl-informe-indice-entrada', { href: '#' + e.id, texto: e.texto })
+        );
+      });
+
+      const wrap = document.createElement('div');
+      wrap.appendChild(nav);
+      return wrap.innerHTML;
     },
 
     _construirPortada: function (config, fecha) {
-      return `
-<div class="informe-portada">
-  <div class="informe-portada__titulo">
-    <div class="informe-portada__icono">${config.portada.icono}</div>
-    <div class="informe-portada__titulo-texto">${config.portada.titulo}</div>
-  </div>
-  <div class="informe-portada__linea"></div>
-  <div class="informe-portada__subtitulo">${config.portada.subtitulo}</div>
-  <div class="informe-portada__fecha">Datos del snapshot: ${fecha}</div>
-</div>`;
+      return this._renderTpl('tpl-informe-portada', {
+        icono:     config.portada.icono,
+        titulo:    config.portada.titulo,
+        subtitulo: config.portada.subtitulo,
+        fecha:     'Datos del snapshot: ' + fecha,
+      });
     },
 
     _construirCabeceraRunning: function (config, fecha) {
-      return `
-<div class="informe-running-header">
-  <span class="informe-running-header__titulo">${config.cabecera.titulo}</span>
-  <span class="informe-running-header__fecha">${fecha}</span>
-</div>`;
+      return this._renderTpl('tpl-informe-cabecera-running', {
+        titulo: config.cabecera.titulo,
+        fecha,
+      });
     },
 
     _construirHtml: function (config, { fecha, cssLinks, indice, contenidoHtml }) {

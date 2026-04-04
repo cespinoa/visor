@@ -1,0 +1,86 @@
+{# ============================================================
+   Templates para el sistema de generación de informes PDF.
+   Consumidos por utils-informes.js.
+
+   Convención de placeholders: %%nombre%% — sustituidos por
+   _renderTpl(id, vars) antes de serializar a string HTML.
+   ============================================================ #}
+
+
+{# ── Modal de progreso (browser DOM) ─────────────────────── #}
+
+<template id="tpl-informe-modal">
+  <div id="informe-modal" style="position:fixed;inset:0;z-index:9999;background:#fff;overflow-y:auto;padding:24px">
+    <div style="position:sticky;top:0;z-index:1;background:#fff;padding:12px 0 16px;
+                border-bottom:2px solid #a70000;margin-bottom:24px;
+                display:flex;align-items:center;gap:12px">
+      <span class="material-icons" style="color:#a70000;animation:spin 1s linear infinite">autorenew</span>
+      <span id="informe-modal-estado" style="font-weight:bold;color:#333">Generando informe…</span>
+    </div>
+    <div id="informe-render-temp"></div>
+  </div>
+</template>
+
+
+{# ── Pantalla de éxito (browser DOM) ─────────────────────── #}
+
+<template id="tpl-informe-exito">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+              min-height:100vh;gap:16px;text-align:center;padding:40px">
+    <span class="material-icons" style="font-size:64px;color:#2e7d32">check_circle</span>
+    <h2 style="color:#2e7d32;margin:0">Informe generado</h2>
+    <p class="informe-exito__titulo" style="color:#555;margin:0"></p>
+    <div style="display:flex;gap:12px;margin-top:8px">
+      <a class="informe-exito__enlace" target="_blank"
+         style="padding:10px 20px;background:#a70000;color:#fff;border-radius:6px;text-decoration:none">
+        Ver informe
+      </a>
+      <button class="informe-exito__cerrar"
+              style="padding:10px 20px;background:#eee;color:#333;border:none;border-radius:6px;cursor:pointer">
+        Cerrar
+      </button>
+    </div>
+  </div>
+</template>
+
+
+{# ── Portada (WeasyPrint HTML string) ─────────────────────── #}
+
+<template id="tpl-informe-portada">
+  <div class="informe-portada">
+    <div class="informe-portada__titulo">
+      <div class="informe-portada__icono">%%icono%%</div>
+      <div class="informe-portada__titulo-texto">%%titulo%%</div>
+    </div>
+    <div class="informe-portada__linea"></div>
+    <div class="informe-portada__subtitulo">%%subtitulo%%</div>
+    <div class="informe-portada__fecha">%%fecha%%</div>
+  </div>
+</template>
+
+
+{# ── Cabecera corriendo (WeasyPrint HTML string) ──────────── #}
+
+<template id="tpl-informe-cabecera-running">
+  <div class="informe-running-header">
+    <span class="informe-running-header__titulo">%%titulo%%</span>
+    <span class="informe-running-header__fecha">%%fecha%%</span>
+  </div>
+</template>
+
+
+{# ── Índice — contenedor (WeasyPrint HTML string) ─────────── #}
+
+<template id="tpl-informe-indice">
+  <nav class="informe-indice">
+    <h2 class="informe-indice__titulo">Índice</h2>
+    <ol class="informe-indice__lista"></ol>
+  </nav>
+</template>
+
+
+{# ── Índice — entrada (WeasyPrint HTML string) ────────────── #}
+
+<template id="tpl-informe-indice-entrada">
+  <li class="informe-indice__entrada"><a href="%%href%%">%%texto%%</a></li>
+</template>
