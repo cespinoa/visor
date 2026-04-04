@@ -205,6 +205,24 @@
     break-inside: avoid;
 }
 
+/* Bloques que contienen múltiples elementos con saltos propios (ej. radares-islas) */
+.dashboard-componente.permite-saltos {
+    break-inside: auto;
+}
+
+/* WeasyPrint no fragmenta contenedores flex entre páginas.
+   En secciones con saltos internos, convertir row/col a bloque para
+   que los break-after/before de los hijos surtan efecto. */
+.dashboard-componente.permite-saltos .row,
+.dashboard-componente.permite-saltos .dashboard-fila {
+    display: block !important;
+}
+.dashboard-componente.permite-saltos [class*="col-"] {
+    display: block !important;
+    width: 100% !important;
+    flex: none !important;
+}
+
 /* Clase utilitaria: fuerza salto antes del bloque */
 .salto-antes {
     break-before: page;
@@ -379,6 +397,21 @@ img {
     padding: 0.5em !important;
     /* height: 100% en graficos.css crea referencia circular en WeasyPrint */
     height: auto !important;
+}
+
+.radar-isla-titulo {
+    font-size: 13pt;
+    margin: 1.2em 0 0.5em;
+    break-after: avoid;
+}
+
+/* WeasyPrint ignora gap en flex; margin-bottom separa chart y tabla
+   en los layouts verticales del radar. */
+.radar-body.radar-vertical .radar-chart-col {
+    margin-bottom: 1em;
+}
+.radar-body.radar-tabla-arriba .radar-table-col {
+    margin-bottom: 1em;
 }
 
 /* Resetear altura circular en grafico-body y sus variantes */

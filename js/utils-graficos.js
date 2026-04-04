@@ -10,10 +10,10 @@ window.visorProject.utilsGraficos = {
         return dicc[idCampo] || { formato: 'entero', unidades: '' };
     },
 
-    crearContenedorGrafico: function(config, datosRaw) {
+    crearContenedorGrafico: function(config, datosRaw, opciones = {}) {
         // El radar tiene su propio contenedor
         if (config.tipo === 'radar') {
-            return this.crearContenedorRadar(config, datosRaw);
+            return this.crearContenedorRadar(config, datosRaw, opciones);
         }
 
         const tpl = document.getElementById('tpl-grafico-contenedor');
@@ -74,6 +74,12 @@ window.visorProject.utilsGraficos = {
         canvas.className = 'gauge-canvas';
         contenedor.querySelector('.grafico-body').classList.add(`body-${config.tipo}`);
         contenedor.querySelector('.grafico-body').appendChild(canvas);
+
+        if (opciones['ancho-pdf']) {
+            contenedor.style.maxWidth    = opciones['ancho-pdf'];
+            contenedor.style.marginLeft  = 'auto';
+            contenedor.style.marginRight = 'auto';
+        }
 
         return contenedor;
     },
@@ -251,9 +257,21 @@ window.visorProject.utilsGraficos = {
         titulo.textContent = opciones.titulo || config.titulo;
         wrapper.appendChild(titulo);
 
-        // Body: chart + tabla (horizontal por defecto, vertical si opciones.vertical)
+        // Posición de la tabla: 'derecha' (por defecto) | 'izquierda' | 'abajo' | 'arriba' | null (sin tabla).
+        // Prioridad: posicion-tabla explícito > ancho-pdf presente (→ 'abajo') > vertical legacy > 'derecha'.
+        const posicionTabla = opciones['posicion-tabla'] !== undefined
+            ? opciones['posicion-tabla']
+            : (opciones['ancho-pdf'] ? 'abajo' : (opciones.vertical ? 'abajo' : 'derecha'));
+
+        const CLASE_POSICION = {
+            derecha:   '',
+            izquierda: ' radar-tabla-izquierda',
+            abajo:     ' radar-vertical',
+            arriba:    ' radar-tabla-arriba',
+        };
+
         const body = document.createElement('div');
-        body.className = 'radar-body' + (opciones.vertical ? ' radar-vertical' : '');
+        body.className = 'radar-body' + (CLASE_POSICION[posicionTabla] ?? '');
 
         // Columna del gráfico
         const chartCol = document.createElement('div');
@@ -263,40 +281,49 @@ window.visorProject.utilsGraficos = {
         chartCol.appendChild(canvas);
         body.appendChild(chartCol);
 
-        // Columna de la tabla
-        const tableCol = document.createElement('div');
-        tableCol.className = 'radar-table-col';
+        // Columna de la tabla (omitida si posicionTabla es null)
+        if (posicionTabla !== null) {
+            const tableCol = document.createElement('div');
+            tableCol.className = 'radar-table-col';
 
-        const table = document.createElement('table');
-        table.className = 'radar-tabla';
-        table.innerHTML = '<thead><tr><th>Clave</th><th>Indicador</th><th>Valor</th><th>%val</th><th>Media</th><th>%avg</th><th>Máx</th></tr></thead>';
-        const tbody = document.createElement('tbody');
+            const table = document.createElement('table');
+            table.className = 'radar-tabla';
+            table.innerHTML = '<thead><tr><th>Clave</th><th>Indicador</th><th>Valor</th><th>%val</th><th>Media</th><th>%avg</th><th>Máx</th></tr></thead>';
+            const tbody = document.createElement('tbody');
 
-        filas.forEach(fila => {
-            const tr = document.createElement('tr');
-            const td1 = document.createElement('td');
-            td1.innerHTML = `<strong>${fila.punto}</strong>`;
-            const td2 = document.createElement('td');
-            td2.textContent = fila.etiqueta;
-            const td3 = document.createElement('td');
-            td3.textContent = fila.valorFormateado;
-            const td4 = document.createElement('td');
-            td4.textContent = fila.valorNorm.toFixed(1) + '%';
-            const td5 = document.createElement('td');
-            td5.textContent = fila.avgFormateado;
-            const td6 = document.createElement('td');
-            td6.textContent = fila.avgNorm.toFixed(1) + '%';
-            td6.style.color = fila.avgNorm > 100 ? '#a70000' : 'inherit';
-            const td7 = document.createElement('td');
-            td7.textContent = fila.maxFormateado;
-            tr.append(td1, td2, td3, td4, td5, td6, td7);
-            tbody.appendChild(tr);
-        });
+            filas.forEach(fila => {
+                const tr = document.createElement('tr');
+                const td1 = document.createElement('td');
+                td1.innerHTML = `<strong>${fila.punto}</strong>`;
+                const td2 = document.createElement('td');
+                td2.textContent = fila.etiqueta;
+                const td3 = document.createElement('td');
+                td3.textContent = fila.valorFormateado;
+                const td4 = document.createElement('td');
+                td4.textContent = fila.valorNorm.toFixed(1) + '%';
+                const td5 = document.createElement('td');
+                td5.textContent = fila.avgFormateado;
+                const td6 = document.createElement('td');
+                td6.textContent = fila.avgNorm.toFixed(1) + '%';
+                td6.style.color = fila.avgNorm > 100 ? '#a70000' : 'inherit';
+                const td7 = document.createElement('td');
+                td7.textContent = fila.maxFormateado;
+                tr.append(td1, td2, td3, td4, td5, td6, td7);
+                tbody.appendChild(tr);
+            });
 
-        table.appendChild(tbody);
-        tableCol.appendChild(table);
-        body.appendChild(tableCol);
+            table.appendChild(tbody);
+            tableCol.appendChild(table);
+            body.appendChild(tableCol);
+        }
+
         wrapper.appendChild(body);
+
+        if (opciones['ancho-pdf']) {
+            wrapper.style.maxWidth    = opciones['ancho-pdf'];
+            wrapper.style.marginLeft  = 'auto';
+            wrapper.style.marginRight = 'auto';
+        }
 
         return wrapper;
     },

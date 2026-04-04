@@ -72,8 +72,17 @@
           destino,
           clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes', 'salto-despues'],
           elementos: [
-            { tipo: 'grafico', id: 'bar-reglado-no-reglado',   ancho: '3' },
+            { tipo: 'grafico', id: 'bar-reglado-no-reglado',   ancho: '12', 'ancho-pdf': '80%' },
             { tipo: 'tabla',   id: 'plazas-regladas-no-regladas', ancho: '12' },
+          ],
+        },
+        {
+          tituloBloque: "Síntesis de presión por isla",
+          intro: "Indicadores normalizados de cada isla respecto al máximo registrado en Canarias.",
+          destino,
+          clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes', 'permite-saltos'],
+          elementos: [
+            { tipo: 'radares-islas', id: 'radar-sintesis', ancho: '12', 'ancho-pdf': '80%' },
           ],
         },
         {

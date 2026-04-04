@@ -231,21 +231,51 @@
    RADAR / POLAR
    ============================================= */
 
-/* Layout vertical: gráfico arriba, tabla abajo */
+.radares-islas {
+    width: 100%;
+}
+
+.radar-isla-titulo {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #a70000;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25em;
+    margin: 1.5em 0 0.75em;
+}
+
+.radar-isla-titulo:first-child {
+    margin-top: 0;
+}
+
+/* tabla abajo */
 .radar-body.radar-vertical {
     flex-direction: column;
     gap: 16px;
 }
 
-.radar-body.radar-vertical .radar-chart-col {
+.radar-body.radar-vertical .radar-chart-col,
+.radar-body.radar-tabla-arriba .radar-chart-col {
     flex: none;
     max-width: 100%;
     width: 100%;
 }
 
-.radar-body.radar-vertical .radar-table-col {
+.radar-body.radar-vertical .radar-table-col,
+.radar-body.radar-tabla-arriba .radar-table-col {
     flex: none;
     width: 100%;
+}
+
+/* tabla arriba */
+.radar-body.radar-tabla-arriba {
+    flex-direction: column-reverse;
+    gap: 16px;
+}
+
+/* tabla izquierda */
+.radar-body.radar-tabla-izquierda {
+    flex-direction: row-reverse;
 }
 .contenedor-radar {
     text-align: left;

@@ -23,6 +23,13 @@
           ancho: '12', // Los bloques suelen ir a ancho completo
         });
 
+        // Forzar break-inside:auto con estilo inline para que WeasyPrint
+        // permita saltos de página dentro del bloque (más específico que CSS).
+        if ((bloque.clases || []).includes('permite-saltos')) {
+          wrapper.elemento.style.breakInside = 'auto';
+          wrapper.elemento.style.pageBreakInside = 'auto';
+        }
+
         // 2. Creamos la fila interna de Bootstrap para los elementos
         const $filaInterna = jQuery('<div class="row"></div>');
         
@@ -78,8 +85,11 @@
                 $contenedorParent.append(columnaPack);
             } 
             else {
-                // Elemento simple (comportamiento normal)
-                const columna = this.crearColumna(item.ancho);
+                // Si el elemento tiene ancho-pdf, la columna ocupa el ancho
+                // completo para que el porcentaje se calcule sobre la página,
+                // no sobre una columna estrecha.
+                const anchoColumna = item['ancho-pdf'] ? '12' : item.ancho;
+                const columna = this.crearColumna(anchoColumna);
                 const contenido = this.fabricarElemento(item, props);
                 if (contenido) {
                     columna.appendChild(contenido);
@@ -116,6 +126,10 @@
           elementoDOM = this.manejarLongtext(item);
           break;
 
+        case 'radares-islas':
+          elementoDOM = this.manejarRadaresIslas(item, props);
+          break;
+
         default:
           console.warn(`Tipo de elemento no soportado: ${item.tipo}`);
       }
@@ -137,7 +151,7 @@
         const instanciaConfig = { ...config, canvasId: uniqueId };
 
         // 1. Renderizar contenedor base
-        const graficoDOM = window.visorProject.utilsGraficos.crearContenedorGrafico(instanciaConfig, datosFinales);
+        const graficoDOM = window.visorProject.utilsGraficos.crearContenedorGrafico(instanciaConfig, datosFinales, item);
         
         // 2. INYECTAR BOTÓN FULLSCREEN
         this.añadirFuncionalidadFullscreen(graficoDOM);
@@ -147,6 +161,58 @@
         }
         
         return graficoDOM;
+    },
+
+    /**
+     * Renderiza un radar por cada isla, ordenadas orientales → centrales →
+     * occidentales y alfabéticamente dentro de cada grupo.
+     * El nombre de la isla actúa como subtítulo h2 dentro de la sección.
+     */
+    manejarRadaresIslas: function(item, props) {
+      const config = window.CONFIG_GRAFICOS[item.id];
+      if (!config) return null;
+
+      const snapshot = drupalSettings.visorProject.datosDashboard || [];
+      const ORDEN = [
+        ['Lanzarote', 'Fuerteventura'],
+        ['Gran Canaria', 'Tenerife'],
+        ['El Hierro', 'La Gomera', 'La Palma'],
+      ];
+
+      const islas = ORDEN.flatMap(grupo =>
+        grupo
+          .map(nombre => snapshot.find(d => d.ambito === 'isla' && d.etiqueta === nombre))
+          .filter(Boolean)
+      );
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'radares-islas';
+
+      islas.forEach((isla, index) => {
+        const islaBloque = document.createElement('div');
+        islaBloque.className = 'radar-isla-bloque';
+        // Salto después de cada isla excepto la última, para que el título
+        // de la sección no quede solo en la primera página.
+        if (index < islas.length - 1) islaBloque.classList.add('salto-despues');
+
+        const titulo = document.createElement('h2');
+        titulo.className = 'radar-isla-titulo';
+        titulo.textContent = isla.etiqueta;
+        islaBloque.appendChild(titulo);
+
+        const uniqueId = `canvas-${item.id}-${isla.isla_id || isla.etiqueta}-${Math.floor(Math.random() * 10000)}`;
+        const instanciaConfig = { ...config, canvasId: uniqueId };
+
+        const graficoDOM = window.visorProject.utilsGraficos.crearContenedorGrafico(instanciaConfig, isla, item);
+        if (graficoDOM) {
+          islaBloque.appendChild(graficoDOM);
+          window.visorProject.utilsGraficos.activarObservador(graficoDOM, instanciaConfig, isla);
+        }
+
+        wrapper.appendChild(islaBloque);
+      });
+
+      return wrapper;
     },
 
     manejarWidget: function(item,props) {

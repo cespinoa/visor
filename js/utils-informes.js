@@ -41,21 +41,58 @@
      * @param {Object} datos    Registro del snapshot activo.
      * @returns {Promise<{nid, titulo}>}
      */
-    generar: async function (config, esquema, datos) {
+    /**
+     * @param {Array} seccionesAdicionales  Opcional. Array de { datos, getEsquema(destino) }.
+     *   Cada sección se renderiza en su propio sub-div dentro del contenedor principal,
+     *   lo que permite añadir páginas con datos distintos (p.ej. una por isla).
+     */
+    generar: async function (config, esquema, datos, seccionesAdicionales = []) {
       // 1. Modal de progreso visible en pantalla completa.
       const { modal, contenido } = this._crearModal();
 
-      // 2. Pre-cargar bloques de texto narrativo (longtext) en paralelo.
-      await this._prefetchLongtexts(esquema, datos);
+      // 2. Parchear activarObservador para encolar los dibujos en lugar de
+      //    depender de IntersectionObserver. Garantiza que todos los gráficos
+      //    se dibujen aunque no sean visibles durante la composición.
+      const pendientes = [];
+      const activarOriginal = window.visorProject.utilsGraficos.activarObservador;
+      window.visorProject.utilsGraficos.activarObservador = function (elemento, config, datos) {
+        pendientes.push({ config, datos });
+      };
 
-      // 3. Componer el esquema en el contenedor temporal.
+      // 3. Pre-cargar longtexts y componer el esquema principal.
+      await this._prefetchLongtexts(esquema, datos);
       window.visorProject.rowCompositor.componer(esquema, datos);
 
-      // 4. Scroll programático para activar todos los gráficos.
-      await this._scrollActivador(modal);
+      // 3b. Secciones adicionales en sub-divs propios.
+      for (const [i, seccion] of seccionesAdicionales.entries()) {
+        const secId  = `informe-sec-${i}`;
+        const secDiv = document.createElement('div');
+        secDiv.id = secId;
+        contenido.appendChild(secDiv);
 
-      // 5. Pausa adicional para que los últimos gráficos terminen de dibujar.
-      await new Promise(r => setTimeout(r, 400));
+        const secEsquema = seccion.getEsquema('#' + secId);
+        await this._prefetchLongtexts(secEsquema, seccion.datos);
+        window.visorProject.rowCompositor.componer(secEsquema, seccion.datos);
+      }
+
+      // 4. Restaurar activarObservador y dibujar todos los gráficos encolados.
+      //    En este punto todo el DOM está montado, los canvas están disponibles.
+      window.visorProject.utilsGraficos.activarObservador = activarOriginal;
+      const utils = window.visorProject.utilsGraficos;
+      pendientes.forEach(({ config, datos }) => {
+        const datosRaiz = Array.isArray(datos) ? datos[datos.length - 1] : datos;
+        switch (config.tipo) {
+          case 'gauge':  utils.dibujarGauge(config, datosRaiz);  break;
+          case 'donut':  utils.dibujarDonut(config, datosRaiz);  break;
+          case 'radar':  utils.dibujarRadar(config, datosRaiz);  break;
+          case 'line':
+          case 'area':
+          case 'bar':    utils.dibujarSeries(config, datos);     break;
+        }
+      });
+
+      // 5. Pausa para que Chart.js termine de renderizar todos los canvas.
+      await new Promise(r => setTimeout(r, 500));
 
       // 6. Convertir <canvas> a <img> con datos embebidos (base64 PNG).
       this._canvasAImg(contenido);
@@ -169,7 +206,9 @@
       contenidoEl.querySelectorAll('canvas').forEach(canvas => {
         const img = document.createElement('img');
         img.src   = canvas.toDataURL('image/png');
-        img.style.cssText = `width:${canvas.offsetWidth}px;height:${canvas.offsetHeight}px;display:block;`;
+        // width:100% para que el contenedor (con max-width / ancho-pdf) controle
+        // el tamaño final. height:auto preserva el aspect ratio del canvas original.
+        img.style.cssText = 'width:100%;height:auto;display:block;';
         canvas.parentNode.replaceChild(img, canvas);
       });
     },
