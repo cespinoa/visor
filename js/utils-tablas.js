@@ -255,6 +255,9 @@
 
         resultado._columnasCSV = cabeceras;
         resultado._cabecerasTabla = cabeceras;
+        resultado._clasesColumnas = cabeceras.map((_, i) =>
+            usarUnidades && i === cabeceras.length - 1 ? 'col-unidad' : ''
+        );
         return resultado;
     },
 
@@ -431,9 +434,13 @@
         etiquetasFinales.forEach((texto, index) => {
             const th = document.createElement('th');
             th.textContent = texto;
-            
+
             // Alineación a la izquierda solo para la primera columna
             if (index === 0) th.style.textAlign = 'left';
+
+            if (dataset._clasesColumnas && dataset._clasesColumnas[index]) {
+                th.classList.add(dataset._clasesColumnas[index]);
+            }
 
             if (config.ordenable) {
                 th.classList.add('th-sortable');

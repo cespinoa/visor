@@ -37,9 +37,12 @@
     }
 }
 
-/* Primera página sin cabecera corriendo */
+/* Primera página sin márgenes: la portada cubre el A4 completo */
 @page :first {
-    @top-left { content: none; }
+    margin: 0;
+    @top-left    { content: none; }
+    @bottom-left { content: none; }
+    @bottom-right{ content: none; }
 }
 
 /* ==========================================================================
@@ -72,37 +75,125 @@
    ========================================================================== */
 
 .informe-portada {
+    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: 22cm;
-    padding: 2cm 0;
+    /* Con @page :first { margin: 0 } la primera página usa el A4 completo:
+       297mm de alto y 210mm de ancho, sin márgenes.
+       height explícito (no min-height) para que WeasyPrint pinte el fondo
+       en toda la caja, no solo hasta donde llega el contenido. */
+    height: 297mm;
+    width: 210mm;
+    margin: 0;
+    padding: 2cm;
+    box-sizing: border-box;
     break-after: page;
+    background: #a70000;
+    color: #fff;
+}
+
+/* Punto fantasma en la esquina inferior derecha: fuerza a WeasyPrint a
+   extender el fondo rojo hasta el final del A4 aunque el contenido sea
+   más corto. El color coincide con el fondo para que sea invisible. */
+.informe-portada::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 1pt;
+    height: 1pt;
+    background: #a70000;
+}
+
+.informe-portada svg {
+    fill: #fff;
 }
 
 .informe-portada__titulo {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.3em;
+}
+
+.informe-portada__icono {
+    margin-right: 0.5em;
+    flex-shrink: 0;
+}
+
+.informe-portada__icono svg {
+    display: block;
+    fill: #fff;
+}
+
+.informe-portada__titulo-texto {
     font-size: 28pt;
     font-weight: bold;
-    color: #a70000;
-    margin-bottom: 0.3em;
+    color: #fff;
+    line-height: 1.2;
 }
 
 .informe-portada__subtitulo {
     font-size: 14pt;
-    color: #555;
+    color: rgba(255, 255, 255, 0.85);
     margin-bottom: 2em;
 }
 
 .informe-portada__fecha {
     font-size: 11pt;
-    color: #888;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .informe-portada__linea {
     width: 6cm;
     height: 3pt;
-    background: #a70000;
+    background: rgba(255, 255, 255, 0.5);
     margin: 1.5em 0;
+}
+
+/* ==========================================================================
+   ÍNDICE DE CONTENIDOS
+   ========================================================================== */
+
+.informe-indice {
+    break-after: page;
+    padding-top: 1cm;
+}
+
+.informe-indice__titulo {
+    font-size: 18pt;
+    font-weight: bold;
+    color: #a70000;
+    border-bottom: 1.5pt solid #a70000;
+    padding-bottom: 0.3em;
+    margin-bottom: 0.8em;
+}
+
+.informe-indice__lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.informe-indice__entrada {
+    font-size: 11pt;
+    padding: 0.35em 0;
+    border-bottom: 0.5pt solid #eee;
+}
+
+/* Título + puntos guía + número de página.
+   leader() es la función estándar de CSS Paged Media para rellenar el espacio
+   con un carácter y alinear a la derecha lo que sigue (aquí el nº de página). */
+.informe-indice__entrada a {
+    display: block;
+    text-decoration: none;
+    color: #222;
+}
+
+.informe-indice__entrada a::after {
+    content: leader('.') target-counter(attr(href, url), page);
+    color: #a70000;
+    font-weight: bold;
 }
 
 /* ==========================================================================
@@ -129,8 +220,11 @@
    ========================================================================== */
 
 body.informe-pdf {
+    margin: 0;
+    padding: 0;
     width: 100%;
     font-size: 10pt;
+    font-family: 'Inter', 'Liberation Sans', Arial, sans-serif;
     color: #222;
     background: #fff;
 }
@@ -241,6 +335,16 @@ th, td {
     text-align: left;
 }
 
+th:not(:first-child),
+td:not(:first-child) {
+    text-align: right;
+}
+
+th.col-unidad,
+td.col-unidad {
+    text-align: left;
+}
+
 th:first-child, td:first-child {
     border-left: 0.5pt solid #ddd;
 }
@@ -321,6 +425,29 @@ button,
 }
 
 /* ==========================================================================
+   ICONOS MATERIAL ICONS
+   ========================================================================== */
+
+/* La fuente se sirve localmente para garantizar disponibilidad en WeasyPrint.
+   El CSS de Google Fonts solo usa -webkit-font-feature-settings (no reconocido
+   por WeasyPrint), por eso sobreescribimos con la propiedad estándar. */
+@font-face {
+    font-family: 'Material Icons';
+    font-style: normal;
+    font-weight: 400;
+    src: url('/modules/custom/visor/fonts/MaterialIcons-Regular.woff2') format('woff2');
+}
+
+.material-icons {
+    font-family: 'Material Icons';
+    font-feature-settings: 'liga' 1;
+    font-size: 1em;
+    vertical-align: middle;
+    line-height: 1;
+    display: inline-block;
+}
+
+/* ==========================================================================
    PREVIEW EN PANTALLA: simula la hoja A4 en el navegador.
    Estas reglas solo aplican en screen; WeasyPrint las ignora.
    ========================================================================== */
@@ -376,9 +503,14 @@ button,
         z-index: 1;
     }
 
-    /* La portada ocupa el alto de una página A4: 1123px = 297mm a 96dpi */
+    /* En pantalla .informe-paginas sí tiene padding (96px arriba, 57px lados),
+       así que usamos márgenes negativos para extender el rojo hasta los bordes
+       del papel simulado. 1123px = A4 297mm a 96dpi. */
     .informe-portada {
-        min-height: calc(1123px - 96px - 96px);
+        margin: -96px -57px 0;
+        padding: 96px 57px 2cm;
+        height: auto;
+        min-height: 1123px;
     }
 
     /* ── Indicadores de salto forzado ────────────────────────────────────── */

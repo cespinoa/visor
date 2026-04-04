@@ -76,6 +76,10 @@
         canvas.parentNode.replaceChild(img, canvas);
       });
 
+      // 6a. Construir índice de contenidos a partir del DOM ya renderizado.
+      //     Asigna IDs a los elementos indexables antes de serializar innerHTML.
+      const indice = this._construirIndice(contenido);
+
       // 6. Recoger solo los <link rel="stylesheet"> del visor.
       //    Excluimos CSS del tema admin (Gin, toolbar, etc.) que rompen
       //    el layout en WeasyPrint. Solo incluimos los del módulo visor
@@ -105,7 +109,12 @@
 
       const portada = `
 <div class="informe-portada">
-  <div class="informe-portada__titulo">Visor VTPC</div>
+  <div class="informe-portada__titulo">
+    <div class="informe-portada__icono">
+      <svg xmlns="http://www.w3.org/2000/svg" height="100" viewBox="0 -960 960 960" width="100"><path fill="#ffffff" d="M680-600h80v-80h-80v80Zm0 160h80v-80h-80v80Zm0 160h80v-80h-80v80Zm0 160v-80h160v-560H480v56l-80-58v-78h520v720H680Zm-640 0v-400l280-200 280 200v400H360v-200h-80v200H40Zm80-80h80v-200h240v200h80v-280L320-622 120-480v280Zm560-360ZM440-200v-200H200v200-200h240v200Z"/></svg>
+    </div>
+    <div class="informe-portada__titulo-texto">Vivienda Vacacional,<br/>Turismo y Población</div>
+  </div>
   <div class="informe-portada__linea"></div>
   <div class="informe-portada__subtitulo">Vivienda Vacacional y Turismo en Canarias</div>
   <div class="informe-portada__fecha">Datos del snapshot: ${fecha}</div>
@@ -129,6 +138,7 @@ ${cssLinks}
 ${cabeceraRunning}
 <div class="informe-paginas">
 ${portada}
+${indice}
 ${contenido.innerHTML}
 </div>
 </body>
@@ -227,6 +237,37 @@ ${contenido.innerHTML}
         // Recalcular scrollHeight en cada paso por si el contenido creció
         if (contenedor.scrollTop + window.innerHeight >= contenedor.scrollHeight) break;
       }
+    },
+
+    /**
+     * Escanea el contenedor renderizado buscando .componente-titulo y
+     * .titulo-indice, les asigna IDs únicos y devuelve el HTML del índice.
+     * Debe llamarse DESPUÉS de convertir canvas→img (los IDs se aplican sobre
+     * el DOM en vivo; contenido.innerHTML los llevará ya puestos).
+     */
+    _construirIndice: function(contenidoEl) {
+      const entradas = [];
+      let contador = 0;
+
+      contenidoEl.querySelectorAll('.componente-titulo, .titulo-indice').forEach(el => {
+        const id = 'idx-' + (contador++);
+        el.id = id;
+        entradas.push({ id, texto: el.textContent.trim() });
+      });
+
+      if (!entradas.length) return '';
+
+      const items = entradas.map(e =>
+        `    <li class="informe-indice__entrada"><a href="#${e.id}">${e.texto}</a></li>`
+      ).join('\n');
+
+      return `
+<nav class="informe-indice">
+  <h2 class="informe-indice__titulo">Índice</h2>
+  <ol class="informe-indice__lista">
+${items}
+  </ol>
+</nav>`;
     },
 
     /**
@@ -341,13 +382,15 @@ ${contenido.innerHTML}
           intro: "Caracterizacion del modelo turistico.",
           destino,
           clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes', 'salto-despues'],
-          elementos: [ 
-            { tipo: 'tabla', id: 'oferta-alojativa', ancho: '6'},
-            { tipo: 'tabla', id: 'distribucion-plazas-vacacionales', ancho: '6' },
-            { tipo: 'tabla', id: 'distribucion-plazas-regladas', ancho: '6' },
-            { tipo: 'tabla', id: 'plazas-turisticas-zona-residencial', ancho: '6' },
-            { tipo: 'tabla', id: 'plazas-turisticas-zona-turistica', ancho: '6'},
-            { tipo: 'tabla', id: 'oferta-alojativa-por-zona-ambito', ancho: '6' }
+          elementos: [
+            { tipo: 'grafico', id: 'bar-reglado-no-reglado', ancho: '3' },
+            { tipo: 'tabla', id: 'plazas-regladas-no-regladas', ancho: '12' },
+            //~ { tipo: 'tabla', id: 'oferta-alojativa', ancho: '6'},
+            //~ { tipo: 'tabla', id: 'distribucion-plazas-vacacionales', ancho: '6' },
+            //~ { tipo: 'tabla', id: 'distribucion-plazas-regladas', ancho: '6' },
+            //~ { tipo: 'tabla', id: 'plazas-turisticas-zona-residencial', ancho: '6' },
+            //~ { tipo: 'tabla', id: 'plazas-turisticas-zona-turistica', ancho: '6'},
+            //~ { tipo: 'tabla', id: 'oferta-alojativa-por-zona-ambito', ancho: '6' }
           ]
         },
         { 
