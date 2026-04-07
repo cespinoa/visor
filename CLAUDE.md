@@ -453,3 +453,41 @@ El esquema del informe (método `_getEsquema`) replica el contenido de `panel-da
     con el resto del panel.
   - CSS en `components.css`, sección "BREADCRUMB DE PANEL". Color de enlace
     `#a70000` (consistente con el header del sidebar).
+
+## Publicación y documentación del proyecto
+
+El estudio será publicado en abierto (GitHub). La documentación tiene tres capas
+con audiencias y herramientas distintas. **No confundir ni mezclar sus herramientas.**
+
+### Capa 1 — Diccionario de indicadores (Drupal, ya construido)
+
+- **Herramienta**: Drupal Views sobre la entidad externa `diccionario_dato`
+- **Fuente**: tabla `diccionario_de_datos` en PostgreSQL (`mapa_data`), expuesta
+  como external entity mediante `external_entities` + `xnttsql` + `dbxschema_pgsql`
+- **Formatter LaTeX**: `visor_latex` en `src/Plugin/Field/FieldFormatter/LatexFormatter.php`
+  — convierte `/` a `\frac{}{}`, envuelve identificadores con `_` en `\text{}`,
+  soporta `\boxed{}` y cursiva. Librería CSS: `visor/visor_latex_formatter`
+- **Audiencia**: usuarios del visor que quieren entender qué mide cada indicador
+- **Alcance**: solo los campos de la tabla de snapshots (`datos_dashboard.json`).
+  Esa tabla ya agrega datos de casi todas las demás tablas, por lo que es el único
+  diccionario de interés general.
+- **Pendiente**: crear la View (dos displays: `/admin/visor/diccionario` y `/metodologia/variables`)
+
+### Capa 2 — Documentación técnica de la BD (GitHub/Markdown, pendiente)
+
+- **Herramienta**: Markdown en el repositorio `viviendas-canarias` — **no Drupal**
+- **Repo**: `/home/carlos/viviendas-canarias/` (Docker Compose con PostGIS)
+  — se publicará en GitHub completo y autosuficiente
+- **Contenido**: esquema tabla por tabla + referencias cruzadas a los scripts R y
+  Python que generan cada tabla, con el pipeline de transformación documentado
+- **Audiencia**: desarrolladores e investigadores que quieren replicar el estudio
+- **Automatización posible**: `information_schema` puede generar la parte de esquema;
+  la narrativa del pipeline es manual
+
+### Capa 3 — Notas metodológicas (Drupal contenido, pendiente)
+
+- **Herramienta**: contenido Drupal (páginas básicas o tipo de contenido propio)
+- **Contenido**: decisiones metodológicas, fuentes de datos oficiales, limitaciones
+  del modelo — pura literatura, sin código ni esquemas técnicos
+- **Audiencia**: investigadores, periodistas, responsables de políticas públicas
+  que quieren validar el enfoque sin entrar en el código

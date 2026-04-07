@@ -287,6 +287,11 @@
 
         if (!motorTablas || !config || !selector) return null;
 
+        // Tabla especial: índice de presión (no pasa por el selector/dataset estándar)
+        if (config.tipo === 'indice-presion') {
+            return motorTablas.crearTablaIndicePression(props);
+        }
+
         // 1. OBTENCIÓN DE DATOS: El selector aplica filtros, agrupaciones y ORDENACIÓN
         const datosParaMotor = selector.seleccionar(props, config);
         

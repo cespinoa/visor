@@ -121,9 +121,58 @@
       formatearTextosImpacto: function(itemConfig, registro, vars) {
           let t = itemConfig.plantilla || "";
           let d = itemConfig.desarrollo || "";
-          
+
           // El campo que se usará para el placeholder [valor]
           const campoParaValor = itemConfig.campo || itemConfig.campo_referencia || 'plazas_vacacionales';
+
+          // ── PASO 0: expresiones aritméticas [[expr]] o [[expr|formato]] ──────
+          // Dentro de [[ ]], los campos se escriben SIN corchetes adicionales.
+          // Esto evita la ambigüedad de cierre que causaría [[campo1] + [campo2]]:
+          // el ] de cierre del campo interior y el ] del [[ son el mismo carácter.
+          //
+          // Sintaxis:
+          //   [[hogares_2 + hogares_3]]
+          //   [[viviendas_vacias / viviendas_total * 100 | porcentaje_1]]
+          //   [[pte_v - pte_r | decimal_2]]
+          //
+          // El formato va tras '|'. Por defecto: 'entero'.
+          // Los [campo] simples fuera de [[ ]] siguen funcionando con normalidad.
+          const resolverExpresion = (expr) => {
+              const partes  = expr.trim().split('|');
+              const exprStr = partes[0].trim();
+              const formato = (partes[1] || 'entero').trim();
+
+              // Sustituir identificadores que existan en el registro por su valor numérico.
+              // Los literales numéricos (100, 3.14…) quedan intactos.
+              const exprNum = exprStr.replace(/\b([a-zA-Z_]\w*)\b/g, (_, token) => {
+                  if (token in registro) {
+                      const val = parseFloat(registro[token]);
+                      return isNaN(val) ? 0 : val;
+                  }
+                  // Token desconocido: devolver 0 y avisar
+                  console.warn('visor-widgets: campo no encontrado en registro:', token);
+                  return 0;
+              });
+
+              // Validar: solo dígitos, espacios, punto decimal y operadores básicos
+              if (!/^[\d\s.\+\-\*\/\(\)]+$/.test(exprNum)) {
+                  console.warn('visor-widgets: expresión no válida tras sustitución:', exprNum);
+                  return '?';
+              }
+
+              try {
+                  // eslint-disable-next-line no-new-func
+                  const resultado = Function('"use strict"; return (' + exprNum + ')')();
+                  return window.visorProject.utils.formatearDato(resultado, formato);
+              } catch (e) {
+                  console.warn('visor-widgets: error al evaluar expresión:', exprNum, e);
+                  return '?';
+              }
+          };
+
+          t = t.replace(/\[\[([\s\S]*?)\]\]/g, (_, expr) => resolverExpresion(expr));
+          d = d.replace(/\[\[([\s\S]*?)\]\]/g, (_, expr) => resolverExpresion(expr));
+          // ─────────────────────────────────────────────────────────────────────
 
           const mapaSustitucion = {
               'etiqueta': registro.etiqueta || registro.nombre || "Canarias",
@@ -131,38 +180,54 @@
               'var_abs': window.visorProject.utils.formatearDato(vars.abs, 'entero'),
               'var_pct': window.visorProject.utils.formatearDato(vars.pct, 'porcentaje'),
               'fecha_ref': itemConfig.fecha_referencia ? luxon.DateTime.fromISO(itemConfig.fecha_referencia).toFormat('dd/MM/yyyy') : "",
-              'uds_vv_residenciales_porc': window.visorProject.utils.formatearDato(registro['uds_vv_residenciales_porc'], itemConfig.formato || 'porcentaje_2'),
-              'uds_vv_residenciales': window.visorProject.utils.formatearDato(registro['uds_vv_residenciales'], itemConfig.formato || 'entero'),
-              'plazas_suelo_residencial': window.visorProject.utils.formatearDato(registro['plazas_suelo_residencial'], itemConfig.formato || 'entero'),
-              'plazas_suelo_residencial_porc': window.visorProject.utils.formatearDato(registro['plazas_suelo_residencial_porc'], itemConfig.formato || 'porcentaje_2'),
-              'plazas_vacacionales': window.visorProject.utils.formatearDato(registro['plazas_vacacionales'], itemConfig.formato || 'entero'),
-              'plazas_vacacionales_plazas_total_porc': window.visorProject.utils.formatearDato(registro['plazas_vacacionales_plazas_total_porc'], itemConfig.formato || 'porcentaje_2'),
-              'plazas_total': window.visorProject.utils.formatearDato(registro['plazas_total'], itemConfig.formato || 'entero'),
-              'pte_v': window.visorProject.utils.formatearDato(registro['pte_v'], itemConfig.formato || 'entero'),
-              'pte_v_porc': window.visorProject.utils.formatearDato(registro['pte_v_porc'], itemConfig.formato || 'porcentaje_2'),
-              'rit': window.visorProject.utils.formatearDato(registro['rit'], itemConfig.formato || 'entero'),
-              'rit_v': window.visorProject.utils.formatearDato(registro['rit_v'], itemConfig.formato || 'entero'),
-              'presion_humana_km2': window.visorProject.utils.formatearDato(registro['presion_humana_km2'], itemConfig.formato || 'entero'),
-              'rit_km2': window.visorProject.utils.formatearDato(registro['rit_km2'], itemConfig.formato || 'entero'),
-              'rit_r_km2': window.visorProject.utils.formatearDato(registro['rit_r_km2'], itemConfig.formato || 'entero'),
-              'rit_v_km2': window.visorProject.utils.formatearDato(registro['rit_v_km2'], itemConfig.formato || 'entero'),
-              'viviendas_total': window.visorProject.utils.formatearDato(registro['viviendas_total'], itemConfig.formato || 'entero'),
-              'viviendas_habituales': window.visorProject.utils.formatearDato(registro['viviendas_habituales'], itemConfig.formato || 'entero'),
-              'viviendas_vacias': window.visorProject.utils.formatearDato(registro['viviendas_vacias'], itemConfig.formato || 'entero'),
-              'viviendas_esporadicas': window.visorProject.utils.formatearDato(registro['viviendas_esporadicas'], itemConfig.formato || 'entero'),
-              'vacacional_por_viviendas_habituales': window.visorProject.utils.formatearDato(registro['vacacional_por_viviendas_habituales'], itemConfig.formato || 'porcentaje_2'),
+              //~ 'uds_vv_residenciales_porc': window.visorProject.utils.formatearDato(registro['uds_vv_residenciales_porc'], itemConfig.formato || 'porcentaje_2'),
+              //~ 'uds_vv_residenciales': window.visorProject.utils.formatearDato(registro['uds_vv_residenciales'], itemConfig.formato || 'entero'),
+              //~ 'plazas_suelo_residencial': window.visorProject.utils.formatearDato(registro['plazas_suelo_residencial'], itemConfig.formato || 'entero'),
+              //~ 'plazas_suelo_residencial_porc': window.visorProject.utils.formatearDato(registro['plazas_suelo_residencial_porc'], itemConfig.formato || 'porcentaje_2'),
+              //~ 'plazas_vacacionales': window.visorProject.utils.formatearDato(registro['plazas_vacacionales'], itemConfig.formato || 'entero'),
+              //~ 'plazas_vacacionales_plazas_total_porc': window.visorProject.utils.formatearDato(registro['plazas_vacacionales_plazas_total_porc'], itemConfig.formato || 'porcentaje_2'),
+              //~ 'plazas_total': window.visorProject.utils.formatearDato(registro['plazas_total'], itemConfig.formato || 'entero'),
+              //~ 'pte_v': window.visorProject.utils.formatearDato(registro['pte_v'], itemConfig.formato || 'entero'),
+              //~ 'pte_v_porc': window.visorProject.utils.formatearDato(registro['pte_v_porc'], itemConfig.formato || 'porcentaje_2'),
+              //~ 'rit': window.visorProject.utils.formatearDato(registro['rit'], itemConfig.formato || 'entero'),
+              //~ 'rit_v': window.visorProject.utils.formatearDato(registro['rit_v'], itemConfig.formato || 'entero'),
+              //~ 'presion_humana_km2': window.visorProject.utils.formatearDato(registro['presion_humana_km2'], itemConfig.formato || 'entero'),
+              //~ 'rit_km2': window.visorProject.utils.formatearDato(registro['rit_km2'], itemConfig.formato || 'entero'),
+              //~ 'rit_r_km2': window.visorProject.utils.formatearDato(registro['rit_r_km2'], itemConfig.formato || 'entero'),
+              //~ 'rit_v_km2': window.visorProject.utils.formatearDato(registro['rit_v_km2'], itemConfig.formato || 'entero'),
+              //~ 'viviendas_total': window.visorProject.utils.formatearDato(registro['viviendas_total'], itemConfig.formato || 'entero'),
+              //~ 'viviendas_habituales': window.visorProject.utils.formatearDato(registro['viviendas_habituales'], itemConfig.formato || 'entero'),
+              //~ 'viviendas_vacias': window.visorProject.utils.formatearDato(registro['viviendas_vacias'], itemConfig.formato || 'entero'),
+              //~ 'viviendas_esporadicas': window.visorProject.utils.formatearDato(registro['viviendas_esporadicas'], itemConfig.formato || 'entero'),
+              //~ 'vacacional_por_viviendas_habituales': window.visorProject.utils.formatearDato(registro['vacacional_por_viviendas_habituales'], itemConfig.formato || 'porcentaje_2'),
           }; 
           //~ console.log(itemConfig);
           //~ console.log(registro);
 
           
 
-          // Aplicamos reemplazo de todos los placeholders encontrados
+          // ── PASO 1: claves especiales del mapa (etiqueta, valor, var_*…) ────
           Object.keys(mapaSustitucion).forEach(key => {
               const regex = new RegExp(`\\[${key}\\]`, 'g');
               t = t.replace(regex, mapaSustitucion[key]);
               d = d.replace(regex, mapaSustitucion[key]);
           });
+
+          // ── PASO 2: fallback genérico para [cualquier_campo] no resuelto ────
+          // Permite usar cualquier campo del registro sin necesidad de añadirlo
+          // al mapaSustitucion. El formato se lee del diccionario de datos;
+          // si no existe, se usa itemConfig.formato o 'entero' como último recurso.
+          const diccionario = (drupalSettings.visorProject && drupalSettings.visorProject.diccionario) || {};
+          const reemplazarGenerico = (str) => str.replace(/\[(\w+)\]/g, (match, campo) => {
+              if (!(campo in registro)) return match; // dejar intacto si no existe
+              const formato = (diccionario[campo] && diccionario[campo].formato)
+                  || itemConfig.formato
+                  || 'entero';
+              return window.visorProject.utils.formatearDato(registro[campo], formato);
+          });
+          t = reemplazarGenerico(t);
+          d = reemplazarGenerico(d);
+          // ─────────────────────────────────────────────────────────────────────
 
           return {
               titulo: t,

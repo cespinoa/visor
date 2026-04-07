@@ -48,6 +48,12 @@ visor_dashboard:
     - visor/chartjs_adapter_luxon
     - visor/gaugejs
 
+visor_latex_formatter:
+  version: 1.x
+  css:
+    component:
+      css/latex-formatter.css: {}
+
 visor_informe_nodo:
   version: 1.x
   js:

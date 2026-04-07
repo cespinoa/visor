@@ -496,7 +496,149 @@
 
     _limpiarDatoParaOrdenar: function(texto) {
         return texto.trim().replace(/\./g, '').replace(',', '.').replace('%', '').replace(/[▲▼=]/g, '');
-    }
+    },
+
+    // ─────────────────────────────────────────────────────────────────────
+    // ÍNDICE DE PRESIÓN (área del polígono radar)
+    // ─────────────────────────────────────────────────────────────────────
+
+    /**
+     * Tabla de índice de presión basada en el área del polígono del gráfico
+     * radar-sintesis. Ámbito canarias/isla → tabla de islas.
+     * Ámbito municipio → tabla de municipios del mismo tipo_municipio.
+     * Última fila: polígono de referencia (_avg).
+     */
+    crearTablaIndicePression: function(props) {
+      const radarConfig = window.CONFIG_GRAFICOS['radar-sintesis'];
+      if (!radarConfig) return null;
+      const campos = radarConfig.config.campos;
+      const snapshot = drupalSettings.visorProject.datosDashboard || [];
+      const esIslas = props.ambito !== 'municipio';
+
+      let entidades, tituloSufijo, refLabel;
+
+      if (esIslas) {
+        const ORDEN = ['Lanzarote', 'Fuerteventura', 'Gran Canaria', 'Tenerife', 'El Hierro', 'La Gomera', 'La Palma'];
+        entidades = ORDEN
+          .map(nombre => snapshot.find(d => d.ambito === 'isla' && d.etiqueta === nombre))
+          .filter(Boolean);
+        tituloSufijo = 'Islas';
+        refLabel = 'Media Canarias';
+      } else {
+        const tipo = props.tipo_municipio;
+        const ORDEN_TIPO_ISLA = { oriental: 0, central: 1, occidental: 2 };
+        entidades = snapshot
+          .filter(d => d.ambito === 'municipio' && d.tipo_municipio === tipo)
+          .sort((a, b) => {
+            const tA = ORDEN_TIPO_ISLA[a.tipo_isla] ?? 9;
+            const tB = ORDEN_TIPO_ISLA[b.tipo_isla] ?? 9;
+            if (tA !== tB) return tA - tB;
+            if (a.isla_id !== b.isla_id) return (a.isla_id || 0) - (b.isla_id || 0);
+            return a.etiqueta.localeCompare(b.etiqueta, 'es');
+          });
+        tituloSufijo = tipo;
+        refLabel = 'Media municipios ' + tipo;
+      }
+
+      if (!entidades.length) return null;
+
+      // Los valores _max son iguales para todas las entidades del mismo ámbito;
+      // usamos la primera como referencia.
+      const maxRef = entidades[0];
+
+      // Calcular área para cada entidad
+      const filas = entidades.map(ent => ({
+        etiqueta: ent.etiqueta,
+        indice: this._calcularAreaRadar(ent, campos, maxRef),
+        activo: ent.etiqueta === props.etiqueta,
+        esRef: false,
+      }));
+
+      // Fila de referencia: polígono _avg (el gris de fondo del radar)
+      const avgDatos = {};
+      campos.forEach(c => { avgDatos[c] = maxRef[c + '_avg']; });
+      filas.push({
+        etiqueta: refLabel,
+        indice: this._calcularAreaRadar(avgDatos, campos, maxRef),
+        activo: false,
+        esRef: true,
+      });
+
+      // Construir el DOM con inline styles en todos los elementos para ser
+      // inmune a cualquier regla CSS externa (Bootstrap, Gin, col-*…).
+      const wrapper = document.createElement('div');
+      wrapper.className = 'contenedor-tabla';
+
+      const h3 = document.createElement('h3');
+      h3.className = 'tabla-titulo mdc-typography--headline6';
+      h3.textContent = 'Índice de presión — ' + tituloSufijo;
+      wrapper.appendChild(h3);
+
+      const table = document.createElement('table');
+      table.className = 'tabla-visor';
+      table.style.cssText = 'width:100%;border-collapse:collapse;font-size:0.9rem;color:#333;';
+
+      // Cabeceras
+      const thead    = document.createElement('thead');
+      const headerTr = document.createElement('tr');
+      ['Ámbito', 'Índice de presión'].forEach((texto, i) => {
+        const th = document.createElement('th');
+        th.textContent = texto;
+        th.style.cssText = 'padding:12px;border-bottom:2px solid #333;font-weight:700;'
+          + 'text-align:' + (i === 0 ? 'left' : 'right') + ';';
+        headerTr.appendChild(th);
+      });
+      thead.appendChild(headerTr);
+      table.appendChild(thead);
+
+      // Filas (sin clases col-* para evitar colisiones con el grid CSS)
+      const tbody = document.createElement('tbody');
+      const ESTILO_TD = 'display:table-cell;padding:8px 12px;border-bottom:1px solid #f0f0f0;';
+      filas.forEach(f => {
+        const tr = document.createElement('tr');
+        if (f.activo || f.esRef) {
+          tr.style.cssText = 'font-weight:700;background:#f9f9f9;';
+        }
+
+        const td1 = document.createElement('td');
+        td1.style.cssText = ESTILO_TD + 'text-align:left;width:70%;';
+        td1.textContent = f.etiqueta;
+        tr.appendChild(td1);
+
+        const td2 = document.createElement('td');
+        td2.style.cssText = ESTILO_TD + 'text-align:right;';
+        td2.textContent = f.indice.toFixed(2);
+        tr.appendChild(td2);
+
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      wrapper.appendChild(table);
+
+      return wrapper;
+    },
+
+    /**
+     * Calcula el área del polígono radar usando la fórmula shoelace en
+     * coordenadas polares con n vértices equiangulares.
+     * r_k ∈ [0, 1] (valor normalizado respecto al _max).
+     * Área = (sin(2π/n) / 2) × Σ(r_k × r_{k+1 mod n})
+     * Rango: 0 – n × sin(2π/n) / 2  (≈ 0–2.83 para n=8)
+     */
+    _calcularAreaRadar: function(datos, campos, maxRef) {
+      const n = campos.length;
+      const radios = campos.map(campo => {
+        const max = maxRef[campo + '_max'];
+        if (!max) return 0;
+        return Math.min((datos[campo] || 0) / max, 1);
+      });
+
+      let suma = 0;
+      for (let i = 0; i < n; i++) {
+        suma += radios[i] * radios[(i + 1) % n];
+      }
+      return (Math.sin(2 * Math.PI / n) / 2) * suma;
+    },
   };
 
 })(window.jQuery, window.Drupal);

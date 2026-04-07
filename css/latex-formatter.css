@@ -1,0 +1,16 @@
+/**
+ * Estilos del formateador LaTeX (LatexFormatter).
+ * Solo se carga cuando el formateador está activo en la página.
+ */
+
+.visor-latex-formula--italic {
+  font-style: italic;
+}
+
+.visor-latex-nota {
+  display: block;
+  font-size: 0.85em;
+  color: #666;
+  margin-top: 0.25em;
+  font-style: normal;
+}

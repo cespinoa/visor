@@ -213,24 +213,178 @@ final class InformeController extends ControllerBase {
   }
 
   /**
-   * Sustituye {{ campo }} y {{ campo | formato }} por los valores del registro.
+   * Sustituye variables de texto con soporte de contexto (período, entidad)
+   * y expresiones aritméticas.
+   *
+   * Sintaxis:
+   *   {{ campo }}                          campo del registro actual, auto-formato
+   *   {{ campo | formato }}                campo con formato explícito
+   *   {{ campo | p:anterior }}             período anterior para el mismo registro
+   *   {{ campo | p:YYYY-MM-DD }}           fecha específica
+   *   {{ campo | e:NombreEntidad }}        otra entidad, período actual
+   *   {{ campo | p:anterior | e:Nombre }}  otra entidad, período anterior
+   *   [[ expr | formato ]]                 expresión aritmética formateada
+   *     donde expr puede contener {{ campo | opts }} más operadores + - * / ()
+   *     Ejemplo: [[ {{ rit }} - {{ rit | p:anterior }} | decimal_2 ]]
    */
   private function aplicarSustituciones(string $texto, array $datos): string {
-    return preg_replace_callback(
-      '/\{\{\s*(\w+)(?:\s*\|\s*([\w_]+))?\s*\}\}/',
-      function (array $m) use ($datos): string {
-        $campo   = $m[1];
-        $formato = $m[2] ?? '';
-        $valor   = $datos[$campo] ?? NULL;
+
+    // ── Carga diferida de los JSON del visor ──────────────────────────────
+    $cache = [];
+    $cargar = function (string $nombre) use (&$cache): array {
+      if (!array_key_exists($nombre, $cache)) {
+        $base = \Drupal::service('file_system')->realpath('public://visor');
+        $ruta = $base . '/' . $nombre;
+        $cache[$nombre] = file_exists($ruta)
+          ? (json_decode(file_get_contents($ruta), TRUE) ?? [])
+          : [];
+      }
+      return $cache[$nombre];
+    };
+
+    // ── Parser de opciones ────────────────────────────────────────────────
+    // Convierte " | decimal_2 | p:anterior | e:Lanzarote"
+    // en       ['formato' => 'decimal_2', 'p' => 'anterior', 'e' => 'Lanzarote']
+    $parsearOpts = static function (string $raw): array {
+      $opts = [];
+      foreach (array_filter(array_map('trim', explode('|', $raw))) as $parte) {
+        if (str_starts_with($parte, 'p:')) {
+          $opts['p'] = trim(substr($parte, 2));
+        }
+        elseif (str_starts_with($parte, 'e:')) {
+          $opts['e'] = trim(substr($parte, 2));
+        }
+        elseif ($parte !== '') {
+          $opts['formato'] = $parte;
+        }
+      }
+      return $opts;
+    };
+
+    // ── Resolución de un campo según contexto ────────────────────────────
+    $resolverCampo = function (string $campo, array $opts) use ($datos, $cargar): mixed {
+      $periodo  = $opts['p'] ?? NULL;
+      $etiqueta = $opts['e'] ?? NULL;
+
+      // Caso 1: registro activo, período actual (comportamiento original).
+      if ($periodo === NULL && $etiqueta === NULL) {
+        return $datos[$campo] ?? NULL;
+      }
+
+      // Caso 2: otra entidad, período actual → snapshot.
+      if ($periodo === NULL) {
+        foreach ($cargar('datos_dashboard.json') as $reg) {
+          if (($reg['etiqueta'] ?? NULL) === $etiqueta) {
+            return $reg[$campo] ?? NULL;
+          }
+        }
+        return NULL;
+      }
+
+      // Casos 3 y 4: necesitamos series históricas.
+      $buscEtiq = $etiqueta ?? ($datos['etiqueta'] ?? NULL);
+      $fechaRef  = $datos['fecha_calculo'] ?? NULL;
+
+      $serie = array_values(array_filter(
+        $cargar('series.json'),
+        static fn($r) => ($r['etiqueta'] ?? NULL) === $buscEtiq,
+      ));
+
+      if (empty($serie)) {
+        return NULL;
+      }
+
+      // Ordenar por fecha descendente.
+      usort($serie, static fn($a, $b) =>
+        strcmp($b['fecha_calculo'] ?? '', $a['fecha_calculo'] ?? ''),
+      );
+
+      if ($periodo === 'anterior') {
+        // Período más reciente estrictamente anterior a la fecha de referencia.
+        foreach ($serie as $reg) {
+          if ($fechaRef === NULL || ($reg['fecha_calculo'] ?? '') < $fechaRef) {
+            return $reg[$campo] ?? NULL;
+          }
+        }
+        return NULL;
+      }
+
+      // Fecha específica.
+      foreach ($serie as $reg) {
+        if (($reg['fecha_calculo'] ?? '') === $periodo) {
+          return $reg[$campo] ?? NULL;
+        }
+      }
+
+      return NULL;
+    };
+
+    // ── PASO 1: Expresiones aritméticas  [[ expr | formato ]] ─────────────
+    // Se procesan primero para que las {{ }} internas estén todavía sin resolver.
+    $texto = preg_replace_callback(
+      '/\[\[((?:(?!\]\]).)*)\]\]/s',
+      function (array $m) use ($parsearOpts, $resolverCampo): string {
+        $contenido = $m[1];
+        $formato   = 'decimal_2';
+
+        // Extraer formato si el último token tras | no es una opción de contexto.
+        if (preg_match('/^(.*)\|\s*([\w_]+)\s*$/s', $contenido, $partes)
+            && !str_starts_with(trim($partes[2]), 'p:')
+            && !str_starts_with(trim($partes[2]), 'e:')
+        ) {
+          $contenido = $partes[1];
+          $formato   = trim($partes[2]);
+        }
+
+        // Resolver {{ campo | opts }} → valor numérico sin formato.
+        $exprNum = preg_replace_callback(
+          '/\{\{\s*(\w+)((?:\s*\|\s*(?:[^{}|]+))*)\s*\}\}/',
+          static function (array $inner) use ($parsearOpts, $resolverCampo): string {
+            $val = $resolverCampo($inner[1], $parsearOpts($inner[2] ?? ''));
+            return is_numeric($val) ? (string)(float) $val : '0';
+          },
+          $contenido,
+        );
+
+        // Seguridad: la expresión solo puede contener números y operadores.
+        $exprNum = trim($exprNum);
+        if (!preg_match('/^[\d\s.\+\-\*\/\(\)]+$/', $exprNum) || $exprNum === '') {
+          return '';
+        }
+
+        try {
+          // phpcs:ignore Drupal.Functions.DiscouragedFunctions
+          $resultado = eval('return ' . $exprNum . ';');
+        }
+        catch (\Throwable) {
+          return '';
+        }
+
+        return is_numeric($resultado)
+          ? $this->formatearValor((float) $resultado, $formato)
+          : '';
+      },
+      $texto,
+    );
+
+    // ── PASO 2: Referencias simples/contextuales  {{ campo | opts }} ──────
+    $texto = preg_replace_callback(
+      '/\{\{\s*(\w+)((?:\s*\|\s*(?:[^{}|]+))*)\s*\}\}/',
+      function (array $m) use ($parsearOpts, $resolverCampo): string {
+        $campo = $m[1];
+        $opts  = $parsearOpts($m[2] ?? '');
+        $valor = $resolverCampo($campo, $opts);
 
         if ($valor === NULL || $valor === '') {
           return '';
         }
 
-        return $this->formatearValor($valor, $formato);
+        return $this->formatearValor($valor, $opts['formato'] ?? '');
       },
-      $texto
+      $texto,
     );
+
+    return $texto;
   }
 
   /**

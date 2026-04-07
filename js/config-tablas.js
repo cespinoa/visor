@@ -239,8 +239,8 @@ window.CONFIG_TABLAS = {
     // ==============================================
     // PANEL - DASHBOARD
     // ==============================================
-    'tabla-evolucion-plazas': {
-        titulo: 'Evolución de plazas',
+    'tabla-evolucion-unidades': {
+        titulo: 'Evolución de unidades de vivienda vacacional',
         contexto: 'CHILDREN_HISTORIC',
         total_padre: true,
         descargable: true,
@@ -453,6 +453,46 @@ window.CONFIG_TABLAS = {
         ],
         etiquetas: ["Isla", "Disponibles", "Déficit", "Déficit de oferta"],
     },
-    
+
+    'hogares-nucleos': {
+        titulo: "Núcleos familiares por hogar",
+        contexto: "CHILDREN",
+        modo: "lista",
+        total_padre: true,
+        descargable: true,
+        es_ranking: true,
+        maxInicial: 10,
+        columnas: [
+          ["etiqueta"],
+          ['hogares_0'],
+          ['hogares_1'],
+          ['hogares_2'],
+          ['hogares_3'],
+          ['hogares_total'],
+        ],
+        etiquetas: ["Isla", "Sin núcleo", "1 Núcleo", "2 núcleos", "3 o más", "Total"],
+    },
+
+    'hogares-nucleos-deficit': {
+        titulo: "Núcleos familiares por hogar",
+        contexto: "CHILDREN",
+        modo: "lista",
+        total_padre: true,
+        descargable: true,
+        es_ranking: true,
+        maxInicial: 10,
+        columnas: [
+          ["etiqueta"],
+          ['deficit_teorico_viviendas'],
+          ['deficit_teorico_viviendas_porc'],
+        ],
+        etiquetas: ["Isla", "Déficit teórico de viviendas", "Porcentaje"],
+    },
+
+    'indice-presion': {
+        tipo: 'indice-presion',
+        titulo: 'Índice de presión',
+    },
+
 };
 

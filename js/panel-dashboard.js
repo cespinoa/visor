@@ -39,7 +39,7 @@
             { tipo: 'widget', id: 'card-isla-mayor-crecimiento', ancho: '4'},
             { tipo: 'widget', id: 'card-isla-mayor-crecimiento-porcentual', ancho: '4'},
             { tipo: 'grafico', id: 'evolucion-vivienda-vacacional', ancho: '6'},
-            { tipo: 'tabla', id: 'tabla-evolucion-plazas', ancho: '6' },
+            { tipo: 'tabla', id: 'tabla-evolucion-unidades', ancho: '6' },
           ]
         },
         //~ { 
@@ -174,33 +174,35 @@
           destino: '#panel-dashboard-contenido',
           clases: ['dashboard-main-reglado-a-no-reglado', 'dashboard-main'],
           elementos: [
-            //~ { 
-                //~ tipo: 'pack', 
-                //~ ancho: '12',
-                //~ tituloPack: "Necesidad teórica de vivienda",
-                //~ clasePack: "pack-atencion",
-                //~ elementos: [
-                    //~ { tipo: 'widget', id: 'card-uso-vivienda', ancho: '12'},
-                    //~ { tipo: 'grafico', id: 'bar-necesidad-de-vivienda', ancho: '12' },
-                    { tipo: 'grafico', id: 'bar-cobertura-de-vivienda', ancho: '6' },
-                    { tipo: 'tabla', id: 'necesidad-de-vivienda', ancho: '6'}
-                //~ ]
-            //~ },
-            //~ { 
-                //~ tipo: 'pack', 
-                //~ ancho: '6',
-                //~ tituloPack: "Déficit teórico de vivienda",
-                //~ clasePack: "pack-atencion",
-                //~ elementos: [
-                    //~ { tipo: 'widget', id: 'card-presion-vivienda', ancho: '12'},
-                    //~ { tipo: 'grafico', id: 'bar-cobertura-de-vivienda', ancho: '12' },
-                    //~ { tipo: 'tabla', id: 'deficit-de-vivienda', ancho: '12' }
-                //~ ]
-            //~ }
+            { 
+                tipo: 'pack', 
+                ancho: '6',
+                tituloPack: "Número de núcleos por hogar",
+                clasePack: "pack-atencion",
+                elementos: [
+                    { tipo: 'widget', id: 'card-hogares-nucleos', ancho: '12'},
+                    { tipo: 'grafico', id: 'bar-hogares-nucleos', ancho: '6' },
+                    { tipo: 'tabla', id: 'hogares-nucleos', ancho: '6' },
+                ]
+            },
+            { 
+                tipo: 'pack', 
+                ancho: '6',
+                tituloPack: "Déficit teórico de vivienda",
+                clasePack: "pack-atencion",
+                elementos: [
+                    { tipo: 'widget', id: 'card-hogares-nucleos-deficit', ancho: '12'},
+                    { tipo: 'grafico', id: 'bar-hogares-nucleos-deficit', ancho: '6' },
+                    { tipo: 'tabla', id: 'hogares-nucleos-deficit', ancho: '6' },
+                ]
+            }
           ]
         }
         
       ];
+
+
+
 
       // Llamamos al compositor para que haga todo el trabajo sucio
       if (window.visorProject.rowCompositor) {

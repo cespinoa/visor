@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.diccionario_dato.field_etiqueta
+  module:
+    - external_entities
+id: diccionario_dato.diccionario_dato.field_etiqueta
+field_name: field_etiqueta
+entity_type: diccionario_dato
+bundle: diccionario_dato
+label: 'etiqueta'
+description: ''
+required: false
+translatable: false
+default_value: []
+default_value_callback: ''
+settings: {}
+field_type: string

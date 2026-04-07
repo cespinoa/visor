@@ -57,23 +57,114 @@
     _getEsquema: function (destino) {
       return [
         {
-          tituloBloque: "Datos principales",
-          intro: "Resumen de los indicadores clave de intensidad y presión turística en el ámbito seleccionado.",
+          tituloBloque: "Introducción",
           destino,
           clases: ['dashboard-main-reglado-a-no-reglado'],
           elementos: [
-            { tipo: 'longtext', id: 'intro-intensidad-turistica', ancho: '12' },
-            { tipo: 'tabla',    id: 'resumen-ambito',             ancho: '12' },
+            { tipo: 'longtext', id: 'intro-general', ancho: '12' },
+          ],
+        },
+        { 
+          tituloBloque: "Evolución de la vivienda vacacional",
+          destino,
+          clases: ['dashboard-main-evolucion'],
+          elementos: [
+            { tipo: 'longtext', id: 'evolucion-vv', ancho: '12' },
+            { tipo: 'grafico', id: 'evolucion-vivienda-vacacional', ancho: '12', 'ancho-pdf': '80%'},
+            { tipo: 'tabla', id: 'tabla-evolucion-unidades', ancho: '12' },
+          ]
+        },
+        {
+          tituloBloque: "Principales indicadores",
+          destino,
+          clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes'],
+          elementos: [
+            { tipo: 'longtext', id: 'principales-indicadores', ancho: '12' },
+            { tipo: 'tabla',    id: 'resumen-ambito', ancho: '12' },
+          ],
+        },
+        { 
+          tituloBloque: "Impacto sobre el modelo turístico",
+          destino,
+          clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes'],
+          elementos: [ 
+            { tipo: 'longtext', id: 'impacto-modelo-turistico', ancho: '12' },
+            { tipo: 'tabla', id: 'oferta-alojativa', ancho: '6'},
+            { tipo: 'tabla', id: 'distribucion-plazas-vacacionales', ancho: '6' },
+            { tipo: 'tabla', id: 'distribucion-plazas-regladas', ancho: '6' },
+            { tipo: 'tabla', id: 'plazas-turisticas-zona-residencial', ancho: '6' },
+            { tipo: 'tabla', id: 'plazas-turisticas-zona-turistica', ancho: '6'},
+            { tipo: 'tabla', id: 'oferta-alojativa-por-zona-ambito', ancho: '6' }
+          ]
+        },
+        { 
+          destino,
+          clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes'],
+          elementos: [ 
+            { tipo: 'grafico', id: 'bar-reglado-no-reglado', ancho: '12' },
+            { tipo: 'tabla', id: 'plazas-regladas-no-regladas', ancho: '12'},
+          ]
+        },
+        { 
+          destino,
+          clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes'],
+          elementos: [ 
+            { tipo: 'grafico', id: 'bar-plazas', ancho: '12' },
+            { tipo: 'tabla', id: 'plazas-alojativas-por-zonas', ancho: '12' }
+          ]
+        },
+            
+        {
+          tituloBloque: "Presión humana",
+          destino,
+          clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes'],
+          elementos: [
+            { tipo: 'longtext', id: 'presion-humana', ancho: '12' },
+            { tipo: 'tabla', id: 'poblacion-turistica-equivalente', ancho: '6' },
+            { tipo: 'tabla', id: 'intensidad-turistica',            ancho: '6' },
+            { tipo: 'tabla', id: 'carga-poblacional',               ancho: '6' },
+            { tipo: 'tabla', id: 'presion-humana',                  ancho: '6' },
+          ],
+        },
+
+        {
+          destino,
+          clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes'],
+          elementos: [
+            { tipo: 'grafico', id: 'bar-ptev-pter', ancho: '12' },
+            { tipo: 'tabla', id: 'ptev-pter', ancho: '12' }
+          ],
+        },
+
+
+        {
+          destino,
+          clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes'],
+          elementos: [
+            { tipo: 'grafico', id: 'bar-ritr_ritv', ancho: '12' },
+            { tipo: 'tabla', id: 'ritv-ritr', ancho: '12'}
+          ],
+        },
+
+        {
+          destino,
+          clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes'],
+          elementos: [
+            { tipo: 'grafico', id: 'bar-presion-humana', ancho: '12' },
+            { tipo: 'tabla', id: 'presion-territorio', ancho: '12' }
           ],
         },
         {
-          tituloBloque: "Actividad turistica por tipo de oferta y de zona",
-          intro: "Caracterizacion del modelo turistico.",
+          tituloBloque: "Afección a la vivienda",
           destino,
-          clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes', 'salto-despues'],
+          clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes'],
           elementos: [
-            { tipo: 'grafico', id: 'bar-reglado-no-reglado',   ancho: '12', 'ancho-pdf': '80%' },
-            { tipo: 'tabla',   id: 'plazas-regladas-no-regladas', ancho: '12' },
+            { tipo: 'longtext', id: 'indicadores-vivienda', ancho: '12' },
+            { tipo: 'tabla', id: 'parque-viviendas',        ancho: '6' },
+            { tipo: 'tabla', id: 'viviendas-disponibles',   ancho: '6' },
+            { tipo: 'tabla', id: 'viviendas-necesarias',    ancho: '6' },
+            { tipo: 'tabla', id: 'deficit-de-viviendas',    ancho: '6' },
+            { tipo: 'tabla', id: 'presion-vv-sobre-vivienda', ancho: '6' },
           ],
         },
         {
@@ -86,28 +177,12 @@
           ],
         },
         {
-          tituloBloque: "Presión humana",
-          intro: "Resumen de los indicadores clave de intensidad y presión turística en el ámbito seleccionado.",
+          tituloBloque: "Índice de presión por isla",
+          intro: "Indicadores normalizados de cada isla respecto al máximo registrado en Canarias.",
           destino,
-          clases: ['dashboard-main-reglado-a-no-reglado'],
+          clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes', 'permite-saltos'],
           elementos: [
-            { tipo: 'tabla', id: 'poblacion-turistica-equivalente', ancho: '6' },
-            { tipo: 'tabla', id: 'intensidad-turistica',            ancho: '6' },
-            { tipo: 'tabla', id: 'carga-poblacional',               ancho: '6' },
-            { tipo: 'tabla', id: 'presion-humana',                  ancho: '6' },
-          ],
-        },
-        {
-          tituloBloque: "Vivienda",
-          intro: "Resumen de los indicadores clave de vivienda.",
-          destino,
-          clases: ['dashboard-main-reglado-a-no-reglado'],
-          elementos: [
-            { tipo: 'tabla', id: 'parque-viviendas',        ancho: '6' },
-            { tipo: 'tabla', id: 'viviendas-disponibles',   ancho: '6' },
-            { tipo: 'tabla', id: 'viviendas-necesarias',    ancho: '6' },
-            { tipo: 'tabla', id: 'deficit-de-viviendas',    ancho: '6' },
-            { tipo: 'tabla', id: 'presion-vv-sobre-vivienda', ancho: '6' },
+            { tipo: 'tabla', id: 'indice-presion', ancho: '12' }
           ],
         },
       ];

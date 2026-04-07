@@ -1,0 +1,17 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - external_entities
+id: diccionario_dato.field_formato
+field_name: field_formato
+entity_type: diccionario_dato
+type: string
+settings: {}
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {}
+persist_with_no_fields: false
+custom_storage: false

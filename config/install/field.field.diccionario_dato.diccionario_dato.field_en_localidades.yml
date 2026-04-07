@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.diccionario_dato.field_en_localidades
+  module:
+    - external_entities
+id: diccionario_dato.diccionario_dato.field_en_localidades
+field_name: field_en_localidades
+entity_type: diccionario_dato
+bundle: diccionario_dato
+label: 'en_localidades'
+description: ''
+required: false
+translatable: false
+default_value: []
+default_value_callback: ''
+settings: {}
+field_type: boolean

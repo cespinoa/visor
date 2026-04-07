@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.diccionario_dato.field_orden_de_calculo
+  module:
+    - external_entities
+id: diccionario_dato.diccionario_dato.field_orden_de_calculo
+field_name: field_orden_de_calculo
+entity_type: diccionario_dato
+bundle: diccionario_dato
+label: 'orden_de_calculo'
+description: ''
+required: false
+translatable: false
+default_value: []
+default_value_callback: ''
+settings: {}
+field_type: integer

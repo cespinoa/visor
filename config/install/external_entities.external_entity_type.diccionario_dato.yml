@@ -1,0 +1,296 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - external_entities
+    - xnttsql
+id: diccionario_dato
+label: 'Dato del diccionario'
+label_plural: 'Datos del diccionario'
+base_path: null
+description: 'Registros de la tabla diccionario_de_datos en la base de datos externa mapa_data (PostgreSQL).'
+content_class: Drupal\external_entities\Entity\ExternalEntity
+read_only: true
+debug_level: 0
+field_mappers:
+  id:
+    id: generic
+    config:
+      property_mappings:
+        value:
+          id: direct
+          config:
+            mapping: id_campo
+            required_field: true
+            main_property: true
+            data_processors: {  }
+      debug_level: 0
+  label:
+    id: generic
+    config:
+      property_mappings:
+        value:
+          id: direct
+          config:
+            mapping: etiqueta
+            required_field: false
+            main_property: true
+            data_processors: {  }
+      debug_level: 0
+  langcode:
+    id: generic
+    config:
+      property_mappings:
+        value:
+          id: direct
+          config:
+            mapping: langcode
+            required_field: false
+            main_property: true
+            data_processors: {  }
+      debug_level: 0
+  uuid:
+    id: generic
+    config:
+      property_mappings:
+        value:
+          id: direct
+          config:
+            mapping: id_campo
+            required_field: false
+            main_property: true
+            data_processors: {  }
+      debug_level: 0
+  field_etiqueta:
+    id: generic
+    config:
+      property_mappings:
+        value:
+          id: direct
+          config:
+            mapping: etiqueta
+            required_field: false
+            main_property: true
+            data_processors: {  }
+      debug_level: 0
+  field_descripcion:
+    id: generic
+    config:
+      property_mappings:
+        value:
+          id: direct
+          config:
+            mapping: descripcion
+            required_field: false
+            main_property: true
+            data_processors: {  }
+      debug_level: 0
+  field_tipo:
+    id: generic
+    config:
+      property_mappings:
+        value:
+          id: direct
+          config:
+            mapping: tipo
+            required_field: false
+            main_property: true
+            data_processors: {  }
+      debug_level: 0
+  field_orden_de_calculo:
+    id: generic
+    config:
+      property_mappings:
+        value:
+          id: direct
+          config:
+            mapping: orden_de_calculo
+            required_field: false
+            main_property: true
+            data_processors: {  }
+      debug_level: 0
+  field_formula:
+    id: generic
+    config:
+      property_mappings:
+        value:
+          id: direct
+          config:
+            mapping: formula
+            required_field: false
+            main_property: true
+            data_processors: {  }
+      debug_level: 0
+  field_origen:
+    id: generic
+    config:
+      property_mappings:
+        value:
+          id: direct
+          config:
+            mapping: origen
+            required_field: false
+            main_property: true
+            data_processors: {  }
+      debug_level: 0
+  field_formato:
+    id: generic
+    config:
+      property_mappings:
+        value:
+          id: direct
+          config:
+            mapping: formato
+            required_field: false
+            main_property: true
+            data_processors: {  }
+      debug_level: 0
+  field_unidades:
+    id: generic
+    config:
+      property_mappings:
+        value:
+          id: direct
+          config:
+            mapping: unidades
+            required_field: false
+            main_property: true
+            data_processors: {  }
+      debug_level: 0
+  field_visualizable:
+    id: generic
+    config:
+      property_mappings:
+        value:
+          id: direct
+          config:
+            mapping: visualizable
+            required_field: false
+            main_property: true
+            data_processors: {  }
+      debug_level: 0
+  field_comparable:
+    id: generic
+    config:
+      property_mappings:
+        value:
+          id: direct
+          config:
+            mapping: comparable
+            required_field: false
+            main_property: true
+            data_processors: {  }
+      debug_level: 0
+  field_en_mv:
+    id: generic
+    config:
+      property_mappings:
+        value:
+          id: direct
+          config:
+            mapping: en_mv
+            required_field: false
+            main_property: true
+            data_processors: {  }
+      debug_level: 0
+  field_en_localidades:
+    id: generic
+    config:
+      property_mappings:
+        value:
+          id: direct
+          config:
+            mapping: en_localidades
+            required_field: false
+            main_property: true
+            data_processors: {  }
+      debug_level: 0
+field_mapping_notes: ''
+data_aggregator:
+  id: single
+  config:
+    storage_clients:
+      -
+        id: sql
+        config:
+          queries:
+            read:
+              - 'SELECT id_campo, etiqueta, descripcion, tipo, orden_de_calculo, formula, origen, formato, unidades, visualizable, comparable, en_mv, en_localidades FROM diccionario_de_datos WHERE id_campo = :id'
+            list:
+              - 'SELECT id_campo, etiqueta, descripcion, tipo, orden_de_calculo, formula, origen, formato, unidades, visualizable, comparable, en_mv, en_localidades FROM diccionario_de_datos'
+            count:
+              - 'SELECT COUNT(*) FROM diccionario_de_datos'
+          connection:
+            dbkey: mapa_data
+            schemas:
+              - public
+          placeholders: {  }
+          filter_mappings:
+            - alias: field_etiqueta
+              expression: etiqueta
+            - alias: field_descripcion
+              expression: descripcion
+            - alias: field_tipo
+              expression: tipo
+            - alias: field_orden_de_calculo
+              expression: orden_de_calculo
+            - alias: field_formula
+              expression: formula
+            - alias: field_origen
+              expression: origen
+            - alias: field_formato
+              expression: formato
+            - alias: field_unidades
+              expression: unidades
+            - alias: field_visualizable
+              expression: visualizable
+            - alias: field_comparable
+              expression: comparable
+            - alias: field_en_mv
+              expression: en_mv
+            - alias: field_en_localidades
+              expression: en_localidades
+data_aggregator_notes: ''
+language_settings: {  }
+persistent_cache_max_age: 0
+annotation_entity_type_id: null
+annotation_bundle_id: null
+annotation_field_name: null
+annotation_inherited_fields: {  }
+locks:
+  lock_edit: false
+  lock_delete: true
+  lock_fields: false
+  lock_display: false
+  lock_annotations: false
+  lock_field_mappers:
+    '*':
+      allow_plugins: {  }
+      lock_config: false
+      hide_config: false
+    id:
+      allow_plugins:
+        generic: generic
+      lock_config: true
+      hide_config: false
+    langcode:
+      allow_plugins:
+        generic: generic
+      lock_config: true
+      hide_config: false
+    uuid:
+      allow_plugins:
+        generic: generic
+      lock_config: true
+      hide_config: false
+  lock_data_aggregator:
+    allow_plugins:
+      single: single
+    lock_config: false
+    hide_config: false
+    lock_storage_clients:
+      -
+        allow_plugins:
+          sql: sql
+        lock_config: false
+        hide_config: false

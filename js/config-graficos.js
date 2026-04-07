@@ -293,12 +293,12 @@ window.CONFIG_GRAFICOS = {
         contexto: 'CHILDREN_HISTORIC', // <--- El Selector buscará en datosSeries
         periodo: 'YEARLY_MAX',     // <--- Refinará para tener un punto por año (diciembre)
         stacked: true,
-        agrupacion: {
-            campo: 'tipo_municipio',
-            series_a_agrupar: ['GRANDE', 'MEDIANO', 'PEQUEÑO', 'TURÍSTICO'], // Solo estos se funden
-            etiqueta_grupo: ['Grandes municipios', 'Municipios medianos','Municipios pequeños', 'Municipios turísticos'],
-            color: '#6c757d'
-        },
+        //~ agrupacion: {
+            //~ campo: 'tipo_municipio',
+            //~ series_a_agrupar: ['GRANDE', 'MEDIANO', 'PEQUEÑO', 'TURÍSTICO'], // Solo estos se funden
+            //~ etiqueta_grupo: ['Grandes municipios', 'Municipios medianos','Municipios pequeños', 'Municipios turísticos'],
+            //~ color: '#6c757d'
+        //~ },
         config: {
             campos: ['uds_vv_total'],
             paleta: 'islas',
@@ -311,12 +311,12 @@ window.CONFIG_GRAFICOS = {
         contexto: 'CHILDREN_HISTORIC', // <--- El Selector buscará en datosSeries
         periodo: '2023-06-30',
         stacked: true,
-        agrupacion: {
-            campo: 'tipo_municipio',
-            series_a_agrupar: ['GRANDE', 'MEDIANO', 'PEQUEÑO', 'TURÍSTICO'], // Solo estos se funden
-            etiqueta_grupo: ['Grandes municipios', 'Municipios medianos','Municipios pequeños', 'Municipios turísticos'],
-            color: '#6c757d'
-        },
+        //~ agrupacion: {
+            //~ campo: 'tipo_municipio',
+            //~ series_a_agrupar: ['GRANDE', 'MEDIANO', 'PEQUEÑO', 'TURÍSTICO'], // Solo estos se funden
+            //~ etiqueta_grupo: ['Grandes municipios', 'Municipios medianos','Municipios pequeños', 'Municipios turísticos'],
+            //~ color: '#6c757d'
+        //~ },
         config: {
             campos: ['uds_vv_total'],
             paleta: 'islas',
@@ -334,12 +334,12 @@ window.CONFIG_GRAFICOS = {
             campos: ['plazas_suelo_residencial', 'plazas_suelo_turistico'],
             paleta: 'paleta-donuts', 
         },
-        agrupacion: {
-            campo: 'tipo_isla',
-            series_a_agrupar: ['Occidental'], 
-            etiqueta_grupo: ['Islas occidentales'],
-            color: '#6c757d'
-        },
+        //~ agrupacion: {
+            //~ campo: 'tipo_isla',
+            //~ series_a_agrupar: ['Occidental'], 
+            //~ etiqueta_grupo: ['Islas occidentales'],
+            //~ color: '#6c757d'
+        //~ },
     },
     'bar-vv-por-zona': {
         tipo: 'bar',
@@ -352,12 +352,12 @@ window.CONFIG_GRAFICOS = {
             campos: ['uds_vv_residenciales', 'uds_vv_turisticas'],
             paleta: 'paleta-donuts', 
         },
-        agrupacion: {
-            campo: 'tipo_isla',
-            series_a_agrupar: ['Occidental'], 
-            etiqueta_grupo: ['Islas occidentales'],
-            color: '#6c757d'
-        },
+        //~ agrupacion: {
+            //~ campo: 'tipo_isla',
+            //~ series_a_agrupar: ['Occidental'], 
+            //~ etiqueta_grupo: ['Islas occidentales'],
+            //~ color: '#6c757d'
+        //~ },
     },
     'bar-reglado-no-reglado': {
         tipo: 'bar',
@@ -369,12 +369,12 @@ window.CONFIG_GRAFICOS = {
             campos: ['plazas_vacacionales', 'plazas_regladas'],
             paleta: 'paleta-donuts', 
         },
-        agrupacion: {
-            campo: 'tipo_isla',
-            series_a_agrupar: ['Occidental'], 
-            etiqueta_grupo: ['Islas occidentales'],
-            color: '#6c757d'
-        },
+        //~ agrupacion: {
+            //~ campo: 'tipo_isla',
+            //~ series_a_agrupar: ['Occidental'], 
+            //~ etiqueta_grupo: ['Islas occidentales'],
+            //~ color: '#6c757d'
+        //~ },
     },
     'bar-ptev-pter': {
         tipo: 'bar',
@@ -386,12 +386,12 @@ window.CONFIG_GRAFICOS = {
             campos: ['pte_v', 'pte_r'],
             paleta: 'paleta-donuts', 
         },
-        agrupacion: {
-            campo: 'tipo_isla',
-            series_a_agrupar: ['Occidental'], 
-            etiqueta_grupo: ['Islas occidentales'],
-            color: '#6c757d'
-        },
+        //~ agrupacion: {
+            //~ campo: 'tipo_isla',
+            //~ series_a_agrupar: ['Occidental'], 
+            //~ etiqueta_grupo: ['Islas occidentales'],
+            //~ color: '#6c757d'
+        //~ },
     },
     'bar-ritr_ritv': {
         tipo: 'bar',
@@ -403,12 +403,12 @@ window.CONFIG_GRAFICOS = {
             campos: ['rit_v', 'rit_r'],
             paleta: 'paleta-donuts', 
         },
-        agrupacion: {
-            campo: 'tipo_isla',
-            series_a_agrupar: ['Occidental'], 
-            etiqueta_grupo: ['Islas occidentales'],
-            color: '#6c757d'
-        },
+        //~ agrupacion: {
+            //~ campo: 'tipo_isla',
+            //~ series_a_agrupar: ['Occidental'], 
+            //~ etiqueta_grupo: ['Islas occidentales'],
+            //~ color: '#6c757d'
+        //~ },
     },
     'bar-presion-humana': {
         tipo: 'bar',
@@ -420,12 +420,12 @@ window.CONFIG_GRAFICOS = {
             campos: ['rit_v_km2', 'rit_r_km2','residentes_km2'],
             paleta: 'triada', 
         },
-        agrupacion: {
-            campo: 'tipo_isla',
-            series_a_agrupar: ['Occidental'], 
-            etiqueta_grupo: ['Islas occidentales'],
-            color: '#6c757d'
-        },
+        //~ agrupacion: {
+            //~ campo: 'tipo_isla',
+            //~ series_a_agrupar: ['Occidental'], 
+            //~ etiqueta_grupo: ['Islas occidentales'],
+            //~ color: '#6c757d'
+        //~ },
     },
     'bar-uso-vivienda': {
         tipo: 'bar',
@@ -448,18 +448,18 @@ window.CONFIG_GRAFICOS = {
         tipo: 'bar',
         titulo: 'Presion sobre la vivienda habitual',
         contexto: 'CHILDREN',
-        stacked: true,   
-        base100: true,
+        stacked: false,   
+        base100: false,
         config: {
-            campos: ['uds_vv_residenciales', 'viviendas_disponibles'],
+            campos: ['uds_vv_residenciales'],
             paleta: 'paleta-donuts', 
         },
-        agrupacion: {
-            campo: 'tipo_isla',
-            series_a_agrupar: ['Occidental'], 
-            etiqueta_grupo: ['Islas occidentales'],
-            color: '#6c757d'
-        },
+        //~ agrupacion: {
+            //~ campo: 'tipo_isla',
+            //~ series_a_agrupar: ['Occidental'], 
+            //~ etiqueta_grupo: ['Islas occidentales'],
+            //~ color: '#6c757d'
+        //~ },
     },
 
     'bar-necesidad-de-vivienda': {
@@ -479,6 +479,34 @@ window.CONFIG_GRAFICOS = {
             series_a_agrupar: ['Occidental'], 
             etiqueta_grupo: ['Islas occidentales'],
             color: '#6c757d'
+        },
+    },
+
+    'bar-hogares-nucleos': {
+        tipo: 'bar',
+        titulo: 'Necesidad de vivienda',
+        contexto: 'CHILDREN',
+        stacked: true,
+        base100: true,
+        config: {
+            campos: ['hogares_0', 'hogares_1', 'hogares_2', 'hogares_3'],
+            paleta: 'progreso-calor',
+            fill: true,
+            tipo: 'bar',
+        },
+    },
+
+    'bar-hogares-nucleos-deficit': {
+        tipo: 'bar',
+        titulo: 'Necesidad de vivienda',
+        contexto: 'CHILDREN',
+        stacked: false,
+        base100: false,
+        config: {
+            campos: ['deficit_teorico_viviendas_porc'],
+            paleta: 'paleta-donuts',
+            fill: true,
+            tipo: 'bar',
         },
     },
 

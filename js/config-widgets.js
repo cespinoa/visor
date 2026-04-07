@@ -233,5 +233,32 @@ window.CONFIG_WIDGETS = {
             clasePersonalizada: 'impacto-total'
         }
     },
+
+    'card-hogares-nucleos': {
+        tipo: 'widget',
+        servicio: 'cardImpacto',
+        item: {
+            propsSelector: { ambito: 'canarias' },
+            ambito: 'canarias',
+            icono: 'trending_up',
+            plantilla: "[[ hogares_2 + hogares_3 ]] familias canarias están obligadas a compartir vivienda",
+            desarrollo: "En [hogares_3] viviendas conviven tres o más familias",
+            clasePersonalizada: 'impacto-total'
+        }
+    },
+
+    'card-hogares-nucleos-deficit': {
+        tipo: 'widget',
+        servicio: 'cardImpacto',
+        item: {
+            propsSelector: { ambito: 'canarias' },
+            ambito: 'canarias',
+            icono: 'trending_up',
+            plantilla: "Canarias tiene que poner a disposición de las familias un mínimo de [deficit_teorico_viviendas] viviendas ",
+            desarrollo: "El déficit teórico de viviendas se sitúa en el [deficit_teorico_viviendas_porc]",
+            clasePersonalizada: 'impacto-total'
+        }
+    },
+    
     
 }
