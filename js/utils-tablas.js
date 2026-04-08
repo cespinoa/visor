@@ -134,7 +134,7 @@
                     const [idCampo, tipoManual] = col;
                     const formato = this.obtenerFormato(idCampo, tipoManual);
                     return {
-                        valor: this._f(regActual[idCampo], formato),
+                        valor: this._f(this._resolverCampo(idCampo, regActual), formato),
                         clase: "col-dato"
                     };
                 });
@@ -242,7 +242,7 @@
             const formato = this.obtenerFormato(idCampo, Array.isArray(campoSpec) ? campoSpec[1] : null);
 
             const celdas = registros.map(reg => ({
-                valor: this._f(reg[idCampo], formato),
+                valor: this._f(this._resolverCampo(idCampo, reg), formato),
                 clase: 'col-dato'
             }));
 
@@ -287,10 +287,10 @@
                 const formato = this.obtenerFormato(idCampo, itemDato[1]);
 
                 const celdas = [
-                    { valor: this._f(regAntiguo[idCampo], formato), clase: "col-dato col-antiguo" },
-                    { valor: this._f(regActual[idCampo], formato), clase: "col-dato col-reciente" }
+                    { valor: this._f(this._resolverCampo(idCampo, regAntiguo), formato), clase: "col-dato col-antiguo" },
+                    { valor: this._f(this._resolverCampo(idCampo, regActual), formato), clase: "col-dato col-reciente" }
                 ];
-                this._inyectarCalculos(celdas, config, regAntiguo[idCampo], regActual[idCampo]);
+                this._inyectarCalculos(celdas, config, this._resolverCampo(idCampo, regAntiguo), this._resolverCampo(idCampo, regActual));
 
                 return { etiqueta, celdas, esDestacada: items.includes('destacada') };
             });
@@ -314,9 +314,9 @@
                 items.forEach(item => {
                     if (Array.isArray(item)) {
                         let [idOTexto, tipoManual] = item;
-                        let valorFinal = (tipoManual === 'literal') 
-                            ? idOTexto 
-                            : this._f(regUnico[idOTexto], this.obtenerFormato(idOTexto, tipoManual));
+                        let valorFinal = (tipoManual === 'literal')
+                            ? idOTexto
+                            : this._f(this._resolverCampo(idOTexto, regUnico), this.obtenerFormato(idOTexto, tipoManual));
                         
                         celdas.push({ valor: valorFinal, clase: "col-dato" });
                     } else if (item === 'destacada') {
@@ -472,11 +472,88 @@
         return wrapper;
     },
 
+    /**
+     * Prepara un dataset desde un objeto drupalSettings (p.ej. {2021: '3011', total: '13941'}).
+     * Genera una fila por clave, con la clave indicada en config.fila_total como destacada.
+     */
+    prepararDatasetFuente: function(config, datosRaw) {
+        const formato    = config.formato || 'entero';
+        const claveTotal = config.fila_total || 'total';
+
+        const resultado = Object.entries(datosRaw)
+            .filter(([k]) => k !== claveTotal)
+            .map(([k, v]) => ({
+                etiqueta:    k,
+                celdas:      [{ valor: this._f(v, formato), clase: 'col-dato' }],
+                esDestacada: false,
+            }));
+
+        if (claveTotal in datosRaw) {
+            resultado.push({
+                etiqueta:    config.etiqueta_total || 'Total',
+                celdas:      [{ valor: this._f(datosRaw[claveTotal], formato), clase: 'col-dato' }],
+                esDestacada: true,
+            });
+        }
+
+        resultado._columnasCSV = config.cabecera || ['Clave', 'Valor'];
+        return resultado;
+    },
+
     // ... (Mantener funciones de obtenerFormato, exportarDatos y ordenarTabla igual que antes)
     obtenerFormato: function(idCampo, tipoManual) {
         if (tipoManual) return tipoManual;
+        // Extraer formato embebido en [[expr | formato]]
+        const mFmt = /^\[\[[\s\S]+?\|\s*(\w+)\s*\]\]$/.exec(idCampo);
+        if (mFmt) return mFmt[1];
         const dicc = drupalSettings.visorProject.diccionario;
         return (dicc && dicc[idCampo] && dicc[idCampo].formato) ? dicc[idCampo].formato : 'entero';
+    },
+
+    /**
+     * Resuelve el valor de una celda dado su spec y un registro.
+     *
+     * Si spec empieza por [[, se trata como expresión aritmética:
+     *   - Los identificadores que existen en registro se sustituyen por
+     *     su valor numérico raw.
+     *   - La expresión se valida y evalúa con Function().
+     *   - El formato opcional [[expr | formato]] se ignora aquí
+     *     (obtenerFormato lo extrae por separado).
+     *
+     * Si spec es un nombre de campo normal, devuelve registro[spec].
+     *
+     * Devuelve null si la expresión no es válida (→ _f mostrará "-").
+     */
+    _resolverCampo: function(spec, registro) {
+        const m = /^\[\[([\s\S]+?)\]\]$/.exec(spec);
+        if (!m) return registro[spec];
+
+        // Eliminar el fragmento de formato opcional antes de evaluar
+        const exprStr = m[1].split('|')[0].trim();
+
+        // Sustituir identificadores por su valor numérico
+        const exprNum = exprStr.replace(/\b([a-zA-Z_]\w*)\b/g, (_, token) => {
+            if (token in registro) {
+                const val = parseFloat(registro[token]);
+                return isNaN(val) ? 0 : val;
+            }
+            console.warn('visor-tablas: campo no encontrado en registro:', token);
+            return 0;
+        });
+
+        // Validar: solo dígitos, espacios, punto decimal y operadores básicos
+        if (!/^[\d\s.\+\-\*\/\(\)]+$/.test(exprNum)) {
+            console.warn('visor-tablas: expresión no válida:', exprNum);
+            return null;
+        }
+
+        try {
+            // eslint-disable-next-line no-new-func
+            return Function('"use strict"; return (' + exprNum + ')')();
+        } catch (e) {
+            console.warn('visor-tablas: error al evaluar:', exprNum, e);
+            return null;
+        }
     },
 
     ordenarTabla: function(tabla, colIndex) {

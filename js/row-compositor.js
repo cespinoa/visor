@@ -292,6 +292,17 @@
             return motorTablas.crearTablaIndicePression(props);
         }
 
+        // Tabla desde drupalSettings: no pasa por el dataSelector de snapshot
+        if (config.fuente) {
+            const datosRaw = (drupalSettings.visorProject || {})[config.fuente];
+            if (!datosRaw) return null;
+            const dataset = motorTablas.prepararDatasetFuente(config, datosRaw);
+            if (!dataset || dataset.length === 0) return null;
+            const tablaDOM = motorTablas.crearTabla(config, dataset);
+            if (tablaDOM) this.añadirFuncionalidadFullscreen(tablaDOM);
+            return tablaDOM;
+        }
+
         // 1. OBTENCIÓN DE DATOS: El selector aplica filtros, agrupaciones y ORDENACIÓN
         const datosParaMotor = selector.seleccionar(props, config);
         

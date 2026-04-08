@@ -45,6 +45,12 @@ final class DashboardController extends ControllerBase {
       $datos_localidades = json_decode($contenido, TRUE);
     }
 
+    // DATOS COMPLEMENTARIOS
+    //======================
+
+    // Obtenemos los datos de vivienda terminada
+    $viviendas_terminadas = $this->getViviendasTerminadas();
+
     
 
     // Obtenemos las siluetas
@@ -90,11 +96,45 @@ final class DashboardController extends ControllerBase {
             'siluetas' => $imagenes_json,
             'nombres_siluetas' => $nombres_siluetas,
             'diccionario' => $diccionario,
+            '$viviendas_terminadas' => $viviendas_terminadas,
           ],
         ],
       ],
     ];
 
+  }
+
+  public function getViviendasTerminadas(){
+    $conn = Database::getConnection('default', 'mapa_data');
+    
+    // Traemos toda la vista que creamos en Postgres
+    $results = $conn->select('vivienda_iniciada_terminada_canarias', 'h')                                                                                                                    
+      ->fields('h', ['year', 'viviendas_terminadas'])                                                                                                                                        
+      ->condition('tipo_periodo', 'anual')                    
+      ->condition('territorio_codigo', 'ES70')                                                                                                                                               
+      ->condition('year', 2020, '>')
+      ->orderBy('year', 'ASC')                                                                                                                                                               
+      ->execute()                                                                                                                                                                            
+      ->fetchAll();
+
+
+    // Organizamos el array para que el JS lo encuentre rápido
+    $dataset = [];
+    foreach ($results as $row) {
+      $key = $row->year;
+      $dataset[$key] = $row->viviendas_terminadas;
+    }
+
+    $query = $conn->select('vivienda_iniciada_terminada_canarias', 'h')
+      ->condition('territorio_codigo', 'ES70')
+      ->condition('tipo_periodo', 'anual')                                                                                                                                                   
+      ->condition('year', 2020, '>');
+    $query->addExpression('SUM(viviendas_terminadas)', 'total_terminadas');                                                                                                                  
+                                                                                                                                                                                             
+    //~ $total = $query->execute()->fetchField();
+    $dataset['total'] = $query->execute()->fetchField();
+    
+    return $dataset;
   }
 
 

@@ -1,7 +1,17 @@
 // js/dashboard/config-tablas.js
 
 window.CONFIG_TABLAS = {
-    
+
+    'viviendas-terminadas-canarias': {
+        titulo:         "Viviendas terminadas",
+        fuente:         '$viviendas_terminadas',
+        modo:           'ficha',
+        cabecera:       ["Año", "Viviendas"],
+        formato:        'entero',
+        fila_total:     'total',
+        etiqueta_total: 'Total período',
+    },
+
     'resumen-ambito': {
         titulo: "Principales indicadores",
         contexto: "PARENTS",
@@ -201,6 +211,39 @@ window.CONFIG_TABLAS = {
             ["Total", ["pte_total", "entero"], ["100,00%", "literal"], "destacada" ]
         ]
     },
+
+
+    'ficha-hogares-por-nucleos': {
+        titulo: "Hogares por núcleos",
+        contexto: "SELF",
+        modo: "ficha",
+        cabecera: ["Tipo de hogar", "Unidades", "Porcentaje"],
+        filas: [
+            ["Sin núcleo", ["hogares_0"], ["hogares_0_porc"]],
+            ["Un núcleo", ["hogares_1"], ["hogares_1_porc"]],
+            ["Dos núcleos", ["hogares_2"], ["hogares_2_porc"]],
+            ["Tres o más núcleos", ["hogares_3"], ["hogares_3_porc"]],
+            ["Total", ["hogares_total", "entero"], ["100,00%", "literal"], "destacada" ]
+        ]
+    },
+
+    'ficha-hogares-por-nucleos-deficit': {
+        titulo: "Déficit generado por tipo de hogar",
+        contexto: "SELF",
+        modo: "ficha",
+        cabecera: ["Tipo de hogar", "Familias", "Porcentaje"],
+        filas: [
+            ["Sin núcleo x 0", ["0", "literal"], ["0,00%", "literal"]],
+            ["Un núcleo x 0", ["0", "literal"], ["0,00%", "literal"]],
+            ["Dos núcleos x 1", ["hogares_2"], ["[[hogares_2/((hogares_3 * 2) + hogares_2)*100]]", "porcentaje_2"]  ],
+            ["Tres o más núcleos x3", ["[[hogares_3*2]]"], ["[[hogares_3*2/((hogares_3 * 2) + hogares_2)*100]]", "porcentaje_2"]  ],
+            ["Total", ["[[(hogares_3 * 2) + hogares_2]]"], ["100,00%", "literal"], "destacada"]
+
+        ]
+    },
+
+    
+    
     'lista-de-hijos': {
         titulo: "Distribución territorial",
         contexto: "CHILDREN",

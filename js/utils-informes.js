@@ -337,12 +337,21 @@ ${contenidoHtml}
 
       const token = await fetch('/session/token').then(r => r.text());
 
+      // Recoger datasets extra ($-prefijados) de drupalSettings para hacerlos
+      // disponibles en las sustituciones {{ dataset.clave }} de los longtexts.
+      const vp = drupalSettings.visorProject || {};
+      const extra = Object.fromEntries(
+        Object.entries(vp)
+          .filter(([k]) => k.startsWith('$'))
+          .map(([k, v]) => [k.slice(1), v])
+      );
+
       await Promise.all(items.map(async item => {
         try {
           const resp = await fetch(`/api/visor/texto/${item.id}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
-            body: JSON.stringify({ datos: props }),
+            body: JSON.stringify({ datos: props, extra }),
           });
           if (resp.ok) item._html = (await resp.json()).html || '';
         } catch (e) {

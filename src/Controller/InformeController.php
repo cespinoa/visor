@@ -205,9 +205,10 @@ final class InformeController extends ControllerBase {
 
     $data  = json_decode($request->getContent(), TRUE);
     $datos = $data['datos'] ?? [];
+    $extra = $data['extra'] ?? [];
 
     $html = $node->get('field_contenido')->value ?? '';
-    $html = $this->aplicarSustituciones($html, $datos);
+    $html = $this->aplicarSustituciones($html, $datos, $extra);
 
     return new JsonResponse(['html' => $html]);
   }
@@ -227,7 +228,7 @@ final class InformeController extends ControllerBase {
    *     donde expr puede contener {{ campo | opts }} más operadores + - * / ()
    *     Ejemplo: [[ {{ rit }} - {{ rit | p:anterior }} | decimal_2 ]]
    */
-  private function aplicarSustituciones(string $texto, array $datos): string {
+  private function aplicarSustituciones(string $texto, array $datos, array $extra = []): string {
 
     // ── Carga diferida de los JSON del visor ──────────────────────────────
     $cache = [];
@@ -262,9 +263,15 @@ final class InformeController extends ControllerBase {
     };
 
     // ── Resolución de un campo según contexto ────────────────────────────
-    $resolverCampo = function (string $campo, array $opts) use ($datos, $cargar): mixed {
+    $resolverCampo = function (string $campo, array $opts) use ($datos, $extra, $cargar): mixed {
       $periodo  = $opts['p'] ?? NULL;
       $etiqueta = $opts['e'] ?? NULL;
+
+      // Caso 0: notación de punto → dataset extra (p.ej. "viviendas_terminadas.2024").
+      if (str_contains($campo, '.')) {
+        [$dataset, $clave] = explode('.', $campo, 2);
+        return isset($extra[$dataset]) ? ($extra[$dataset][$clave] ?? NULL) : NULL;
+      }
 
       // Caso 1: registro activo, período actual (comportamiento original).
       if ($periodo === NULL && $etiqueta === NULL) {
@@ -319,6 +326,51 @@ final class InformeController extends ControllerBase {
       return NULL;
     };
 
+    // ── PASO 0: Condicionales  {% if campo op valor %}...{% endif %} ────────
+    // Se procesan antes que las variables para que el contenido de cada rama
+    // pase luego por los pasos 1 y 2 con normalidad.
+    //
+    // Operadores soportados: == != > < >= <=
+    // El valor puede ir entre comillas simples/dobles o sin ellas.
+    // Ejemplos:
+    //   {% if ambito == 'canarias' %}...{% endif %}
+    //   {% if ambito != 'municipio' %}...{% else %}...{% endif %}
+    //   {% if viviendas_terminadas.total > 10000 %}...{% endif %}
+    $texto = preg_replace_callback(
+      '/\{%\s*if\s+(.+?)\s*%\}(.*?)(?:\{%\s*else\s*%\}(.*?))?\{%\s*endif\s*%\}/s',
+      function (array $m) use ($resolverCampo): string {
+        $condicion  = trim($m[1]);
+        $ramaTrue   = $m[2];
+        $ramaFalse  = $m[3] ?? '';
+
+        // Parsear: campo  op  'valor' | valor
+        if (!preg_match(
+          '/^([\w.]+)\s*(==|!=|>=|<=|>|<)\s*(?:[\'"](.+?)[\'"]|(\S+))$/',
+          $condicion, $p
+        )) {
+          return $ramaFalse; // condición no reconocida → rama else o vacío
+        }
+
+        $campo      = $p[1];
+        $op         = $p[2];
+        $valorEsper = $p[3] !== '' ? $p[3] : ($p[4] ?? '');
+        $valorReal  = $resolverCampo($campo, []) ?? '';
+
+        $cumple = match ($op) {
+          '=='    => (string) $valorReal === (string) $valorEsper,
+          '!='    => (string) $valorReal !== (string) $valorEsper,
+          '>'     => is_numeric($valorReal) && is_numeric($valorEsper) && (float) $valorReal >  (float) $valorEsper,
+          '<'     => is_numeric($valorReal) && is_numeric($valorEsper) && (float) $valorReal <  (float) $valorEsper,
+          '>='    => is_numeric($valorReal) && is_numeric($valorEsper) && (float) $valorReal >= (float) $valorEsper,
+          '<='    => is_numeric($valorReal) && is_numeric($valorEsper) && (float) $valorReal <= (float) $valorEsper,
+          default => FALSE,
+        };
+
+        return $cumple ? $ramaTrue : $ramaFalse;
+      },
+      $texto,
+    );
+
     // ── PASO 1: Expresiones aritméticas  [[ expr | formato ]] ─────────────
     // Se procesan primero para que las {{ }} internas estén todavía sin resolver.
     $texto = preg_replace_callback(
@@ -338,7 +390,7 @@ final class InformeController extends ControllerBase {
 
         // Resolver {{ campo | opts }} → valor numérico sin formato.
         $exprNum = preg_replace_callback(
-          '/\{\{\s*(\w+)((?:\s*\|\s*(?:[^{}|]+))*)\s*\}\}/',
+          '/\{\{\s*([\w.]+)((?:\s*\|\s*(?:[^{}|]+))*)\s*\}\}/',
           static function (array $inner) use ($parsearOpts, $resolverCampo): string {
             $val = $resolverCampo($inner[1], $parsearOpts($inner[2] ?? ''));
             return is_numeric($val) ? (string)(float) $val : '0';
@@ -369,7 +421,7 @@ final class InformeController extends ControllerBase {
 
     // ── PASO 2: Referencias simples/contextuales  {{ campo | opts }} ──────
     $texto = preg_replace_callback(
-      '/\{\{\s*(\w+)((?:\s*\|\s*(?:[^{}|]+))*)\s*\}\}/',
+      '/\{\{\s*([\w.]+)((?:\s*\|\s*(?:[^{}|]+))*)\s*\}\}/',
       function (array $m) use ($parsearOpts, $resolverCampo): string {
         $campo = $m[1];
         $opts  = $parsearOpts($m[2] ?? '');

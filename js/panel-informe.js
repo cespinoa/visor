@@ -159,7 +159,7 @@
           destino,
           clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes'],
           elementos: [
-            { tipo: 'longtext', id: 'indicadores-vivienda', ancho: '12' },
+            //~ { tipo: 'longtext', id: 'indicadores-vivienda', ancho: '12' },
             { tipo: 'tabla', id: 'parque-viviendas',        ancho: '6' },
             { tipo: 'tabla', id: 'viviendas-disponibles',   ancho: '6' },
             { tipo: 'tabla', id: 'viviendas-necesarias',    ancho: '6' },
