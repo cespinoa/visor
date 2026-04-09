@@ -14,6 +14,8 @@
       if (!$destinoGlobal.length) return;
 
       esquema.forEach(bloque => {
+        if (!this._ambitoPermitido(bloque, props)) return;
+
         // 1. Creamos el marco del bloque (Título, intro, etc.)
         const wrapper = window.visorProject.utilsLayout.crearContenedor({
           titulo: bloque.tituloBloque,
@@ -52,9 +54,16 @@
       });
     },
 
+    _ambitoPermitido: function(item, props) {
+        if (!item.ambito) return true;
+        const permitidos = [].concat(item.ambito);
+        return permitidos.includes(props.ambito);
+    },
+
     procesarElementos: function(elementos, $contenedorParent, props) {
         elementos.forEach(item => {
-            
+            if (!this._ambitoPermitido(item, props)) return;
+
             if (item.tipo === 'pack') {
                 const columnaPack = this.crearColumna(item.ancho);
                 
@@ -74,6 +83,7 @@
                 packBody.className = "pack-body d-flex flex-column flex-grow-1";
 
                 item.elementos.forEach(subItem => {
+                    if (!this._ambitoPermitido(subItem, props)) return;
                     const contenido = this.fabricarElemento(subItem, props);
                     if (contenido) {
                         packBody.appendChild(contenido);
