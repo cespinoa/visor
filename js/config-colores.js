@@ -26,7 +26,16 @@ window.visorProject.paletas = {
         'Islas occidentales': '#B0BEC5' // Blue Grey 200
     },
     'paleta-donuts': ['#a70000', '#E0E0E0', '#888888'],
-    'triada': ['#a70000', '#720303', '#E0E0E0'],
-    'progreso-calor': ['#fee5e5', '#f9b3b3', '#ee5252', '#a70000'],
-    'grises': ['#E0E0E0', '#BDBDBD', '#9E9E9E']
+    'triada':        ['#a70000', '#720303', '#E0E0E0'],
+    'progreso-calor':['#fee5e5', '#f9b3b3', '#ee5252', '#a70000'],
+    'grises':        ['#E0E0E0', '#BDBDBD', '#9E9E9E'],
+    'alertas':       ['#a70000', '#ee5252', '#f9b3b3'],
+
+    // Colores de etiqueta para modo impresión PDF (índice paralelo a su paleta).
+    // Si no existe variante '-etiquetas', el plugin calcula el contraste automáticamente.
+    'paleta-donuts-etiquetas': ['#ffffff', '#333333', '#333333'],
+    'triada-etiquetas':        ['#ffffff', '#ffffff', '#333333'],
+    'progreso-calor-etiquetas':['#333333', '#333333', '#333333', '#ffffff'],
+    'grises-etiquetas':        ['#333333', '#333333', '#333333'],
+    'alertas-etiquetas':       ['#ffffff', '#333333', '#333333'],
 };

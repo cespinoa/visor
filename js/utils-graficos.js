@@ -465,7 +465,8 @@ window.visorProject.utilsGraficos = {
                     backgroundColor: (esApilado || config.config.fill) ? color : 'transparent',
                     fill: config.config.fill || false,
                     tension: config.config.tension || 0,
-                    pointRadius: 0
+                    pointRadius: 0,
+                    _formato: this._getMeta(campos[0])?.formato || 'decimal_2',
                 };
             });
 
@@ -501,7 +502,8 @@ window.visorProject.utilsGraficos = {
                     }),
                     backgroundColor: color,
                     borderColor: color,
-                    borderWidth: 1
+                    borderWidth: 1,
+                    _formato: meta.formato || 'decimal_2',
                 };
             });
         }
@@ -541,6 +543,7 @@ window.visorProject.utilsGraficos = {
                     }
                 },
                 plugins: {
+                    visorDatalabels: { paletaId },
                     tooltip: {
                         mode: 'index',
                         intersect: false,
@@ -600,6 +603,34 @@ window.visorProject.utilsGraficos = {
         });
     },
 
+    // ── Helpers de color para etiquetas PDF ─────────────────────────────────
+
+    /**
+     * Devuelve '#ffffff' o '#333333' según el contraste WCAG relativo a bgColor.
+     * Umbral óptimo: L = 0.179 (igual ratio con blanco y negro).
+     */
+    _contrasteColor: function(hex) {
+        if (!hex || hex[0] !== '#' || hex.length < 7) return '#333333';
+        const r = parseInt(hex.slice(1, 3), 16) / 255;
+        const g = parseInt(hex.slice(3, 5), 16) / 255;
+        const b = parseInt(hex.slice(5, 7), 16) / 255;
+        const lin = c => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+        return L > 0.179 ? '#333333' : '#ffffff';
+    },
+
+    /**
+     * Color de etiqueta para una barra concreta.
+     * Prioridad: paleta + '-etiquetas'[index] → contraste automático.
+     */
+    _colorEtiqueta: function(bgColor, paletaId, index) {
+        if (paletaId) {
+            const etqs = window.visorProject.paletas[paletaId + '-etiquetas'];
+            if (etqs && etqs.length > 0) return etqs[index % etqs.length];
+        }
+        return this._contrasteColor(bgColor);
+    },
+
     activarObservador: function(elemento, config, datos) {
         const self = this; 
         const observer = new IntersectionObserver((entries) => {
@@ -631,3 +662,61 @@ window.visorProject.utilsGraficos = {
         observer.observe(elemento);
     }
 };
+
+// ── Plugin Chart.js: etiquetas de valor sobre barras en modo impresión ───────
+//
+// Solo activo cuando visorProject.estado.modoImpresion === true.
+// Colores: paleta + '-etiquetas'[index] si existe; contraste WCAG si no.
+// Se registra globalmente para que aplique a todos los gráficos sin tocar
+// cada configuración individual.
+if (window.Chart) {
+    Chart.register({
+        id: 'visorDatalabels',
+        afterDatasetsDraw(chart) {
+            if (!window.visorProject?.estado?.modoImpresion) return;
+            const utils = window.visorProject.utilsGraficos;
+            if (!utils) return;
+
+            const ctx      = chart.ctx;
+            const paletaId = chart.config.options?.plugins?.visorDatalabels?.paletaId;
+            const UMBRAL   = 22; // px mínimos de barra para colocar etiqueta dentro
+
+            chart.data.datasets.forEach((dataset, datasetIndex) => {
+                const meta = chart.getDatasetMeta(datasetIndex);
+                if (meta.hidden || meta.type !== 'bar') return;
+
+                meta.data.forEach((bar, barIndex) => {
+                    const value = dataset.data[barIndex];
+                    if (value === null || value === undefined || value === 0) return;
+
+                    // Color de fondo e índice de paleta para esta barra
+                    const bgEsArray = Array.isArray(dataset.backgroundColor);
+                    const bgColor   = bgEsArray ? dataset.backgroundColor[barIndex] : dataset.backgroundColor;
+                    const etqIndex  = bgEsArray ? barIndex : datasetIndex;
+                    const textColor = utils._colorEtiqueta(bgColor, paletaId, etqIndex);
+
+                    const texto     = window.visorProject.utils.formatearDato(value, dataset._formato || 'decimal_2');
+                    const barHeight = Math.abs(bar.base - bar.y);
+
+                    ctx.save();
+                    ctx.font      = '600 10px Arial, sans-serif';
+                    ctx.textAlign = 'center';
+
+                    if (barHeight >= UMBRAL) {
+                        // Dentro de la barra: color contrastado
+                        ctx.fillStyle    = textColor;
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(texto, bar.x, bar.y + barHeight / 2);
+                    } else {
+                        // Encima de la barra: siempre oscuro (fondo blanco)
+                        ctx.fillStyle    = '#333333';
+                        ctx.textBaseline = 'bottom';
+                        ctx.fillText(texto, bar.x, bar.y - 3);
+                    }
+
+                    ctx.restore();
+                });
+            });
+        },
+    });
+}

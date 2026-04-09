@@ -77,7 +77,9 @@
 
       // 4. Restaurar activarObservador y dibujar todos los gráficos encolados.
       //    En este punto todo el DOM está montado, los canvas están disponibles.
+      //    El flag modoImpresion activa el plugin de etiquetas sobre barras.
       window.visorProject.utilsGraficos.activarObservador = activarOriginal;
+      window.visorProject.estado.modoImpresion = true;
       const utils = window.visorProject.utilsGraficos;
       pendientes.forEach(({ config, datos }) => {
         const datosRaiz = Array.isArray(datos) ? datos[datos.length - 1] : datos;
@@ -95,6 +97,8 @@
       await new Promise(r => setTimeout(r, 500));
 
       // 6. Convertir <canvas> a <img> con datos embebidos (base64 PNG).
+      //    Desactivar el modo impresión antes de volver al modo interactivo.
+      window.visorProject.estado.modoImpresion = false;
       this._canvasAImg(contenido);
 
       // 7. Construir índice (asigna IDs al DOM en vivo antes de serializar).
