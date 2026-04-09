@@ -255,6 +255,9 @@ final class InformeController extends ControllerBase {
         elseif (str_starts_with($parte, 'e:')) {
           $opts['e'] = trim(substr($parte, 2));
         }
+        elseif (str_starts_with($parte, 'y:')) {
+          $opts['y'] = trim(substr($parte, 2));
+        }
         elseif ($parte !== '') {
           $opts['formato'] = $parte;
         }
@@ -276,13 +279,15 @@ final class InformeController extends ControllerBase {
         // Array de objetos (claves numéricas): buscar el registro que coincide
         // con la entidad activa según ambito + isla_id / municipio_id.
         if (array_is_list($ds) && !empty($ds) && is_array($ds[0])) {
-          $ambito      = $datos['ambito']      ?? NULL;
-          $isla_id     = (string) ($datos['isla_id']     ?? '');
+          $ambito       = $datos['ambito']       ?? NULL;
+          $isla_id      = (string) ($datos['isla_id']      ?? '');
           $municipio_id = (string) ($datos['municipio_id'] ?? '');
+          $yearFilter   = isset($opts['y']) ? (string) $opts['y'] : NULL;
           foreach ($ds as $record) {
             if (($record['ambito'] ?? NULL) !== $ambito) continue;
             if ($ambito === 'isla'      && (string) ($record['isla_id']      ?? '') !== $isla_id) continue;
             if ($ambito === 'municipio' && (string) ($record['municipio_id'] ?? '') !== $municipio_id) continue;
+            if ($yearFilter !== NULL && (string) ($record['year'] ?? '') !== $yearFilter) continue;
             return $record[$clave] ?? NULL;
           }
           return NULL;
@@ -349,43 +354,104 @@ final class InformeController extends ControllerBase {
     // Se procesan antes que las variables para que el contenido de cada rama
     // pase luego por los pasos 1 y 2 con normalidad.
     //
-    // Operadores soportados: == != > < >= <=
-    // El valor puede ir entre comillas simples/dobles o sin ellas.
+    // Soporta: if / elseif / else / endif
+    // Los paréntesis opcionales alrededor de la condición se ignoran.
+    // Ambos lados del operador pueden ser campos, datasets o literales.
+    // Operadores: == != > < >= <=
     // Ejemplos:
     //   {% if ambito == 'canarias' %}...{% endif %}
-    //   {% if ambito != 'municipio' %}...{% else %}...{% endif %}
-    //   {% if viviendas_terminadas.total > 10000 %}...{% endif %}
-    $texto = preg_replace_callback(
-      '/\{%\s*if\s+(.+?)\s*%\}(.*?)(?:\{%\s*else\s*%\}(.*?))?\{%\s*endif\s*%\}/s',
-      function (array $m) use ($resolverCampo): string {
-        $condicion  = html_entity_decode(trim($m[1]), ENT_QUOTES | ENT_HTML5);
-        $ramaTrue   = $m[2];
-        $ramaFalse  = $m[3] ?? '';
+    //   {% if( personas_hogar.miembros | y:2021 > personas_hogar.miembros | y:2011 ) %}...{% elseif(...) %}...{% else %}...{% endif %}
 
-        // Parsear: campo  op  'valor' | valor
-        if (!preg_match(
-          '/^([\w.]+)\s*(==|!=|>=|<=|>|<)\s*(?:[\'"](.+?)[\'"]|(\S+))$/',
-          $condicion, $p
-        )) {
-          return $ramaFalse; // condición no reconocida → rama else o vacío
+    // ── Evaluador de una condición individual ────────────────────────────
+    $evaluarCondicion = function (string $raw) use ($resolverCampo, $parsearOpts): bool {
+      $cond = trim(html_entity_decode($raw, ENT_QUOTES | ENT_HTML5));
+      // Quitar paréntesis envolventes opcionales
+      if (str_starts_with($cond, '(') && str_ends_with($cond, ')')) {
+        $cond = trim(substr($cond, 1, -1));
+      }
+
+      // Patrón: [lado_izq]  operador  [lado_der]
+      // Cada lado: campo.sub [| opt:val ...], o literal entre comillas, o número.
+      $ladoPattern = '[\w.]+(?:\s*\|\s*[\w:]+)*|\'[^\']*\'|"[^"]*"|\S+';
+      if (!preg_match(
+        '/^(' . $ladoPattern . ')\s*(==|!=|>=|<=|>|<)\s*(' . $ladoPattern . ')$/',
+        $cond, $p
+      )) {
+        return FALSE;
+      }
+
+      // Resolver un lado: campo con opts → valor, o literal → string tal cual
+      $resolverLado = function (string $lado) use ($resolverCampo, $parsearOpts): mixed {
+        $lado = trim($lado);
+        // Literal entre comillas → devolver sin comillas
+        if (preg_match('/^[\'"](.+)[\'"]$/', $lado, $q)) return $q[1];
+        // Número puro → devolver como string
+        if (is_numeric($lado)) return $lado;
+        // Campo [| opts] → resolver
+        $segs  = preg_split('/\s*\|\s*/', $lado, 2);
+        $campo = trim($segs[0]);
+        $opts  = $parsearOpts(isset($segs[1]) ? '| ' . $segs[1] : '');
+        return $resolverCampo($campo, $opts) ?? '';
+      };
+
+      $izq = $resolverLado($p[1]);
+      $der = $resolverLado($p[3]);
+      $op  = $p[2];
+
+      return match ($op) {
+        '=='    => (string) $izq === (string) $der,
+        '!='    => (string) $izq !== (string) $der,
+        '>'     => is_numeric($izq) && is_numeric($der) && (float) $izq >  (float) $der,
+        '<'     => is_numeric($izq) && is_numeric($der) && (float) $izq <  (float) $der,
+        '>='    => is_numeric($izq) && is_numeric($der) && (float) $izq >= (float) $der,
+        '<='    => is_numeric($izq) && is_numeric($der) && (float) $izq <= (float) $der,
+        default => FALSE,
+      };
+    };
+
+    // ── Procesado de bloques if/elseif/else/endif ────────────────────────
+    $texto = preg_replace_callback(
+      '/\{%\s*if\b[^%]*%\}.*?\{%\s*endif\s*%\}/s',
+      function (array $m) use ($evaluarCondicion): string {
+        $bloque = $m[0];
+
+        // Extraer la condición del {% if ... %}
+        if (!preg_match('/^\{%\s*if\b[^%]*%\}/', $bloque, $tagIf)) return '';
+        preg_match('/^\{%\s*if\b\s*(.*?)\s*%\}/s', $bloque, $condIf);
+        $condPrimera = trim($condIf[1] ?? '');
+
+        // Cuerpo entre {% if %} y {% endif %}, sin el tag de apertura
+        $cuerpo = substr($bloque, strlen($tagIf[0]));
+        $cuerpo = preg_replace('/\{%\s*endif\s*%\}\s*$/', '', $cuerpo);
+
+        // Normalizar {% else %} a un marcador antes de dividir, para evitar
+        // el comportamiento indefinido de grupos no participantes en preg_split.
+        $sentinel = '__ELSE__';
+        $cuerpo   = preg_replace('/\{%\s*else\s*%\}/s', "{% elseif {$sentinel} %}", $cuerpo);
+
+        // Dividir en ramas sobre {% elseif ... %} con PREG_SPLIT_DELIM_CAPTURE
+        $partes = preg_split(
+          '/\{%\s*elseif\b\s*(.*?)\s*%\}/s',
+          $cuerpo,
+          -1,
+          PREG_SPLIT_DELIM_CAPTURE
+        );
+
+        // Construir lista de ramas: [ [condicion, cuerpo], ... ]
+        // partes[0]           = cuerpo de la rama if
+        // partes[1], [3], ... = condición del elseif (__ELSE__ para rama else)
+        // partes[2], [4], ... = cuerpo de cada rama
+        $ramas = [[$condPrimera, $partes[0]]];
+        for ($i = 1, $n = count($partes); $i < $n; $i += 2) {
+          $cond = trim($partes[$i] ?? '');
+          $ramas[] = [$cond === $sentinel ? '' : $cond, $partes[$i + 1] ?? ''];
         }
 
-        $campo      = $p[1];
-        $op         = $p[2];
-        $valorEsper = $p[3] !== '' ? $p[3] : ($p[4] ?? '');
-        $valorReal  = $resolverCampo($campo, []) ?? '';
-
-        $cumple = match ($op) {
-          '=='    => (string) $valorReal === (string) $valorEsper,
-          '!='    => (string) $valorReal !== (string) $valorEsper,
-          '>'     => is_numeric($valorReal) && is_numeric($valorEsper) && (float) $valorReal >  (float) $valorEsper,
-          '<'     => is_numeric($valorReal) && is_numeric($valorEsper) && (float) $valorReal <  (float) $valorEsper,
-          '>='    => is_numeric($valorReal) && is_numeric($valorEsper) && (float) $valorReal >= (float) $valorEsper,
-          '<='    => is_numeric($valorReal) && is_numeric($valorEsper) && (float) $valorReal <= (float) $valorEsper,
-          default => FALSE,
-        };
-
-        return $cumple ? $ramaTrue : $ramaFalse;
+        foreach ($ramas as [$cond, $rama]) {
+          if ($cond === '') return $rama;           // else
+          if ($evaluarCondicion($cond)) return $rama;
+        }
+        return '';
       },
       $texto,
     );

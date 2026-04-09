@@ -48,6 +48,7 @@
             { tipo: 'longtext', id: 'hogares-nucleos', ancho: '12' },
             { tipo: 'tabla', id: 'ficha-hogares-por-nucleos', ancho: '6' },
             { tipo: 'tabla', id: 'ficha-hogares-por-nucleos-deficit', ancho: '6' },
+            { tipo: 'grafico', id: 'personas-por-hogar', ancho: '12' },
             { tipo: 'longtext', id: 'disponibilidad-vivienda', ancho: '12' },
             { tipo: 'tabla', id: 'parque-viviendas', ancho: '6' },
             { tipo: 'tabla', id: 'viviendas-terminadas-canarias', ancho: '6', ambito: 'canarias' },

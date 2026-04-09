@@ -126,6 +126,31 @@ drupalSettings.visorProject['$poblacion_2021'] = [
 Si se está visualizando Lanzarote (isla_id=6) devuelve 156.189.
 Si se está visualizando Canarias devuelve 2.172.944.
 
+**Filtro por año (`y:`)** — datasets con múltiples registros por entidad:
+
+Cuando el array contiene varias filas para la misma entidad (p.ej. una por año),
+se añade la opción `y:YYYY` para seleccionar el año concreto.
+
+```js
+// PHP/DashboardController inyecta:
+drupalSettings.visorProject['$personas_hogar'] = [
+    { miembros: 2.61, year: '2011', ambito: 'canarias', isla_id: null, municipio_id: null },
+    { miembros: 2.43, year: '2021', ambito: 'canarias', isla_id: null, municipio_id: null },
+    // ... una fila por entidad × año
+]
+```
+
+```
+{{ personas_hogar.miembros | y:2021 | decimal_2 }}   → 2,43
+{{ personas_hogar.miembros | y:2011 | decimal_2 }}   → 2,61
+```
+
+También funciona dentro de expresiones aritméticas:
+
+```
+[[ {{ personas_hogar.miembros | y:2021 }} - {{ personas_hogar.miembros | y:2011 }} | decimal_2 ]]
+```
+
 ### 1.7 Expresión aritmética
 
 ```
@@ -145,21 +170,26 @@ contexto), números y los operadores `+ - * / ( )`.
 ### 1.8 Condicionales
 
 ```
-{% if campo operador valor %}
-  Contenido si se cumple la condición.
-{% endif %}
-
-{% if campo operador valor %}
+{% if condición %}
   Contenido si se cumple.
+{% elseif otra_condición %}
+  Contenido si se cumple la segunda.
 {% else %}
-  Contenido si no se cumple.
+  Contenido si ninguna se cumple.
 {% endif %}
 ```
 
+**Ramas disponibles:** `if` (obligatorio) + cualquier número de `elseif` + `else` opcional.
+
 **Operadores:** `==` `!=` `>` `<` `>=` `<=`
 
-El valor puede ir entre comillas simples, comillas dobles o sin ellas.
-El `campo` admite notación de punto para datasets extra.
+**Cada lado de la comparación puede ser:**
+- Un campo del snapshot: `ambito`, `rit`, `tipo_municipio`…
+- Un dataset extra con notación de punto: `viviendas_terminadas.total`
+- Un dataset con filtro de año: `personas_hogar.miembros | y:2021`
+- Un literal entre comillas simples/dobles o sin ellas: `'canarias'`, `10000`
+
+Los paréntesis alrededor de la condición son opcionales: `{% if( cond ) %}` equivale a `{% if cond %}`.
 
 ```
 {% if ambito == 'canarias' %}
@@ -178,6 +208,14 @@ El `campo` admite notación de punto para datasets extra.
 
 {% if viviendas_terminadas.total > 10000 %}
   Producción de vivienda por encima de la media del período.
+{% endif %}
+
+{% if( personas_hogar.miembros | y:2021 > personas_hogar.miembros | y:2011 ) %}
+  El tamaño medio de los hogares ha aumentado.
+{% elseif( personas_hogar.miembros | y:2021 < personas_hogar.miembros | y:2011 ) %}
+  El tamaño medio de los hogares ha disminuido.
+{% else %}
+  El tamaño medio de los hogares se ha mantenido estable.
 {% endif %}
 ```
 

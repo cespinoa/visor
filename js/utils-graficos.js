@@ -11,9 +11,11 @@ window.visorProject.utilsGraficos = {
     },
 
     crearContenedorGrafico: function(config, datosRaw, opciones = {}) {
-        // El radar tiene su propio contenedor
         if (config.tipo === 'radar') {
             return this.crearContenedorRadar(config, datosRaw, opciones);
+        }
+        if (config.tipo === 'linea-ext') {
+            return this.crearContenedorLineaExt(config, opciones);
         }
 
         const tpl = document.getElementById('tpl-grafico-contenedor');
@@ -466,7 +468,9 @@ window.visorProject.utilsGraficos = {
                     fill: config.config.fill || false,
                     tension: config.config.tension || 0,
                     pointRadius: 0,
-                    _formato: this._getMeta(campos[0])?.formato || 'decimal_2',
+                    _formato:   this._getMeta(campos[0])?.formato   || 'decimal_2',
+                    _unidades:  this._getMeta(campos[0])?.unidades  || '',
+                    _base100:   esBase100,
                 };
             });
 
@@ -503,7 +507,9 @@ window.visorProject.utilsGraficos = {
                     backgroundColor: color,
                     borderColor: color,
                     borderWidth: 1,
-                    _formato: meta.formato || 'decimal_2',
+                    _formato:  meta.formato  || 'decimal_2',
+                    _unidades: meta.unidades || '',
+                    _base100:  esBase100,
                 };
             });
         }
@@ -631,6 +637,245 @@ window.visorProject.utilsGraficos = {
         return this._contrasteColor(bgColor);
     },
 
+    /**
+     * Dibuja etiquetas de valor sobre las barras de un gráfico Chart.js.
+     * Se llama explícitamente desde utils-informes.js tras el renderizado PDF,
+     * no como plugin, para garantizar que el canvas ya está completamente pintado.
+     */
+    _dibujarEtiquetasChart: function(chart) {
+        const ctx      = chart.ctx;
+        const paletaId = chart.config?.options?.plugins?.visorDatalabels?.paletaId;
+        const UMBRAL   = 22; // px mínimos de barra para colocar la etiqueta dentro
+
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+            const meta = chart.getDatasetMeta(datasetIndex);
+            if (meta.hidden || meta.type !== 'bar') return;
+
+            meta.data.forEach((bar, barIndex) => {
+                const value = dataset.data[barIndex];
+                if (value === null || value === undefined || value === 0) return;
+
+                const bgEsArray = Array.isArray(dataset.backgroundColor);
+                const bgColor   = bgEsArray
+                    ? dataset.backgroundColor[barIndex % dataset.backgroundColor.length]
+                    : dataset.backgroundColor;
+                const etqIndex  = bgEsArray ? barIndex : datasetIndex;
+                const textColor = this._colorEtiqueta(bgColor, paletaId, etqIndex);
+
+                // Formato: base100 o unidades % → porcentaje_2; resto → _formato del campo
+                const unidades = dataset._unidades || '';
+                const formato  = (dataset._base100 || unidades.includes('%'))
+                    ? 'porcentaje_2'
+                    : (dataset._formato || 'decimal_2');
+                const valorNum = typeof value === 'object' ? value.y : value;
+                const texto    = window.visorProject.utils.formatearDato(valorNum, formato)
+                    + (unidades && !unidades.includes('%') && !dataset._base100 ? '\u00a0' + unidades : '');
+
+                const barHeight = Math.abs(bar.base - bar.y);
+
+                ctx.save();
+                ctx.font      = '600 30px Arial, sans-serif';
+                ctx.textAlign = 'center';
+
+                if (barHeight >= UMBRAL) {
+                    ctx.fillStyle    = textColor;
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(texto, bar.x, bar.y + barHeight / 2);
+                } else if (barHeight > 0) {
+                    ctx.fillStyle    = '#333333';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillText(texto, bar.x, bar.y - 2);
+                }
+
+                ctx.restore();
+            });
+        });
+    },
+
+    // ── linea-ext: gráfico de línea sobre dataset externo ────────────────────
+
+    /**
+     * Contenedor para 'linea-ext': canvas + tabla de datos para PDF.
+     */
+    crearContenedorLineaExt: function(config, opciones = {}) {
+        const tpl = document.getElementById('tpl-grafico-contenedor');
+        if (!tpl) return null;
+
+        const fragment  = tpl.content.cloneNode(true);
+        const contenedor = fragment.querySelector('.contenedor-grafico');
+
+        contenedor.querySelector('.grafico-titulo').textContent    = config.titulo;
+        contenedor.querySelector('.grafico-subtitulo').textContent = config.subtitulo || '';
+
+        const canvas   = document.createElement('canvas');
+        canvas.id      = config.canvasId;
+        canvas.className = 'gauge-canvas';
+
+        const body = contenedor.querySelector('.grafico-body');
+        body.classList.add('body-linea-ext');
+        body.appendChild(canvas);
+
+        // Placeholder de tabla (se rellena en dibujarLineaExt)
+        const tablaDiv = document.createElement('div');
+        tablaDiv.id        = config.canvasId + '-tabla';
+        tablaDiv.className = 'linea-ext-tabla';
+        contenedor.appendChild(tablaDiv);
+
+        if (opciones['ancho-pdf']) {
+            contenedor.style.maxWidth    = opciones['ancho-pdf'];
+            contenedor.style.marginLeft  = 'auto';
+            contenedor.style.marginRight = 'auto';
+        }
+
+        return contenedor;
+    },
+
+    /**
+     * Dibuja el gráfico de línea y rellena la tabla de datos.
+     * @param {Object} config    Instancia de CONFIG_GRAFICOS con canvasId ya asignado.
+     * @param {Object} registro  Registro activo del snapshot.
+     */
+    dibujarLineaExt: function(config, registro) {
+        const canvas = document.getElementById(config.canvasId);
+        if (!canvas || !registro) return;
+
+        const dsKey = config.config.dataset.replace(/^\$/, '');
+        const ds    = (drupalSettings.visorProject || {})['$' + dsKey] || [];
+        if (!ds.length) return;
+
+        const campo  = config.config.campo;
+        const ambito = registro.ambito;
+
+        // ── Serie del item activo ────────────────────────────────────────────
+        const misSeries = ds.filter(r => {
+            if (r.ambito !== ambito) return false;
+            if (ambito === 'isla')      return String(r.isla_id)      === String(registro.isla_id);
+            if (ambito === 'municipio') return String(r.municipio_id) === String(registro.municipio_id);
+            return true; // canarias
+        }).sort((a, b) => String(a.year).localeCompare(String(b.year)));
+
+        if (!misSeries.length) return;
+
+        const years  = misSeries.map(r => String(r.year));
+        const myData = misSeries.map(r => {
+            const v = parseFloat(r[campo]);
+            return isNaN(v) ? null : v;
+        });
+
+        // ── Serie de referencia ──────────────────────────────────────────────
+        let refData  = null;
+        let refLabel = null;
+
+        if (ambito === 'isla') {
+            const canDs = ds.filter(r => r.ambito === 'canarias')
+                .sort((a, b) => String(a.year).localeCompare(String(b.year)));
+            refData  = years.map(y => {
+                const r = canDs.find(x => String(x.year) === y);
+                return r ? (parseFloat(r[campo]) || null) : null;
+            });
+            refLabel = 'Canarias';
+
+        } else if (ambito === 'municipio') {
+            const tipoMun = registro.tipo_municipio;
+            const snapshot = drupalSettings.visorProject.datosDashboard || [];
+            const peerIds  = new Set(
+                snapshot
+                    .filter(s => s.ambito === 'municipio' && s.tipo_municipio === tipoMun)
+                    .map(s => String(s.municipio_id))
+            );
+            refData  = years.map(y => {
+                const vals = ds
+                    .filter(r => r.ambito === 'municipio' &&
+                                 peerIds.has(String(r.municipio_id)) &&
+                                 String(r.year) === y)
+                    .map(r => parseFloat(r[campo]))
+                    .filter(v => !isNaN(v));
+                return vals.length
+                    ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 100) / 100
+                    : null;
+            });
+            refLabel = 'Media municipios ' + tipoMun;
+        }
+
+        // ── Gráfico Chart.js ─────────────────────────────────────────────────
+        const datasets = [
+            {
+                label:           registro.etiqueta,
+                data:            myData,
+                borderColor:     '#a70000',
+                backgroundColor: 'rgba(167,0,0,0.07)',
+                borderWidth:     2,
+                pointRadius:     3,
+                tension:         0.3,
+            }
+        ];
+
+        if (refData) {
+            datasets.push({
+                label:           refLabel,
+                data:            refData,
+                borderColor:     '#aaaaaa',
+                backgroundColor: 'transparent',
+                borderWidth:     1.5,
+                borderDash:      [5, 4],
+                pointRadius:     2,
+                tension:         0.3,
+            });
+        }
+
+        new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: { labels: years, datasets },
+            options: {
+                responsive:          true,
+                maintainAspectRatio: true,
+                aspectRatio:         3,
+                scales: {
+                    y: { beginAtZero: false }
+                },
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        mode:      'index',
+                        intersect: false,
+                        callbacks: {
+                            label: ctx => {
+                                const v = ctx.parsed.y;
+                                return ` ${ctx.dataset.label}: ${v !== null ? v.toFixed(2) : '—'}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // ── Tabla de datos (visible siempre; imprescindible en PDF) ──────────
+        const tablaEl = document.getElementById(config.canvasId + '-tabla');
+        if (!tablaEl) return;
+
+        const fmt = v => (v === null || v === undefined || isNaN(v))
+            ? '—'
+            : parseFloat(v).toFixed(2);
+
+        let html = '<table class="linea-ext-tabla__table">';
+        html += '<thead><tr><th></th>'
+            + years.map(y => `<th>${y}</th>`).join('')
+            + '</tr></thead><tbody>';
+
+        html += `<tr><th>${registro.etiqueta}</th>`
+            + myData.map(v => `<td>${fmt(v)}</td>`).join('')
+            + '</tr>';
+
+        if (refData) {
+            html += `<tr><th>${refLabel}</th>`
+                + refData.map(v => `<td>${fmt(v)}</td>`).join('')
+                + '</tr>';
+        }
+
+        html += '</tbody></table>';
+        tablaEl.innerHTML = html;
+    },
+
     activarObservador: function(elemento, config, datos) {
         const self = this; 
         const observer = new IntersectionObserver((entries) => {
@@ -654,6 +899,9 @@ window.visorProject.utilsGraficos = {
                         case 'radar':
                             self.dibujarRadar(config, Array.isArray(datos) ? datos[datos.length - 1] : datos);
                             break;
+                        case 'linea-ext':
+                            self.dibujarLineaExt(config, Array.isArray(datos) ? datos[datos.length - 1] : datos);
+                            break;
                     }
                     observer.unobserve(entry.target);
                 }
@@ -663,60 +911,3 @@ window.visorProject.utilsGraficos = {
     }
 };
 
-// ── Plugin Chart.js: etiquetas de valor sobre barras en modo impresión ───────
-//
-// Solo activo cuando visorProject.estado.modoImpresion === true.
-// Colores: paleta + '-etiquetas'[index] si existe; contraste WCAG si no.
-// Se registra globalmente para que aplique a todos los gráficos sin tocar
-// cada configuración individual.
-if (window.Chart) {
-    Chart.register({
-        id: 'visorDatalabels',
-        afterDatasetsDraw(chart) {
-            if (!window.visorProject?.estado?.modoImpresion) return;
-            const utils = window.visorProject.utilsGraficos;
-            if (!utils) return;
-
-            const ctx      = chart.ctx;
-            const paletaId = chart.config.options?.plugins?.visorDatalabels?.paletaId;
-            const UMBRAL   = 22; // px mínimos de barra para colocar etiqueta dentro
-
-            chart.data.datasets.forEach((dataset, datasetIndex) => {
-                const meta = chart.getDatasetMeta(datasetIndex);
-                if (meta.hidden || meta.type !== 'bar') return;
-
-                meta.data.forEach((bar, barIndex) => {
-                    const value = dataset.data[barIndex];
-                    if (value === null || value === undefined || value === 0) return;
-
-                    // Color de fondo e índice de paleta para esta barra
-                    const bgEsArray = Array.isArray(dataset.backgroundColor);
-                    const bgColor   = bgEsArray ? dataset.backgroundColor[barIndex] : dataset.backgroundColor;
-                    const etqIndex  = bgEsArray ? barIndex : datasetIndex;
-                    const textColor = utils._colorEtiqueta(bgColor, paletaId, etqIndex);
-
-                    const texto     = window.visorProject.utils.formatearDato(value, dataset._formato || 'decimal_2');
-                    const barHeight = Math.abs(bar.base - bar.y);
-
-                    ctx.save();
-                    ctx.font      = '600 10px Arial, sans-serif';
-                    ctx.textAlign = 'center';
-
-                    if (barHeight >= UMBRAL) {
-                        // Dentro de la barra: color contrastado
-                        ctx.fillStyle    = textColor;
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(texto, bar.x, bar.y + barHeight / 2);
-                    } else {
-                        // Encima de la barra: siempre oscuro (fondo blanco)
-                        ctx.fillStyle    = '#333333';
-                        ctx.textBaseline = 'bottom';
-                        ctx.fillText(texto, bar.x, bar.y - 3);
-                    }
-
-                    ctx.restore();
-                });
-            });
-        },
-    });
-}

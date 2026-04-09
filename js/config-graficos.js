@@ -1,5 +1,18 @@
 window.CONFIG_GRAFICOS = {
 
+    // ── Gráficos de línea sobre datasets externos ────────────────────────────
+
+    'personas-por-hogar': {
+        tipo:   'linea-ext',
+        titulo: 'Evolución del tamaño medio de los hogares',
+        config: {
+            campo:   'miembros',
+            dataset: '$personas_hogar',
+        }
+    },
+
+    // ── Radar ────────────────────────────────────────────────────────────────
+
     'radar-sintesis': {
         tipo: 'radar',
         titulo: 'Síntesis de indicadores',
