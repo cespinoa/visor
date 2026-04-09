@@ -51,6 +51,9 @@ final class DashboardController extends ControllerBase {
     // Obtenemos los datos de vivienda terminada
     $viviendas_terminadas = $this->getViviendasTerminadas();
 
+    // Obtenemos los datos de poblacion 2021 (coincide con el último censo de viviendas)
+    $poblacion_2021 = $this->getPoblacion2021();
+
     
 
     // Obtenemos las siluetas
@@ -97,11 +100,34 @@ final class DashboardController extends ControllerBase {
             'nombres_siluetas' => $nombres_siluetas,
             'diccionario' => $diccionario,
             '$viviendas_terminadas' => $viviendas_terminadas,
+            '$poblacion_2021' => $poblacion_2021
           ],
         ],
       ],
     ];
 
+  }
+
+  public function getPoblacion2021(){
+    $conn = Database::getConnection('default', 'mapa_data');
+    $results = $conn->select('poblacion', 'h')
+      ->fields('h')
+      ->condition('year', 2021)
+      ->execute()
+      ->fetchAll();
+
+    // Organizamos el array para que el JS lo encuentre rápido
+    $dataset = [];
+    foreach ($results as $row) {
+      $dataset[] = [
+        'poblacion' => $row->valor,
+        'ambito' => $row->ambito,
+        'isla_id' => $row->isla_id,
+        'municipio_id' => $row->municipio_id,
+      ];
+      
+    }
+    return $dataset;
   }
 
   public function getViviendasTerminadas(){

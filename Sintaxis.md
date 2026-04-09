@@ -86,20 +86,45 @@ Cualquier key con prefijo `$` en `drupalSettings.visorProject` está
 disponible mediante notación de punto. El prefijo `$` se omite en el token.
 
 ```
-{{ nombre_dataset.clave }}
+{{ nombre_dataset.campo }}
 ```
+
+**Dataset key-value** — acceso directo por clave:
 
 ```js
 // PHP/DashboardController inyecta:
 drupalSettings.visorProject['$viviendas_terminadas'] = {
-    2021: 3011, 2022: 2782, 2023: 2107, 2024: 2889, 2025: 3152, total: 13941
+    2021: 3011, 2022: 2782, 2023: 2107, 2024: 2889, total: 13941
 }
 ```
 
 ```
-{{ viviendas_terminadas.2024 }}         → 2.889
+{{ viviendas_terminadas.2024 }}           → 2.889
 {{ viviendas_terminadas.total | entero }} → 13.941
 ```
+
+**Dataset array de objetos** — búsqueda automática por entidad activa:
+
+Cuando el dataset es un array de objetos con campos `ambito`, `isla_id` y
+`municipio_id`, el servidor busca automáticamente el registro que coincide
+con la entidad que se está visualizando. La sintaxis es idéntica.
+
+```js
+// PHP/DashboardController inyecta:
+drupalSettings.visorProject['$poblacion_2021'] = [
+    { poblacion: 2172944, ambito: 'canarias', isla_id: null,  municipio_id: null },
+    { poblacion:  156189, ambito: 'isla',     isla_id: '6',   municipio_id: null },
+    { poblacion:   48733, ambito: 'municipio',isla_id: '7',   municipio_id: '58' },
+    // ...
+]
+```
+
+```
+{{ poblacion_2021.poblacion }}   → valor de la entidad activa
+```
+
+Si se está visualizando Lanzarote (isla_id=6) devuelve 156.189.
+Si se está visualizando Canarias devuelve 2.172.944.
 
 ### 1.7 Expresión aritmética
 
@@ -199,22 +224,30 @@ El formato se deduce automáticamente del diccionario de datos.
 ### 2.4 Dataset extra (drupalSettings)
 
 Cualquier key con prefijo `$` en `drupalSettings.visorProject` (inyectada
-desde PHP) es accesible en las tablas con la notación `$dataset.clave`.
+desde PHP) es accesible en las tablas con la notación `$dataset.campo`.
+A diferencia de los longtexts, en tablas JS el prefijo `$` es obligatorio.
 
 ```js
-["Etiqueta de fila", ["$dataset.clave"]]
-["Etiqueta de fila", ["$dataset.clave", "formato"]]
+["Etiqueta de fila", ["$dataset.campo"]]
+["Etiqueta de fila", ["$dataset.campo", "formato"]]
 ```
 
-```js
-// PHP/DashboardController inyecta bajo la clave '$viviendas_terminadas':
-// { 2021: 3011, 2022: 2782, 2023: 2107, 2024: 2889, total: 13941 }
+**Dataset key-value** — acceso directo por clave:
 
+```js
 ["Viviendas terminadas 2021-2024", ["$viviendas_terminadas.total"]]
 ["Terminadas en 2023",             ["$viviendas_terminadas.2023", "entero"]]
 ```
 
-A diferencia de los longtexts, en tablas JS el prefijo `$` sí es obligatorio.
+**Dataset array de objetos** — búsqueda automática por entidad activa:
+
+Cuando el dataset es un array de objetos con `ambito`/`isla_id`/`municipio_id`,
+se busca automáticamente el registro que coincide con el registro que se
+está renderizando (el mismo `registro` que el resto de la fila).
+
+```js
+["Población 2021", ["$poblacion_2021.poblacion"]]
+```
 
 ### 2.5 Expresión aritmética
 

@@ -12,6 +12,19 @@ window.CONFIG_TABLAS = {
         etiqueta_total: 'Total período',
     },
 
+    'viviendas-habituales-mas-terminadas': {
+        titulo: "Vivienda disponible",                                                                                                                                                       
+        contexto: "SELF",
+        modo: "ficha",                                                                                                                                                                       
+        cabecera: ["Indicador", "Viviendas"],                 
+        filas: [                                                                                                                                                                             
+            ["Viviendas habituales existentes",  ["viviendas_habituales"]],
+            ["Viviendas terminadas 2021-2024",   ["$viviendas_terminadas.total"]],                                                                                                           
+            ["Suma",  ["[[ viviendas_habituales + $viviendas_terminadas.total ]]", "entero"], "destacada"],                                                                                  
+        ]                                                                                                                                                                                    
+    }, 
+    
+
     'resumen-ambito': {
         titulo: "Principales indicadores",
         contexto: "PARENTS",
@@ -75,6 +88,22 @@ window.CONFIG_TABLAS = {
             ["Viviendas disponibles", ["viviendas_disponibles"]],
             ["Viviendas necesarias", ["viviendas_necesarias"] ],
             ["Déficit de viviendas", ["deficit_viviendas"], ['deficit_oferta_viviendas'], "destacada"]
+        ]
+    },
+
+    'deficit-de-viviendas-canarias': {
+        titulo: "Déficit teórico de viviendas (con nuevas)",
+        contexto: "SELF",
+        modo: "ficha",
+        cabecera: ["Concepto", "Valor", "Porcentaje"],
+        filas: [
+            ["Viviendas disponibles + terminadas", ["[[ viviendas_disponibles + $viviendas_terminadas.total | entero ]]"]],
+            ["Viviendas necesarias",               ["viviendas_necesarias"]],
+            ["Déficit de viviendas",
+                ["[[ viviendas_disponibles + $viviendas_terminadas.total - viviendas_necesarias | entero ]]"],
+                ["[[ (viviendas_necesarias - viviendas_disponibles - $viviendas_terminadas.total) / (viviendas_disponibles + $viviendas_terminadas.total) * 100 | decimal_2 ]]"],
+                "destacada"
+            ]
         ]
     },
     'carga-poblacional': {

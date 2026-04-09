@@ -140,6 +140,12 @@
           elementoDOM = this.manejarRadaresIslas(item, props);
           break;
 
+        case 'salto': {
+          const br = document.createElement('div');
+          br.className = 'w-100';
+          return br; // sin columna envolvente
+        }
+
         default:
           console.warn(`Tipo de elemento no soportado: ${item.tipo}`);
       }

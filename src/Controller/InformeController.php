@@ -270,7 +270,26 @@ final class InformeController extends ControllerBase {
       // Caso 0: notación de punto → dataset extra (p.ej. "viviendas_terminadas.2024").
       if (str_contains($campo, '.')) {
         [$dataset, $clave] = explode('.', $campo, 2);
-        return isset($extra[$dataset]) ? ($extra[$dataset][$clave] ?? NULL) : NULL;
+        if (!isset($extra[$dataset])) return NULL;
+        $ds = $extra[$dataset];
+
+        // Array de objetos (claves numéricas): buscar el registro que coincide
+        // con la entidad activa según ambito + isla_id / municipio_id.
+        if (array_is_list($ds) && !empty($ds) && is_array($ds[0])) {
+          $ambito      = $datos['ambito']      ?? NULL;
+          $isla_id     = (string) ($datos['isla_id']     ?? '');
+          $municipio_id = (string) ($datos['municipio_id'] ?? '');
+          foreach ($ds as $record) {
+            if (($record['ambito'] ?? NULL) !== $ambito) continue;
+            if ($ambito === 'isla'      && (string) ($record['isla_id']      ?? '') !== $isla_id) continue;
+            if ($ambito === 'municipio' && (string) ($record['municipio_id'] ?? '') !== $municipio_id) continue;
+            return $record[$clave] ?? NULL;
+          }
+          return NULL;
+        }
+
+        // Key-value simple (comportamiento original).
+        return $ds[$clave] ?? NULL;
       }
 
       // Caso 1: registro activo, período actual (comportamiento original).
@@ -339,7 +358,7 @@ final class InformeController extends ControllerBase {
     $texto = preg_replace_callback(
       '/\{%\s*if\s+(.+?)\s*%\}(.*?)(?:\{%\s*else\s*%\}(.*?))?\{%\s*endif\s*%\}/s',
       function (array $m) use ($resolverCampo): string {
-        $condicion  = trim($m[1]);
+        $condicion  = html_entity_decode(trim($m[1]), ENT_QUOTES | ENT_HTML5);
         $ramaTrue   = $m[2];
         $ramaFalse  = $m[3] ?? '';
 

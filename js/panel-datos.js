@@ -41,7 +41,7 @@
 
 
          { 
-          tituloBloque: "Hogares y núcleos familiares",
+          tituloBloque: "Déficit de viviendas",
           intro: "Resumen de los indicadores clave de vivienda.",
           destino: '#ficha-contenido',
           elementos: [
@@ -50,10 +50,12 @@
             { tipo: 'tabla', id: 'ficha-hogares-por-nucleos-deficit', ancho: '6' },
             { tipo: 'longtext', id: 'disponibilidad-vivienda', ancho: '12' },
             { tipo: 'tabla', id: 'parque-viviendas', ancho: '6' },
-            { tipo: 'tabla', id: 'viviendas-terminadas-canarias', ancho: '6' },
-            //~ { tipo: 'tabla', id: 'viviendas-disponibles', ancho: '6' },
+            { tipo: 'tabla', id: 'viviendas-terminadas-canarias', ancho: '6', ambito: 'canarias' },
+            { tipo: 'tabla', id: 'viviendas-habituales-mas-terminadas', ancho: '6', ambito: 'canarias' },
             { tipo: 'tabla', id: 'viviendas-necesarias', ancho: '6' },
-            { tipo: 'tabla', id: 'deficit-de-viviendas', ancho: '6' },
+            { tipo: 'tabla', id: 'deficit-de-viviendas', ancho: '6', ambito: ['isla', 'municipio'] },
+            { tipo: 'tabla', id: 'deficit-de-viviendas-canarias', ancho: '6', ambito: 'canarias' },
+            { tipo: 'salto' },
             { tipo: 'tabla', id: 'presion-vv-sobre-vivienda', ancho: '6'}
           ]
         },
@@ -104,6 +106,8 @@
           ]
         }
       ];
+
+      
 
       // Llamamos al compositor para que haga todo el trabajo sucio
       if (window.visorProject.rowCompositor) {

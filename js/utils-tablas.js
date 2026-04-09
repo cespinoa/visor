@@ -130,11 +130,12 @@
             } 
             // MODO B: Lista Estándar (Varios indicadores en una misma fecha)
             else {
+                const extra = this._obtenerExtra();
                 celdas = config.columnas.slice(1).map(col => {
                     const [idCampo, tipoManual] = col;
                     const formato = this.obtenerFormato(idCampo, tipoManual);
                     return {
-                        valor: this._f(this._resolverCampo(idCampo, regActual), formato),
+                        valor: this._f(this._resolverCampo(idCampo, regActual, extra), formato),
                         clase: "col-dato"
                     };
                 });
@@ -228,6 +229,7 @@
         if (!config.filas || !registros || registros.length === 0) return [];
 
         const usarUnidades = config.unidades === true;
+        const extra = this._obtenerExtra();
 
         // Cabeceras dinámicas: Indicador + nombre de cada entidad + Unidades?
         const cabeceras = ['Indicador', ...registros.map(r => r.etiqueta)];
@@ -242,7 +244,7 @@
             const formato = this.obtenerFormato(idCampo, Array.isArray(campoSpec) ? campoSpec[1] : null);
 
             const celdas = registros.map(reg => ({
-                valor: this._f(this._resolverCampo(idCampo, reg), formato),
+                valor: this._f(this._resolverCampo(idCampo, reg, extra), formato),
                 clase: 'col-dato'
             }));
 
@@ -267,6 +269,7 @@
         let resultado = [];
         let cabecerasCSV = [config.etiquetas ? config.etiquetas[0] : 'Indicador'];
 
+        const extra = this._obtenerExtra();
         const esComparativaTemporal = config.comparativa && registros.length >= 2;
 
         if (esComparativaTemporal) {
@@ -287,17 +290,17 @@
                 const formato = this.obtenerFormato(idCampo, itemDato[1]);
 
                 const celdas = [
-                    { valor: this._f(this._resolverCampo(idCampo, regAntiguo), formato), clase: "col-dato col-antiguo" },
-                    { valor: this._f(this._resolverCampo(idCampo, regActual), formato), clase: "col-dato col-reciente" }
+                    { valor: this._f(this._resolverCampo(idCampo, regAntiguo, extra), formato), clase: "col-dato col-antiguo" },
+                    { valor: this._f(this._resolverCampo(idCampo, regActual, extra), formato), clase: "col-dato col-reciente" }
                 ];
-                this._inyectarCalculos(celdas, config, this._resolverCampo(idCampo, regAntiguo), this._resolverCampo(idCampo, regActual));
+                this._inyectarCalculos(celdas, config, this._resolverCampo(idCampo, regAntiguo, extra), this._resolverCampo(idCampo, regActual, extra));
 
                 return { etiqueta, celdas, esDestacada: items.includes('destacada') };
             });
         } else {
             // MODO FICHA CLÁSICA (Varias columnas de datos estáticos)
             const regUnico = registros[registros.length - 1];
-            
+
             // Sacamos las cabeceras de la config o de las etiquetas
             if (config.cabecera) {
                 cabecerasCSV = config.cabecera;
@@ -316,8 +319,8 @@
                         let [idOTexto, tipoManual] = item;
                         let valorFinal = (tipoManual === 'literal')
                             ? idOTexto
-                            : this._f(this._resolverCampo(idOTexto, regUnico), this.obtenerFormato(idOTexto, tipoManual));
-                        
+                            : this._f(this._resolverCampo(idOTexto, regUnico, extra), this.obtenerFormato(idOTexto, tipoManual));
+
                         celdas.push({ valor: valorFinal, clase: "col-dato" });
                     } else if (item === 'destacada') {
                         esDestacada = true;
@@ -511,28 +514,94 @@
     },
 
     /**
-     * Resuelve el valor de una celda dado su spec y un registro.
+     * Devuelve los datasets externos: claves $-prefijadas de drupalSettings.visorProject,
+     * sin el prefijo. Ej: '$viviendas_terminadas' → extra['viviendas_terminadas'].
+     */
+    _obtenerExtra: function() {
+        const vp = drupalSettings.visorProject || {};
+        return Object.fromEntries(
+            Object.entries(vp)
+                .filter(([k]) => k.startsWith('$'))
+                .map(([k, v]) => [k.slice(1), v])
+        );
+    },
+
+    /**
+     * Resuelve el valor de una celda dado su spec, un registro del snapshot
+     * y (opcionalmente) un objeto extra con datasets externos.
      *
-     * Si spec empieza por [[, se trata como expresión aritmética:
-     *   - Los identificadores que existen en registro se sustituyen por
-     *     su valor numérico raw.
-     *   - La expresión se valida y evalúa con Function().
-     *   - El formato opcional [[expr | formato]] se ignora aquí
-     *     (obtenerFormato lo extrae por separado).
+     * Notaciones soportadas:
+     *   campo_normal              → registro[campo_normal]
+     *   $dataset.clave            → extra[dataset][clave]
+     *   [[ expr ]]                → evalúa expr aritmética (solo snapshot)
+     *   [[ expr con $dataset.k ]] → evalúa expr aritmética mixta (snapshot + externos)
      *
-     * Si spec es un nombre de campo normal, devuelve registro[spec].
+     * El formato opcional [[ expr | formato ]] se ignora aquí
+     * (obtenerFormato lo extrae por separado).
      *
      * Devuelve null si la expresión no es válida (→ _f mostrará "-").
      */
-    _resolverCampo: function(spec, registro) {
-        const m = /^\[\[([\s\S]+?)\]\]$/.exec(spec);
-        if (!m) return registro[spec];
+    /**
+     * Resuelve un campo dentro de un dataset extra.
+     *
+     * Si el dataset es un array de objetos, busca el registro que coincide
+     * con la entidad activa (ambito + isla_id / municipio_id del registro).
+     * Si es un objeto key-value simple, accede directamente por clave.
+     */
+    _resolverExtraField: function(dataset, clave, extra, registro) {
+        const ds = extra[dataset];
+        if (ds === undefined) return null;
 
-        // Eliminar el fragmento de formato opcional antes de evaluar
+        // Array de objetos: buscar el que coincide con la entidad del registro
+        if (Array.isArray(ds)) {
+            const ambito = registro.ambito;
+            const found = ds.find(r => {
+                if (r.ambito !== ambito) return false;
+                if (ambito === 'isla')      return String(r.isla_id      ?? '') === String(registro.isla_id      ?? '');
+                if (ambito === 'municipio') return String(r.municipio_id ?? '') === String(registro.municipio_id ?? '');
+                return true; // canarias
+            });
+            return found !== undefined ? (found[clave] ?? null) : null;
+        }
+
+        // Key-value simple
+        return ds[clave] ?? null;
+    },
+
+    _resolverCampo: function(spec, registro, extra) {
+        extra = extra || {};
+
+        const m = /^\[\[([\s\S]+?)\]\]$/.exec(spec);
+
+        if (!m) {
+            // Notación $dataset.clave (campo plano externo)
+            if (typeof spec === 'string' && spec.startsWith('$')) {
+                const dot = spec.indexOf('.', 1);
+                if (dot !== -1) {
+                    const dataset = spec.slice(1, dot);
+                    const clave   = spec.slice(dot + 1);
+                    return this._resolverExtraField(dataset, clave, extra, registro);
+                }
+            }
+            return registro[spec];
+        }
+
+        // Expresión aritmética: eliminar el fragmento de formato opcional
         const exprStr = m[1].split('|')[0].trim();
 
-        // Sustituir identificadores por su valor numérico
-        const exprNum = exprStr.replace(/\b([a-zA-Z_]\w*)\b/g, (_, token) => {
+        // 1. Sustituir $dataset.clave antes que los identificadores normales
+        let exprNum = exprStr.replace(/\$([a-zA-Z_]\w*)\.([a-zA-Z0-9_]+)/g, (_, dataset, clave) => {
+            const val = this._resolverExtraField(dataset, clave, extra, registro);
+            if (val === undefined || val === null) {
+                console.warn('visor-tablas: campo externo no encontrado:', dataset, clave);
+                return 0;
+            }
+            const n = parseFloat(val);
+            return isNaN(n) ? 0 : n;
+        });
+
+        // 2. Sustituir identificadores del registro snapshot
+        exprNum = exprNum.replace(/\b([a-zA-Z_]\w*)\b/g, (_, token) => {
             if (token in registro) {
                 const val = parseFloat(registro[token]);
                 return isNaN(val) ? 0 : val;

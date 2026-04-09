@@ -110,6 +110,26 @@ del contenido.
 Renderiza un radar Chart.js por cada isla, en orden
 oriental → central → occidental.
 
+### `salto`
+
+Fuerza un salto de línea dentro de la fila Bootstrap (`w-100`). No necesita
+`id` ni `ancho`. Útil para empujar elementos al siguiente renglón sin abrir
+un bloque nuevo.
+
+```js
+{ tipo: 'salto' }
+{ tipo: 'salto', ambito: 'canarias' }  // también admite filtro de ámbito
+```
+
+```js
+elementos: [
+    { tipo: 'tabla', id: 'tabla-a', ancho: '6' },
+    { tipo: 'tabla', id: 'tabla-b', ancho: '6' },
+    { tipo: 'salto' },
+    { tipo: 'tabla', id: 'tabla-c', ancho: '4' },
+]
+```
+
 ### `pack`
 
 Agrupa sub-elementos en una columna compartida con título propio.
