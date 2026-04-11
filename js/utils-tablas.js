@@ -645,6 +645,141 @@
     },
 
     // ─────────────────────────────────────────────────────────────────────
+    // TABLA CCAA × AÑOS SOBRE DATASET EXTERNO
+    // ─────────────────────────────────────────────────────────────────────
+
+    /**
+     * Genera una tabla con una fila por CCAA y una columna por año,
+     * ordenada de mayor a menor por el valor del último año disponible.
+     * Las filas en config.destacadas reciben clase fila-resaltada.
+     */
+    crearTablaCCAA: function(config, props) {
+        const settings  = drupalSettings.visorProject || {};
+        const dsKey     = config.dataset.replace(/^\$/, '');
+        const ds        = settings['$' + dsKey] || settings[dsKey] || [];
+        if (!ds.length) return null;
+
+        const campo     = config.campo        || 'miembros';
+        const yearField = config.yearField    || 'ejercicio';
+        const etiqField = config.etiquetaField || 'ccaa_nombre';
+        const destacadas = config.destacadas  || [];
+        const formato   = config.formato      || 'decimal_2';
+        const fmt       = window.visorProject.utils.formatearDato;
+
+        const allYears = [...new Set(ds.map(r => String(r[yearField])))].sort();
+        const maxYear  = allYears[allYears.length - 1];
+
+        const getVal = (ccaa, year) => {
+            const r = ds.find(x => x[etiqField] === ccaa && String(x[yearField]) === year);
+            return (r && r[campo] !== null && r[campo] !== undefined) ? parseFloat(r[campo]) : null;
+        };
+
+        // CCAA únicas, ordenadas por valor del último año descendente
+        const allCCAA = [...new Set(ds.map(r => r[etiqField]))]
+            .sort((a, b) => (getVal(b, maxYear) ?? -Infinity) - (getVal(a, maxYear) ?? -Infinity));
+
+        const dataset = allCCAA.map(ccaa => ({
+            etiqueta:    ccaa,
+            esDestacada: destacadas.includes(ccaa),
+            celdas: allYears.map(year => {
+                const v = getVal(ccaa, year);
+                return { valor: v !== null ? fmt(v, formato) : '—', clase: 'col-dato' };
+            }),
+        }));
+
+        const cabeceras = [etiqField === 'ccaa_nombre' ? 'CCAA' : etiqField, ...allYears];
+        dataset._cabecerasTabla = cabeceras;
+        dataset._columnasCSV    = cabeceras;
+        dataset._datosPuros     = this.aplanarParaCSV(dataset);
+
+        return this.crearTabla(config, dataset);
+    },
+
+    // HISTÓRICO MULTI-SERIE SOBRE DATASETS EXTERNOS
+    // ─────────────────────────────────────────────────────────────────────
+
+    /**
+     * Genera una tabla con una fila por año y columnas de valor + variación %
+     * acumulada (respecto a config.baseYear) para cada serie del config.
+     * Solo aplica a ámbitos canarias e isla (los datasets no tienen municipio).
+     */
+    crearTablaHistoricoExt: function(config, props) {
+        const settings  = drupalSettings.visorProject || {};
+        const baseYear  = String(config.baseYear || '2010');
+        const series    = config.series || [];
+        const ambito    = props.ambito;
+        const islaId    = String(props.isla_id || '');
+        const fmt       = window.visorProject.utils.formatearDato;
+
+        const filtrarEntidad = (ds) => {
+            if (ambito === 'canarias') return ds.filter(r => r.ambito === 'canarias');
+            return ds.filter(r => r.ambito === 'isla' && String(r.isla_id) === islaId);
+        };
+
+        const seriesData = series.map(sc => {
+            const ds      = settings[sc.dataset] || settings['$' + sc.dataset] || [];
+            const ordered = filtrarEntidad(ds).slice()
+                .sort((a, b) => String(a[sc.yearField]).localeCompare(String(b[sc.yearField])));
+            const baseRec   = ordered.find(r => String(r[sc.yearField]) === baseYear);
+            const baseValue = baseRec ? parseFloat(baseRec[sc.campo]) : null;
+            return {
+                ...sc,
+                rows: ordered.map(r => ({ year: String(r[sc.yearField]), value: parseFloat(r[sc.campo]) })),
+                baseValue,
+            };
+        });
+
+        const allYears = [...new Set(seriesData.flatMap(s => s.rows.map(r => r.year)))].sort();
+        if (!allYears.length) return null;
+
+        const getVal = (s, year) => {
+            const r = s.rows.find(x => x.year === year);
+            return (r && !isNaN(r.value)) ? r.value : null;
+        };
+
+        const dataset = allYears.map(year => {
+            const celdas = [];
+
+            // Columnas de valor
+            seriesData.forEach(s => {
+                const v = getVal(s, year);
+                celdas.push({
+                    valor: v !== null ? fmt(v, s.formato || 'decimal_1') : '—',
+                    clase: 'col-dato',
+                });
+            });
+
+            // Columnas de variación % acumulada desde baseYear
+            seriesData.forEach(s => {
+                const v  = getVal(s, year);
+                const bv = s.baseValue;
+                let txt  = '—';
+                if (year !== baseYear && v !== null && bv) {
+                    const pct = (v / bv - 1) * 100;
+                    txt = fmt(pct, 'decimal_1') + '\u00a0%';
+                }
+                celdas.push({ valor: txt, clase: 'col-dato' });
+            });
+
+            return {
+                etiqueta:    year,
+                esDestacada: year === baseYear,
+                celdas,
+            };
+        });
+
+        const cabeceras = [
+            'Año',
+            ...series.map(s => s.etiqueta),
+            ...series.map(s => 'Var ' + s.etiqueta + '\u00a0%'),
+        ];
+        dataset._cabecerasTabla = cabeceras;
+        dataset._columnasCSV    = cabeceras;
+        dataset._datosPuros     = this.aplanarParaCSV(dataset);
+
+        return this.crearTabla(config, dataset);
+    },
+
     // ÍNDICE DE PRESIÓN (área del polígono radar)
     // ─────────────────────────────────────────────────────────────────────
 
@@ -784,6 +919,85 @@
         suma += radios[i] * radios[(i + 1) % n];
       }
       return (Math.sin(2 * Math.PI / n) / 2) * suma;
+    },
+
+    // ─────────────────────────────────────────────────────────────────────
+    // TABLA HISTÓRICO POBLACIÓN / VIVIENDA
+    // ─────────────────────────────────────────────────────────────────────
+
+    /**
+     * Genera una tabla año × indicadores comparando el crecimiento de la
+     * población (convertido a hogares necesarios) con las viviendas terminadas.
+     * Usa $historico_poblacion, $historico_viviendas_terminadas y el dataset
+     * derivado $historico_hogares_necesarios (calculado en main.js).
+     */
+    crearTablaHistoricoPobViv: function(config) {
+        const vp      = drupalSettings.visorProject || {};
+        const pob     = vp['$historico_poblacion']            || {};
+        const viv     = vp['$historico_viviendas_terminadas'] || {};
+        const hogares = vp['$historico_hogares_necesarios']   || {};
+
+        const años = Object.keys(hogares).sort();
+        if (!años.length) return null;
+
+        const fmt     = window.visorProject.utils.formatearDato;
+        const fmtDelta = n => {
+            if (n == null || isNaN(n)) return '—';
+            const signo = n >= 0 ? '+' : '−';
+            return signo + fmt(Math.abs(Math.round(n)), 'entero');
+        };
+
+        let cumViv   = 0;
+        let cumHog   = 0;
+        let cumDelta = 0;
+
+        const dataset = años.map(y => {
+            const pobVal  = parseFloat(pob[y]);
+            const pobPrev = parseFloat(pob[String(parseInt(y) - 1)]);
+            const delta   = (!isNaN(pobVal) && !isNaN(pobPrev)) ? pobVal - pobPrev : null;
+
+            if (delta !== null) cumDelta += delta;
+
+            const hogVal = parseFloat(hogares[y]) || 0;
+            const vivVal = y in viv ? (parseFloat(viv[y]) || 0) : null;
+
+            cumHog += hogVal;
+            if (vivVal !== null) cumViv += vivVal;
+
+            const saldo      = cumViv - cumHog;
+            const saldoClase = saldo >= 0 ? 'col-dato saldo-positivo' : 'col-dato saldo-negativo';
+
+            return {
+                etiqueta:    y,
+                esDestacada: false,
+                celdas: [
+                    { valor: !isNaN(pobVal) ? fmt(pobVal, 'entero') : '—', clase: 'col-dato' },
+                    { valor: fmtDelta(delta),   clase: 'col-dato' },
+                    { valor: fmtDelta(cumDelta), clase: 'col-dato' },
+                    { valor: fmt(hogVal, 'entero'),           clase: 'col-dato' },
+                    { valor: fmt(cumHog, 'entero'),           clase: 'col-dato' },
+                    { valor: vivVal !== null ? fmt(vivVal, 'entero') : '—', clase: 'col-dato' },
+                    { valor: fmt(cumViv, 'entero'),           clase: 'col-dato' },
+                    { valor: fmtDelta(saldo),   clase: saldoClase },
+                ],
+            };
+        });
+
+        dataset._cabecerasTabla = [
+            'Año',
+            'Población',
+            'Δ Población',
+            'Δ Pob. acum.',
+            'Hogares necesarios',
+            'Hogares acum.',
+            'Viviendas terminadas',
+            'Viviendas acum.',
+            'Saldo acum.',
+        ];
+        dataset._columnasCSV = dataset._cabecerasTabla;
+        dataset._datosPuros  = this.aplanarParaCSV(dataset);
+
+        return this.crearTabla(config, dataset);
     },
   };
 

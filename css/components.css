@@ -188,6 +188,10 @@
 */
 }
 
+/* Saldo acumulado en tablas históricas */
+.tabla-visor .saldo-positivo .valor-texto { color: #1a7a1a; font-weight: 700; }
+.tabla-visor .saldo-negativo .valor-texto { color: #a70000; font-weight: 700; }
+
 /* Contenedor del botón para darle aire */
 .tabla-footer-acciones {
     padding: 16px;

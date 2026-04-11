@@ -80,6 +80,24 @@ Devuelve el campo de otra entidad del snapshot (por su `etiqueta`).
 {{ rit | p:anterior | e:Lanzarote }}   → RIT de Lanzarote en el período anterior
 ```
 
+### 1.5b Dataset extra + entidad (y año)
+
+El modificador `e:` también funciona con datasets externos (notación de punto).
+Busca la entidad en el snapshot por `etiqueta` y usa sus identificadores para
+filtrar el dataset.
+
+```
+{{ dataset.campo | e:NombreEntidad }}
+{{ dataset.campo | e:NombreEntidad | y:YYYY }}
+{{ dataset.campo | y:YYYY | e:NombreEntidad }}
+```
+
+```
+{{ historicoLlegadas.turistas | e:Lanzarote | y:2023 }}
+{{ historicoTasaOcupacion.tasa | e:Fuerteventura | y:2022 | decimal_1 }}
+{{ personas_hogar.miembros | e:Canarias | y:2021 | decimal_2 }}
+```
+
 ### 1.6 Dataset extra (drupalSettings)
 
 Cualquier key con prefijo `$` en `drupalSettings.visorProject` está

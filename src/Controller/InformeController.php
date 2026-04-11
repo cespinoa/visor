@@ -210,7 +210,9 @@ final class InformeController extends ControllerBase {
     $html = $node->get('field_contenido')->value ?? '';
     $html = $this->aplicarSustituciones($html, $datos, $extra);
 
-    return new JsonResponse(['html' => $html]);
+    $response = new JsonResponse(['html' => $html]);
+    $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    return $response;
   }
 
   /**
@@ -278,16 +280,29 @@ final class InformeController extends ControllerBase {
 
         // Array de objetos (claves numéricas): buscar el registro que coincide
         // con la entidad activa según ambito + isla_id / municipio_id.
+        // Si hay e:NombreEntidad se usa esa entidad en lugar de la activa.
         if (array_is_list($ds) && !empty($ds) && is_array($ds[0])) {
-          $ambito       = $datos['ambito']       ?? NULL;
-          $isla_id      = (string) ($datos['isla_id']      ?? '');
-          $municipio_id = (string) ($datos['municipio_id'] ?? '');
+          $entidadRef = $datos;
+          if ($etiqueta !== NULL) {
+            foreach ($cargar('datos_dashboard.json') as $reg) {
+              if (($reg['etiqueta'] ?? NULL) === $etiqueta) {
+                $entidadRef = $reg;
+                break;
+              }
+            }
+          }
+          $ambito       = $entidadRef['ambito']       ?? NULL;
+          $isla_id      = (string) ($entidadRef['isla_id']      ?? '');
+          $municipio_id = (string) ($entidadRef['municipio_id'] ?? '');
           $yearFilter   = isset($opts['y']) ? (string) $opts['y'] : NULL;
           foreach ($ds as $record) {
             if (($record['ambito'] ?? NULL) !== $ambito) continue;
             if ($ambito === 'isla'      && (string) ($record['isla_id']      ?? '') !== $isla_id) continue;
             if ($ambito === 'municipio' && (string) ($record['municipio_id'] ?? '') !== $municipio_id) continue;
-            if ($yearFilter !== NULL && (string) ($record['year'] ?? '') !== $yearFilter) continue;
+            if ($yearFilter !== NULL) {
+            $recordYear = $record['year'] ?? $record['ejercicio'] ?? '';
+            if ((string) $recordYear !== $yearFilter) continue;
+          }
             return $record[$clave] ?? NULL;
           }
           return NULL;

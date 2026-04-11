@@ -2,6 +2,28 @@
 window.visorProject = window.visorProject || {};
 
 // Inicialización del estado único
+/**
+ * Precalcula datasets derivados que deben estar disponibles antes de cualquier render.
+ * Se llama desde visor-init-logic (paso A0) y queda accesible globalmente por si
+ * necesita reejecutarse (p.ej. si el dataset de población se recarga).
+ */
+window.visorProject.prepararDatosDerivados = function() {
+    const vp  = drupalSettings.visorProject || {};
+    const pob = vp['$historico_poblacion'] || {};
+    const años = Object.keys(pob).sort();
+    const hogares = {};
+    let prevPob = null;
+    años.forEach(y => {
+        const actual = parseFloat(pob[y]);
+        if (prevPob !== null) {
+            hogares[y] = Math.round((actual - prevPob) / 2.6);
+        }
+        // El primer año solo sirve de base para el delta siguiente; no se almacena
+        prevPob = actual;
+    });
+    vp['$historico_hogares_necesarios'] = hogares;
+};
+
 window.visorProject.estado = {
     ambito: 'canarias',
     indicador: 'rit',
@@ -129,6 +151,9 @@ window.visorProject.estado = {
        * 4. LÓGICA DE INICIALIZACIÓN (Init Logic)
        */
       once('visor-init-logic', 'body', context).forEach(() => {
+          // A0. Precalcular datasets derivados (hogares necesarios, etc.)
+          window.visorProject.prepararDatosDerivados();
+
           // A. Leemos URL
           if (window.visorProject.utils) {
               window.visorProject.utils.inicializarDesdeURL(estadoGlobal);

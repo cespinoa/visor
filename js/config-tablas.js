@@ -2,6 +2,34 @@
 
 window.CONFIG_TABLAS = {
 
+    'historico-pob-viv': {
+        tipo:   'historico-pob-viv',
+        titulo: 'Crecimiento de la población y la vivienda',
+    },
+
+
+    'hogar-ccaa-tabla': {
+        tipo:          'ccaa-ext',
+        titulo:        'Tamaño medio del hogar por CCAA',
+        dataset:       '$historico_personas_hogar_ccaa',
+        campo:         'miembros',
+        yearField:     'ejercicio',
+        etiquetaField: 'ccaa_nombre',
+        destacadas:    ['Total Nacional', 'Canarias'],
+        formato:       'decimal_2',
+    },
+
+    'historico-llegadas-plazas-ocupacion': {
+        tipo:    'historico-ext',
+        titulo:  'Evolución: llegadas, plazas regladas y tasa de ocupación',
+        baseYear: '2010',
+        series: [
+            { dataset: 'historicoTasaOcupacion',  campo: 'tasa',     yearField: 'ejercicio', etiqueta: 'Ocupación', formato: 'decimal_1' },
+            { dataset: 'historicoPlazasRegladas',  campo: 'plazas',   yearField: 'ejercicio', etiqueta: 'Plazas',   formato: 'entero'   },
+            { dataset: 'historicoLlegadas',        campo: 'turistas', yearField: 'year',      etiqueta: 'Turistas', formato: 'entero'   },
+        ],
+    },
+
     'viviendas-terminadas-canarias': {
         titulo:         "Viviendas terminadas",
         fuente:         '$viviendas_terminadas',

@@ -54,12 +54,26 @@ final class DashboardController extends ControllerBase {
     // Obtenemos los datos de poblacion 2021 (coincide con el último censo de viviendas)
     $poblacion_2021 = $this->getPoblacion2021();
 
-    // Obtenemos los datos de vivienda terminada
-    $viviendas_terminadas = $this->getViviendasTerminadas();
+    // Obtenemos el histórico de vivienda terminada
+    $historico_viviendas_terminadas = $this->getHistoricoViviendasTerminadas();
 
     // Obtenemos los datos de tamaño del hogar a partir de 1981
     $personas_hogar = $this->getPersonasHogar();
 
+    // Obtenemos los datos de llegada de turistas
+    $historicoLlegadas = $this->getHistoricoLlegadas();
+
+    // Obtenemos el histórico de plazas
+    $historicoPlazasRegladas = $this->getHistoricoPlazasRegladas();
+
+    // Obtenemos el histórico de ocupacion
+    $historicoTasaOcupacion = $this->getHistoricoTasaOcupacion();
+
+    // Obtenemos el histórico de tamño de hogar por CCAA
+    $historico_personas_hogar_ccaa = $this->getHistoricoPersonasHogarCCAA();
+
+    // Obtenemos el histórico de población
+    $historico_poblacion = $this->getHistoricoPoblacion();
     
 
     // Obtenemos las siluetas
@@ -108,11 +122,117 @@ final class DashboardController extends ControllerBase {
             '$viviendas_terminadas' => $viviendas_terminadas,
             '$poblacion_2021' => $poblacion_2021,
             '$personas_hogar' => $personas_hogar,
+            '$historicoLlegadas' => $historicoLlegadas,
+            '$historicoPlazasRegladas' => $historicoPlazasRegladas,
+            '$historicoTasaOcupacion' => $historicoTasaOcupacion,
+            '$historico_personas_hogar_ccaa' => $historico_personas_hogar_ccaa,
+            '$historico_viviendas_terminadas' => $historico_viviendas_terminadas,
+            '$historico_poblacion' => $historico_poblacion,
           ],
         ],
       ],
     ];
 
+  }
+
+  public function getHistoricoPersonasHogarCCAA() {                                                                                                                                        
+      $conn = Database::getConnection('default', 'mapa_data');
+      $results = $conn->select('ech_tamano_hogar_ccaa', 'h')                                                                                                                               
+          ->fields('h')
+          ->condition('trimestre', 4)                                                                                                                                                      
+          ->condition('ccaa_nombre', ['Ceuta', 'Melilla'], 'NOT IN')
+          ->execute()                                                                                                                                                                      
+          ->fetchAll();
+                                                                                                                                                                                           
+      $dataset = [];                                        
+      foreach ($results as $row) {
+          $dataset[] = [
+              'ccaa_nombre' => $row->ccaa_nombre,
+              'miembros'    => $row->miembros,
+              'ejercicio' => $row->anyo,
+          ];
+      }                                                                                                                                                                                    
+      return $dataset;                                      
+  }
+
+
+
+  public function getHistoricoTasaOcupacion() {
+    $conn = Database::getConnection('default', 'mapa_data');
+    $results = $conn->select('historico_tasa_ocupacion_reglada', 'h')
+      ->fields('h')
+      ->condition('ejercicio', 2009, '>')
+      ->execute()
+      ->fetchAll();
+
+    $dataset = [];
+    foreach ($results as $row) {
+      $dataset[] = [
+        'ejercicio' => $row->ejercicio,
+        'ambito' => $row->ambito,
+        'isla_id' => $row->isla_id,
+        'tasa' => $row->tasa,
+      ];
+      
+    }
+    return $dataset;
+  }
+
+  public function getHistoricoLlegadas(){
+    $conn = Database::getConnection('default', 'mapa_data');
+    $results = $conn->select('turistas_llegadas', 'h')
+      ->fields('h')
+      ->condition('year', 2026, '<')
+      ->execute()
+      ->fetchAll();
+
+    $dataset = [];
+    foreach ($results as $row) {
+      $dataset[] = [
+        'isla_id' => $row->isla_id,
+        'year' => $row->year,
+        'ambito' => 'isla',
+        'turistas' => $row->turistas,
+      ];
+    }
+
+    // Totalizar Canarias por año
+    $totalesPorYear = [];
+    foreach ($dataset as $item) {                                                                                                                                                          
+      $year = $item['year'];
+      $totalesPorYear[$year] = ($totalesPorYear[$year] ?? 0) + $item['turistas'];                                                                                                          
+    }                                                       
+    foreach ($totalesPorYear as $year => $total) {                                                                                                                                         
+      $dataset[] = [
+        'isla_id'  => null,                                                                                                                                                                
+        'year'     => $year,                                                                                                                                                               
+        'ambito'   => 'canarias',
+        'turistas' => $total,                                                                                                                                                              
+      ];                                                    
+    }
+
+    return $dataset;
+  }
+
+  public function getHistoricoPlazasRegladas() {
+    $conn = Database::getConnection('default', 'mapa_data');
+    $results = $conn->select('historico_plazas_regladas', 'h')
+      ->fields('h')
+      ->condition('ejercicio', 2009, '>')
+      ->execute()
+      ->fetchAll();
+
+    $dataset = [];
+    foreach ($results as $row) {
+      $dataset[] = [
+        'ejercicio' => $row->ejercicio,
+        'ambito' => $row->ambito,
+        'isla_id' => $row->isla_id,
+        'plazas' => $row->plazas,
+      ];
+      
+    }
+    return $dataset;
   }
 
   public function getPersonasHogar(){
@@ -192,6 +312,48 @@ final class DashboardController extends ControllerBase {
     return $dataset;
   }
 
+  public function getHistoricoViviendasTerminadas(){
+    $conn = Database::getConnection('default', 'mapa_data');
+    
+    // Traemos toda la vista que creamos en Postgres
+    $results = $conn->select('vivienda_iniciada_terminada_canarias', 'h')                                                                                                                    
+      ->fields('h', ['year', 'viviendas_terminadas'])                                                                                                                                        
+      ->condition('tipo_periodo', 'anual')                    
+      ->condition('territorio_codigo', 'ES70')                                                                                                                                               
+      ->condition('year', 2025, '<')
+      ->orderBy('year', 'ASC')                                                                                                                                                               
+      ->execute()                                                                                                                                                                            
+      ->fetchAll();
+
+    $dataset = [];
+    foreach ($results as $row) {
+      $key = $row->year;
+      $dataset[$key] = $row->viviendas_terminadas;
+    }
+  
+    return $dataset;
+  }
+
+  public function getHistoricoPoblacion() {
+    $conn = Database::getConnection('default', 'mapa_data');
+    
+    // Traemos toda la vista que creamos en Postgres
+    $results = $conn->select('poblacion', 'h')                                                                                                                    
+      ->fields('h')                                                                                                                                        
+      ->condition('ambito', 'canarias')                    
+      ->condition('year', 2000, '>')                                                                                                                                               
+      ->orderBy('year', 'ASC')                                                                                                                                                               
+      ->execute()                                                                                                                                                                            
+      ->fetchAll();
+
+    $dataset = [];
+    foreach ($results as $row) {
+      $key = $row->year;
+      $dataset[$key] = $row->valor;
+    }
+  
+    return $dataset;  
+  }
 
   public function getNombreSiluetas() {
     $conn = Database::getConnection('default', 'mapa_data');

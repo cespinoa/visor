@@ -14,7 +14,7 @@ window.visorProject.utilsGraficos = {
         if (config.tipo === 'radar') {
             return this.crearContenedorRadar(config, datosRaw, opciones);
         }
-        if (config.tipo === 'linea-ext') {
+        if (['linea-ext', 'linea-multi-ext', 'barras-ccaa-ext', 'pendiente-ccaa-ext', 'pendiente-pob-viv'].includes(config.tipo)) {
             return this.crearContenedorLineaExt(config, opciones);
         }
 
@@ -643,9 +643,10 @@ window.visorProject.utilsGraficos = {
      * no como plugin, para garantizar que el canvas ya está completamente pintado.
      */
     _dibujarEtiquetasChart: function(chart) {
-        const ctx      = chart.ctx;
-        const paletaId = chart.config?.options?.plugins?.visorDatalabels?.paletaId;
-        const UMBRAL   = 22; // px mínimos de barra para colocar la etiqueta dentro
+        const ctx        = chart.ctx;
+        const paletaId   = chart.config?.options?.plugins?.visorDatalabels?.paletaId;
+        const horizontal = chart.config?.options?.indexAxis === 'y';
+        const UMBRAL     = 22;
 
         chart.data.datasets.forEach((dataset, datasetIndex) => {
             const meta = chart.getDatasetMeta(datasetIndex);
@@ -662,29 +663,43 @@ window.visorProject.utilsGraficos = {
                 const etqIndex  = bgEsArray ? barIndex : datasetIndex;
                 const textColor = this._colorEtiqueta(bgColor, paletaId, etqIndex);
 
-                // Formato: base100 o unidades % → porcentaje_2; resto → _formato del campo
                 const unidades = dataset._unidades || '';
                 const formato  = (dataset._base100 || unidades.includes('%'))
                     ? 'porcentaje_2'
                     : (dataset._formato || 'decimal_2');
-                const valorNum = typeof value === 'object' ? value.y : value;
+                const valorNum = typeof value === 'object' ? (horizontal ? value.x : value.y) : value;
                 const texto    = window.visorProject.utils.formatearDato(valorNum, formato)
                     + (unidades && !unidades.includes('%') && !dataset._base100 ? '\u00a0' + unidades : '');
 
-                const barHeight = Math.abs(bar.base - bar.y);
-
                 ctx.save();
-                ctx.font      = '600 30px Arial, sans-serif';
-                ctx.textAlign = 'center';
+                ctx.font = '600 ' + (horizontal ? '20' : '30') + 'px Arial, sans-serif';
 
-                if (barHeight >= UMBRAL) {
-                    ctx.fillStyle    = textColor;
+                if (horizontal) {
+                    // Barras horizontales: etiqueta dentro/fuera del extremo derecho
+                    const barWidth = Math.abs(bar.x - bar.base);
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(texto, bar.x, bar.y + barHeight / 2);
-                } else if (barHeight > 0) {
-                    ctx.fillStyle    = '#333333';
-                    ctx.textBaseline = 'bottom';
-                    ctx.fillText(texto, bar.x, bar.y - 2);
+                    if (barWidth >= UMBRAL * 2) {
+                        ctx.textAlign = 'right';
+                        ctx.fillStyle = textColor;
+                        ctx.fillText(texto, bar.x - 6, bar.y);
+                    } else {
+                        ctx.textAlign = 'left';
+                        ctx.fillStyle = '#333333';
+                        ctx.fillText(texto, bar.x + 4, bar.y);
+                    }
+                } else {
+                    // Barras verticales (comportamiento original)
+                    const barHeight = Math.abs(bar.base - bar.y);
+                    ctx.textAlign = 'center';
+                    if (barHeight >= UMBRAL) {
+                        ctx.fillStyle    = textColor;
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(texto, bar.x, bar.y + barHeight / 2);
+                    } else if (barHeight > 0) {
+                        ctx.fillStyle    = '#333333';
+                        ctx.textBaseline = 'bottom';
+                        ctx.fillText(texto, bar.x, bar.y - 2);
+                    }
                 }
 
                 ctx.restore();
@@ -711,8 +726,11 @@ window.visorProject.utilsGraficos = {
         canvas.id      = config.canvasId;
         canvas.className = 'gauge-canvas';
 
+        const bodyClasses = {
+            'barras-ccaa-ext': 'body-barras-ccaa',
+        };
         const body = contenedor.querySelector('.grafico-body');
-        body.classList.add('body-linea-ext');
+        body.classList.add(bodyClasses[config.tipo] || 'body-linea-ext');
         body.appendChild(canvas);
 
         // Placeholder de tabla (se rellena en dibujarLineaExt)
@@ -876,6 +894,418 @@ window.visorProject.utilsGraficos = {
         tablaEl.innerHTML = html;
     },
 
+    /**
+     * Gráfico de línea con dos (o más) series de datasets externos, normalizadas
+     * a base 100 en el año indicado por config.config.baseYear.
+     * @param {Object} config    Instancia de CONFIG_GRAFICOS con canvasId ya asignado.
+     * @param {Object} registro  Registro activo del snapshot.
+     */
+    dibujarLineaMultiExt: function(config, registro) {
+        const canvas = document.getElementById(config.canvasId);
+        if (!canvas || !registro) return;
+
+        const settings    = drupalSettings.visorProject || {};
+        const baseYear    = String(config.config.baseYear || '2010');
+        const seriesConf  = config.config.series || [];
+        const ambito      = registro.ambito;
+        const islaId      = String(registro.isla_id || '');
+
+        // Filtra registros de un dataset por entidad activa.
+        const filtrarEntidad = (ds) => {
+            if (ambito === 'canarias') return ds.filter(r => r.ambito === 'canarias');
+            return ds.filter(r => r.ambito === 'isla' && String(r.isla_id) === islaId);
+        };
+
+        // Construye los datos indexados de cada serie
+        const seriesData = seriesConf.map(sc => {
+            const ds       = settings[sc.dataset] || settings['$' + sc.dataset] || [];
+            const filtro   = filtrarEntidad(ds);
+            const ordenado = filtro.slice().sort((a, b) =>
+                String(a[sc.yearField]).localeCompare(String(b[sc.yearField])));
+
+            const baseRec   = ordenado.find(r => String(r[sc.yearField]) === baseYear);
+            const baseValue = baseRec ? parseFloat(baseRec[sc.campo]) : null;
+
+            const years   = ordenado.map(r => String(r[sc.yearField]));
+            const indexed = ordenado.map(r => {
+                if (!baseValue) return null;
+                const v = parseFloat(r[sc.campo]);
+                return isNaN(v) ? null : Math.round((v / baseValue) * 1000) / 10; // 1 decimal
+            });
+
+            return { ...sc, years, indexed };
+        });
+
+        // Eje X: unión ordenada de todos los años
+        const allYears = [...new Set(seriesData.flatMap(s => s.years))].sort();
+        if (!allYears.length) return;
+
+        const lookupVal = (s, year) => {
+            const idx = s.years.indexOf(year);
+            return idx >= 0 ? s.indexed[idx] : null;
+        };
+
+        const chartDatasets = seriesData.map((s, i) => {
+            const ds = {
+                label:           s.etiqueta,
+                data:            allYears.map(y => lookupVal(s, y)),
+                borderColor:     s.color || (i === 0 ? '#a70000' : '#aaaaaa'),
+                backgroundColor: i === 0 ? 'rgba(167,0,0,0.07)' : 'transparent',
+                borderWidth:     i === 0 ? 2 : 1.5,
+                pointRadius:     i === 0 ? 3 : 2,
+                tension:         0.3,
+            };
+            if (s.borderDash) ds.borderDash = s.borderDash;
+            return ds;
+        });
+
+        new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: { labels: allYears, datasets: chartDatasets },
+            options: {
+                responsive:          true,
+                maintainAspectRatio: true,
+                aspectRatio:         3,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: { display: true, text: `Índice (${baseYear}=100)` },
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        mode:      'index',
+                        intersect: false,
+                        callbacks: {
+                            label: ctx => {
+                                const v = ctx.parsed.y;
+                                return ` ${ctx.dataset.label}: ${v !== null ? v.toFixed(1) : '—'}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // ── Tabla de datos para PDF ──────────────────────────────────────────
+        const tablaEl = document.getElementById(config.canvasId + '-tabla');
+        if (!tablaEl) return;
+
+        const fmt = v => (v === null || v === undefined || isNaN(v)) ? '—' : v.toFixed(1);
+
+        let html = '<table class="linea-ext-tabla__table">';
+        html += '<thead><tr><th></th>'
+            + allYears.map(y => `<th>${y}</th>`).join('')
+            + '</tr></thead><tbody>';
+
+        seriesData.forEach(s => {
+            html += `<tr><th>${s.etiqueta}</th>`
+                + allYears.map(y => `<td>${fmt(lookupVal(s, y))}</td>`).join('')
+                + '</tr>';
+        });
+
+        html += '</tbody></table>';
+        tablaEl.innerHTML = html;
+    },
+
+    /**
+     * Barras horizontales ordenadas de mayor a menor para el último año disponible.
+     * Destaca las entradas indicadas en config.config.destacadas con rojo más oscuro.
+     */
+    dibujarBarrasCCAA: function(config, registro) {
+        const canvas = document.getElementById(config.canvasId);
+        if (!canvas) return;
+
+        const settings    = drupalSettings.visorProject || {};
+        const cfg         = config.config;
+        const dsKey       = cfg.dataset.replace(/^\$/, '');
+        const ds          = settings['$' + dsKey] || settings[dsKey] || [];
+        if (!ds.length) return;
+
+        const campo        = cfg.campo        || 'miembros';
+        const yearField    = cfg.yearField    || 'ejercicio';
+        const etiqField    = cfg.etiquetaField || 'ccaa_nombre';
+        const destacadas   = cfg.destacadas   || [];
+
+        // Año más reciente
+        const maxYear = ds.reduce((m, r) => String(r[yearField]) > m ? String(r[yearField]) : m, '');
+
+        // Filtrar y ordenar de mayor a menor
+        const filas = ds
+            .filter(r => String(r[yearField]) === maxYear)
+            .map(r => ({ etiqueta: r[etiqField], valor: parseFloat(r[campo]) || 0 }))
+            .sort((a, b) => b.valor - a.valor);
+
+        const labels = filas.map(r => r.etiqueta);
+        const values = filas.map(r => r.valor);
+        const colors = filas.map(r => destacadas.includes(r.etiqueta) ? '#6d0000' : '#a70000');
+        const borders = filas.map(r => destacadas.includes(r.etiqueta) ? '#2d0000' : 'transparent');
+        const bWidths = filas.map(r => destacadas.includes(r.etiqueta) ? 2 : 0);
+
+        // Rango X ajustado al mínimo-máximo para que las diferencias sean visibles
+        const minVal = Math.min(...values);
+        const maxVal = Math.max(...values);
+        const margen = (maxVal - minVal) * 0.15 || 0.1;
+
+        new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    data:            values,
+                    backgroundColor: colors,
+                    borderColor:     borders,
+                    borderWidth:     bWidths,
+                }],
+            },
+            options: {
+                indexAxis:           'y',
+                responsive:          true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ' ' + ctx.parsed.x.toFixed(2),
+                        }
+                    },
+                    visorDatalabels: { paletaId: null },
+                },
+                scales: {
+                    x: {
+                        min: Math.max(0, minVal - margen),
+                        max: maxVal + margen,
+                        ticks: { font: { size: 11 } },
+                    },
+                    y: { ticks: { font: { size: 11 } } },
+                },
+            },
+        });
+    },
+
+    /**
+     * Línea de evolución temporal para series nombradas de un dataset CCAA.
+     * config.config.series = [{ nombre, color }, ...]
+     */
+    dibujarPendienteCCAA: function(config, registro) {
+        const canvas = document.getElementById(config.canvasId);
+        if (!canvas) return;
+
+        const settings = drupalSettings.visorProject || {};
+        const cfg      = config.config;
+        const dsKey    = cfg.dataset.replace(/^\$/, '');
+        const ds       = settings['$' + dsKey] || settings[dsKey] || [];
+        if (!ds.length) return;
+
+        const campo     = cfg.campo        || 'miembros';
+        const yearField = cfg.yearField    || 'ejercicio';
+        const etiqField = cfg.etiquetaField || 'ccaa_nombre';
+        const seriesCfg = cfg.series       || [];
+
+        const allYears = [...new Set(ds.map(r => String(r[yearField])))].sort();
+
+        const chartDatasets = seriesCfg.map((sc, i) => {
+            const rows = ds
+                .filter(r => r[etiqField] === sc.nombre)
+                .sort((a, b) => String(a[yearField]).localeCompare(String(b[yearField])));
+            const data = allYears.map(y => {
+                const r = rows.find(x => String(x[yearField]) === y);
+                return r ? parseFloat(r[campo]) : null;
+            });
+            const color = sc.color || (i === 0 ? '#555555' : '#a70000');
+            return {
+                label:           sc.nombre,
+                data,
+                borderColor:     color,
+                backgroundColor: 'transparent',
+                borderWidth:     i === 0 ? 1.5 : 2.5,
+                pointRadius:     4,
+                tension:         0.2,
+            };
+        });
+
+        new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: { labels: allYears, datasets: chartDatasets },
+            options: {
+                responsive:          true,
+                maintainAspectRatio: true,
+                aspectRatio:         3,
+                scales: { y: { beginAtZero: false } },
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        mode:      'index',
+                        intersect: false,
+                        callbacks: {
+                            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(2) : '—'}`,
+                        }
+                    }
+                }
+            }
+        });
+
+        // Tabla compañera
+        const tablaEl = document.getElementById(config.canvasId + '-tabla');
+        if (!tablaEl) return;
+
+        const fmt = v => (v !== null && !isNaN(v)) ? parseFloat(v).toFixed(2) : '—';
+        let html = '<table class="linea-ext-tabla__table"><thead><tr><th></th>'
+            + allYears.map(y => `<th>${y}</th>`).join('')
+            + '</tr></thead><tbody>';
+
+        chartDatasets.forEach(s => {
+            html += `<tr><th>${s.label}</th>`
+                + s.data.map(v => `<td>${fmt(v)}</td>`).join('')
+                + '</tr>';
+        });
+
+        html += '</tbody></table>';
+        tablaEl.innerHTML = html;
+    },
+
+    /**
+     * Gráfico de pendiente: población vs. viviendas terminadas acumuladas,
+     * ambas series indexadas a base 100 en config.config.baseYear.
+     * Los datasets son objetos simples { año: valor } (no arrays de registros).
+     */
+    dibujarPendientePobViv: function(config, registro) {
+        const canvas = document.getElementById(config.canvasId);
+        if (!canvas) return;
+
+        const settings  = drupalSettings.visorProject || {};
+        const cfg       = config.config;
+        const baseYear  = cfg.baseYear != null ? String(cfg.baseYear) : null;
+        const seriesConf = cfg.series || [];
+
+        // Eje X: unión de claves de todos los datasets, ordenada
+        const allYearsSet = new Set();
+        seriesConf.forEach(sc => {
+            const dsKey = sc.dataset.replace(/^\$/, '');
+            const ds    = settings['$' + dsKey] || settings[dsKey] || {};
+            Object.keys(ds).forEach(y => allYearsSet.add(y));
+        });
+        const allYears = [...allYearsSet].sort();
+        if (!allYears.length) return;
+
+        const usarBase100 = !!baseYear;
+
+        const seriesData = seriesConf.map(sc => {
+            const dsKey = sc.dataset.replace(/^\$/, '');
+            const ds    = settings['$' + dsKey] || settings[dsKey] || {};
+
+            // Valores brutos en orden de allYears
+            let rawValues = allYears.map(y => {
+                const v = parseFloat(ds[y]);
+                return isNaN(v) ? null : v;
+            });
+
+            // Acumulación opcional (suma corrida desde el primer año)
+            if (sc.acumular) {
+                let cumsum = 0;
+                rawValues = rawValues.map(v => {
+                    if (v !== null) cumsum += v;
+                    return cumsum > 0 ? cumsum : null;
+                });
+            }
+
+            let valores;
+            if (usarBase100) {
+                // Índice base 100
+                const baseIdx   = allYears.indexOf(baseYear);
+                const baseValue = baseIdx >= 0 ? rawValues[baseIdx] : null;
+                valores = rawValues.map(v => {
+                    if (v === null || !baseValue) return null;
+                    return Math.round((v / baseValue) * 1000) / 10; // 1 decimal
+                });
+            } else {
+                valores = rawValues;
+            }
+
+            return { ...sc, valores };
+        });
+
+        const fmtTooltip = usarBase100
+            ? (v => v !== null ? v.toFixed(1) : '—')
+            : (v => v !== null ? Math.round(v).toLocaleString('es-ES') : '—');
+
+        const chartDatasets = seriesData.map((s, i) => {
+            const ds = {
+                label:           s.etiqueta,
+                data:            s.valores,
+                borderColor:     s.color || (i === 0 ? '#a70000' : '#aaaaaa'),
+                backgroundColor: i === 0 ? 'rgba(167,0,0,0.07)' : 'transparent',
+                borderWidth:     i === 0 ? 2 : 1.5,
+                pointRadius:     i === 0 ? 3 : 2,
+                tension:         0.3,
+                fill:            i === 0,
+            };
+            if (s.borderDash) ds.borderDash = s.borderDash;
+            return ds;
+        });
+
+        const yAxisTitle = usarBase100
+            ? `Índice (${baseYear}=100)`
+            : (cfg.yTitle || '');
+
+        new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: { labels: allYears, datasets: chartDatasets },
+            options: {
+                responsive:          true,
+                maintainAspectRatio: true,
+                aspectRatio:         3,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: !!yAxisTitle, text: yAxisTitle },
+                        ticks: {
+                            callback: usarBase100
+                                ? undefined
+                                : v => v.toLocaleString('es-ES'),
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        mode:      'index',
+                        intersect: false,
+                        callbacks: {
+                            label: ctx => {
+                                const v = ctx.parsed.y;
+                                return ` ${ctx.dataset.label}: ${fmtTooltip(v)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // ── Tabla de datos para PDF ──────────────────────────────────────────
+        if (cfg.sinTabla) return;
+        const tablaEl = document.getElementById(config.canvasId + '-tabla');
+        if (!tablaEl) return;
+
+        const fmtTabla = usarBase100
+            ? (v => (v === null || isNaN(v)) ? '—' : v.toFixed(1))
+            : (v => (v === null || isNaN(v)) ? '—' : Math.round(v).toLocaleString('es-ES'));
+
+        let html = '<table class="linea-ext-tabla__table"><thead><tr><th></th>'
+            + allYears.map(y => `<th>${y}</th>`).join('')
+            + '</tr></thead><tbody>';
+
+        seriesData.forEach(s => {
+            html += `<tr><th>${s.etiqueta}</th>`
+                + s.valores.map(v => `<td>${fmtTabla(v)}</td>`).join('')
+                + '</tr>';
+        });
+
+        html += '</tbody></table>';
+        tablaEl.innerHTML = html;
+    },
+
     activarObservador: function(elemento, config, datos) {
         const self = this; 
         const observer = new IntersectionObserver((entries) => {
@@ -901,6 +1331,18 @@ window.visorProject.utilsGraficos = {
                             break;
                         case 'linea-ext':
                             self.dibujarLineaExt(config, Array.isArray(datos) ? datos[datos.length - 1] : datos);
+                            break;
+                        case 'linea-multi-ext':
+                            self.dibujarLineaMultiExt(config, Array.isArray(datos) ? datos[datos.length - 1] : datos);
+                            break;
+                        case 'barras-ccaa-ext':
+                            self.dibujarBarrasCCAA(config, Array.isArray(datos) ? datos[datos.length - 1] : datos);
+                            break;
+                        case 'pendiente-ccaa-ext':
+                            self.dibujarPendienteCCAA(config, Array.isArray(datos) ? datos[datos.length - 1] : datos);
+                            break;
+                        case 'pendiente-pob-viv':
+                            self.dibujarPendientePobViv(config, Array.isArray(datos) ? datos[datos.length - 1] : datos);
                             break;
                     }
                     observer.unobserve(entry.target);

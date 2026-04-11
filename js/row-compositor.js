@@ -308,6 +308,27 @@
             return motorTablas.crearTablaIndicePression(props);
         }
 
+        // Tabla CCAA × años sobre dataset externo
+        if (config.tipo === 'ccaa-ext') {
+            const tablaDOM = motorTablas.crearTablaCCAA(config, props);
+            if (tablaDOM) this.añadirFuncionalidadFullscreen(tablaDOM);
+            return tablaDOM;
+        }
+
+        // Tabla histórica multi-serie sobre datasets externos
+        if (config.tipo === 'historico-ext') {
+            const tablaDOM = motorTablas.crearTablaHistoricoExt(config, props);
+            if (tablaDOM) this.añadirFuncionalidadFullscreen(tablaDOM);
+            return tablaDOM;
+        }
+
+        // Tabla histórico población / vivienda (datos Canarias)
+        if (config.tipo === 'historico-pob-viv') {
+            const tablaDOM = motorTablas.crearTablaHistoricoPobViv(config);
+            if (tablaDOM) this.añadirFuncionalidadFullscreen(tablaDOM);
+            return tablaDOM;
+        }
+
         // Tabla desde drupalSettings: no pasa por el dataSelector de snapshot
         if (config.fuente) {
             const datosRaw = (drupalSettings.visorProject || {})[config.fuente];

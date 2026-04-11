@@ -39,11 +39,12 @@
         }
 
         // 4. Texto de Notas/Advertencias (Al final del componente)
-        const notasEl = fragment.querySelector('.componente-notas');
+        const footerEl = fragment.querySelector('.componente-footer');
+        const notasEl  = fragment.querySelector('.componente-notas');
         if (opciones.notas && notasEl) {
             notasEl.textContent = opciones.notas;
-        } else if (notasEl) {
-            notasEl.remove();
+        } else if (footerEl) {
+            footerEl.remove(); // Sin notas: eliminar el footer entero (evita borde vacío)
         }
 
         // 5. Clases de Layout (is-6, col-12, etc.)

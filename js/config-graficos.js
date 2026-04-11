@@ -2,6 +2,33 @@ window.CONFIG_GRAFICOS = {
 
     // ── Gráficos de línea sobre datasets externos ────────────────────────────
 
+    'hogar-ccaa-barras': {
+        tipo:   'barras-ccaa-ext',
+        titulo: 'Tamaño medio del hogar por CCAA',
+        config: {
+            dataset:       '$historico_personas_hogar_ccaa',
+            campo:         'miembros',
+            yearField:     'ejercicio',
+            etiquetaField: 'ccaa_nombre',
+            destacadas:    ['Total Nacional', 'Canarias'],
+        },
+    },
+
+    'hogar-ccaa-pendiente': {
+        tipo:   'pendiente-ccaa-ext',
+        titulo: 'Evolución del tamaño de hogar: Canarias vs España',
+        config: {
+            dataset:       '$historico_personas_hogar_ccaa',
+            campo:         'miembros',
+            yearField:     'ejercicio',
+            etiquetaField: 'ccaa_nombre',
+            series: [
+                { nombre: 'Total Nacional', color: '#555555' },
+                { nombre: 'Canarias',       color: '#a70000' },
+            ],
+        },
+    },
+
     'personas-por-hogar': {
         tipo:   'linea-ext',
         titulo: 'Evolución del tamaño medio de los hogares',
@@ -9,6 +36,66 @@ window.CONFIG_GRAFICOS = {
             campo:   'miembros',
             dataset: '$personas_hogar',
         }
+    },
+
+    'llegadas-vs-plazas': {
+        tipo:   'linea-multi-ext',
+        titulo: 'Llegadas de turistas vs plazas regladas (base 2010=100)',
+        config: {
+            baseYear: '2010',
+            series: [
+                {
+                    dataset:   'historicoLlegadas',
+                    campo:     'turistas',
+                    yearField: 'year',
+                    etiqueta:  'Llegadas de turistas',
+                    color:     '#a70000',
+                },
+                {
+                    dataset:    'historicoPlazasRegladas',
+                    campo:      'plazas',
+                    yearField:  'ejercicio',
+                    etiqueta:   'Plazas regladas',
+                    color:      '#aaaaaa',
+                    borderDash: [5, 4],
+                },
+                {
+                    dataset:   'historicoTasaOcupacion',
+                    campo:     'tasa',
+                    yearField: 'ejercicio',
+                    etiqueta:  'Tasa de ocupación reglada',
+                    color:     '#2b7abf',
+                    borderDash: [3, 3],
+                },
+            ],
+        },
+    },
+
+    // ── Gráficos de población y vivienda (nivel Canarias) ───────────────────
+
+    'poblacion-vivienda-pendiente': {
+        tipo:   'pendiente-pob-viv',
+        titulo: 'Viviendas construidas vs. hogares necesarios por crecimiento poblacional',
+        config: {
+            // Sin baseYear → valores absolutos acumulados (no índice)
+            yTitle:   'Unidades acumuladas desde 2002',
+            sinTabla: true,
+            series: [
+                {
+                    dataset:  '$historico_viviendas_terminadas',
+                    etiqueta: 'Viviendas terminadas (acumulado)',
+                    color:    '#a70000',
+                    acumular: true,
+                },
+                {
+                    dataset:   '$historico_hogares_necesarios',
+                    etiqueta:  'Hogares necesarios por crecimiento poblacional (acumulado)',
+                    color:     '#2b7abf',
+                    borderDash: [5, 4],
+                    acumular:  true,
+                },
+            ],
+        },
     },
 
     // ── Radar ────────────────────────────────────────────────────────────────

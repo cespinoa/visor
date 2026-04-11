@@ -345,6 +345,10 @@
     max-height: 320px;
 }
 
+.grafico-body.body-barras-ccaa {
+    height: 620px;
+}
+
 
 
 .linea-ext-tabla {
