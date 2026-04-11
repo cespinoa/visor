@@ -190,7 +190,14 @@ Los ítems clickables son `<button>` que llaman a `difundirDatos(record)` con el
 
 ### El panel de gráficos (`panel-graficos.js`)
 
-Define el esquema de bloques para la pestaña Gráficos y delega al `rowCompositor`. Los bloques usan la clave `elementos` (nunca `graficos`). Bloques actuales (en orden de aparición):
+Define el esquema de bloques para la pestaña Gráficos y delega al `rowCompositor`. Los bloques usan la clave `elementos` (nunca `graficos`). El método `actualizarPanel` elige el esquema según `props.ambito`:
+
+**`_esquemaCanarias()`** — Vista de Canarias (2 bloques):
+
+1. **Población y vivienda** — `poblacion-vivienda-pendiente` (gráfico, ancho 12) + `historico-pob-viv` (tabla, ancho 12). Lleva `notas` con la metodología del cálculo de hogares.
+2. **Síntesis de indicadores por isla** — `radares-islas` / `radar-sintesis` (ancho 12)
+
+**`_esquemaDetalle()`** — Vista isla/municipio (6 bloques):
 
 1. **Indicadores de Intensidad Turística** — `gauge-rit`, `gauge-rit-r`, `gauge-rit-v`, `donut-rit` (ancho 3 c/u)
 2. **Indicadores de Intensidad Turística por km²** — `gauge-rit-km2`, `gauge-rit-r-km2`, `gauge-rit-v-km2` (ancho 3 c/u)
@@ -248,6 +255,55 @@ El eje va de 0 a 100 sin etiquetas de tick (escala relativa, no absoluta). El to
 **Nota sobre `_avg > _max`:** en algunos campos la media canaria supera el máximo registrado, causando que el polígono gris salga fuera del radar. Esto es un problema de datos (los valores `_avg` y `_max` se calculan con R fuera de Drupal), no un bug de código. Pendiente de revisión en el pipeline de datos.
 
 **CSS radar** en `css/dashboard/graficos.css`: `.contenedor-radar` (text-align left), `.radar-body` (flex gap 24px), `.radar-chart-col` (flex 0 0 50%), `.radar-table-col` (flex 1 overflow-x auto), `.radar-tabla` (font-size 0.82rem).
+
+### Datasets derivados (`main.js` → `prepararDatosDerivados`)
+
+`window.visorProject.prepararDatosDerivados()` se llama en el paso A0 de la inicialización (antes de `window.visorProject.estado`), de modo que los datasets derivados estén disponibles para todos los gráficos y tablas.
+
+Actualmente calcula:
+- **`$historico_hogares_necesarios`** — `{año: valor}` con hogares necesarios por crecimiento demográfico: `Δpoblación / 2,6`. El primer año del histórico de población actúa solo como base de referencia (no genera entrada) para que el delta del año siguiente sea correcto.
+
+El resultado se escribe en `drupalSettings.visorProject['$historico_hogares_necesarios']`. La convención de prefijo `$` distingue los datasets calculados en JS de los inyectados por PHP.
+
+### Gráfico `pendiente-pob-viv` (`utils-graficos.js`)
+
+Tipo declarado en `CONFIG_GRAFICOS` con `tipo: 'pendiente-pob-viv'`. Acepta en `config.series` un array de series, cada una con:
+
+```js
+{
+    dataset: '$historico_viviendas_terminadas',  // clave en drupalSettings.visorProject
+    etiqueta: 'Viviendas terminadas (acumulado)',
+    color: '#a70000',
+    borderDash: [5, 4],   // opcional — línea discontinua
+    acumular: true,        // suma acumulativa antes de dibujar
+    baseYear: '2002',      // opcional — reindexar al valor del año base = 100
+}
+```
+
+Los datasets son objetos `{año: valor}`. El renderizador los alinea por los años que tienen en común, acumula (si `acumular: true`) y dibuja como Chart.js `line`. Si `config.sinTabla: true` no genera la tabla de valores debajo del gráfico (útil cuando hay una tabla independiente más completa).
+
+**Cuándo NO usar `baseYear`:** si las series tienen magnitudes similares (mismo orden de magnitud de acumulados), no hace falta base 100. La comparación en unidades absolutas es más directa e informativa.
+
+### Tabla `historico-pob-viv` (`utils-tablas.js`)
+
+Entrada en `CONFIG_TABLAS` con `tipo: 'historico-pob-viv'`. No pasa por `dataSelector`; `manejarTabla` en `row-compositor.js` la deriva directamente a `crearTablaHistoricoPobViv(config)`.
+
+Columnas: Año · Población · Δ Población · Δ Pob. acum. · Hogares nec. · Hogares acum. · Viv. terminadas · Viv. acum. · Saldo acum.
+
+El saldo acumulado usa `saldo-positivo` (verde) o `saldo-negativo` (rojo) según signo. Formatos con `formatearDato(n, 'entero')` (garantiza separador de millares incluso para cifras < 10.000 mediante `Intl.NumberFormat useGrouping: 'always'`).
+
+### Notas metodológicas en bloques (`utils-layout.js`)
+
+`crearContenedor` acepta `opciones.notas` (string). Si se pasa, el texto aparece en `.componente-footer > .componente-notas.texto-advertencia` al pie del bloque. Si no se pasa, el footer entero se elimina del DOM (evita el borde vacío huérfano).
+
+Uso en esquema:
+```js
+{
+    tituloBloque: 'Título',
+    notas: 'Texto metodológico que aparece al pie del bloque.',
+    elementos: [...],
+}
+```
 
 ### El mapa (`panel-mapa.js`)
 
