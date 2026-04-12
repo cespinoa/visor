@@ -9,19 +9,69 @@ window.visorProject = window.visorProject || {};
  */
 window.visorProject.prepararDatosDerivados = function() {
     const vp  = drupalSettings.visorProject || {};
-    const pob = vp['$historico_poblacion'] || {};
+    const pob = vp['$historico_poblacion']            || {};
+    const viv = vp['$historico_viviendas_terminadas'] || {};
+
     const años = Object.keys(pob).sort();
-    const hogares = {};
-    let prevPob = null;
+
+    const deltaPob      = {};
+    const deltaPobAcum  = {};
+    const hogaresNec    = {};
+    const hogaresAcum   = {};
+    const vivAcum       = {};
+    const saldoAcum     = {};
+
+    let prevPob    = null;
+    let cumDelta   = 0;
+    let cumHogares = 0;
+    let cumViv     = 0;
+
     años.forEach(y => {
         const actual = parseFloat(pob[y]);
+
         if (prevPob !== null) {
-            hogares[y] = Math.round((actual - prevPob) / 2.6);
+            const delta   = actual - prevPob;
+            const hogares = Math.round(delta / 2.6);
+            const vivVal  = y in viv ? (parseFloat(viv[y]) || 0) : 0;
+
+            cumDelta   += delta;
+            cumHogares += hogares;
+            cumViv     += vivVal;
+
+            deltaPob[y]     = Math.round(delta);
+            deltaPobAcum[y] = Math.round(cumDelta);
+            hogaresNec[y]   = hogares;
+            hogaresAcum[y]  = Math.round(cumHogares);
+            vivAcum[y]      = Math.round(cumViv);
+            saldoAcum[y]    = Math.round(cumViv - cumHogares);
         }
         // El primer año solo sirve de base para el delta siguiente; no se almacena
         prevPob = actual;
     });
-    vp['$historico_hogares_necesarios'] = hogares;
+
+    vp['$historico_delta_poblacion']           = deltaPob;
+    vp['$historico_delta_poblacion_acum']      = deltaPobAcum;
+    vp['$historico_hogares_necesarios']        = hogaresNec;
+    vp['$historico_hogares_necesarios_acum']   = hogaresAcum;
+    vp['$historico_viviendas_terminadas_acum'] = vivAcum;
+    vp['$historico_saldo_acum']                = saldoAcum;
+
+    // Snapshot del último año disponible — accesible en longtexts como
+    // {{ pob_viv_ultimo.saldo_acum }}, {{ pob_viv_ultimo.anyo }}, etc.
+    const ultimoAño = Object.keys(saldoAcum).sort().pop();
+    if (ultimoAño) {
+        vp['$pob_viv_ultimo'] = {
+            anyo:           ultimoAño,
+            poblacion:      Math.round(parseFloat(pob[ultimoAño]) || 0),
+            delta_pob:      deltaPob[ultimoAño]     || 0,
+            delta_pob_acum: deltaPobAcum[ultimoAño] || 0,
+            hogares_nec:    hogaresNec[ultimoAño]   || 0,
+            hogares_acum:   hogaresAcum[ultimoAño]  || 0,
+            viv_terminadas: Math.round(parseFloat(viv[ultimoAño]) || 0),
+            viv_acum:       vivAcum[ultimoAño]      || 0,
+            saldo_acum:     saldoAcum[ultimoAño]    || 0,
+        };
+    }
 };
 
 window.visorProject.estado = {

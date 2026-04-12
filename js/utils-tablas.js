@@ -933,52 +933,43 @@
      */
     crearTablaHistoricoPobViv: function(config) {
         const vp      = drupalSettings.visorProject || {};
-        const pob     = vp['$historico_poblacion']            || {};
-        const viv     = vp['$historico_viviendas_terminadas'] || {};
-        const hogares = vp['$historico_hogares_necesarios']   || {};
+        const pob     = vp['$historico_poblacion']                  || {};
+        const viv     = vp['$historico_viviendas_terminadas']       || {};
+        const deltaP  = vp['$historico_delta_poblacion']            || {};
+        const deltaA  = vp['$historico_delta_poblacion_acum']       || {};
+        const hogNec  = vp['$historico_hogares_necesarios']         || {};
+        const hogAcum = vp['$historico_hogares_necesarios_acum']    || {};
+        const vivAcum = vp['$historico_viviendas_terminadas_acum']  || {};
+        const saldo   = vp['$historico_saldo_acum']                 || {};
 
-        const años = Object.keys(hogares).sort();
+        const años = Object.keys(hogNec).sort();
         if (!años.length) return null;
 
-        const fmt     = window.visorProject.utils.formatearDato;
+        const fmt      = window.visorProject.utils.formatearDato;
         const fmtDelta = n => {
             if (n == null || isNaN(n)) return '—';
             const signo = n >= 0 ? '+' : '−';
-            return signo + fmt(Math.abs(Math.round(n)), 'entero');
+            return signo + fmt(Math.abs(n), 'entero');
         };
-
-        let cumViv   = 0;
-        let cumHog   = 0;
-        let cumDelta = 0;
 
         const dataset = años.map(y => {
             const pobVal  = parseFloat(pob[y]);
-            const pobPrev = parseFloat(pob[String(parseInt(y) - 1)]);
-            const delta   = (!isNaN(pobVal) && !isNaN(pobPrev)) ? pobVal - pobPrev : null;
-
-            if (delta !== null) cumDelta += delta;
-
-            const hogVal = parseFloat(hogares[y]) || 0;
-            const vivVal = y in viv ? (parseFloat(viv[y]) || 0) : null;
-
-            cumHog += hogVal;
-            if (vivVal !== null) cumViv += vivVal;
-
-            const saldo      = cumViv - cumHog;
-            const saldoClase = saldo >= 0 ? 'col-dato saldo-positivo' : 'col-dato saldo-negativo';
+            const vivVal  = y in viv ? parseFloat(viv[y]) : null;
+            const saldoV  = saldo[y] ?? null;
+            const saldoClase = (saldoV ?? 0) >= 0 ? 'col-dato saldo-positivo' : 'col-dato saldo-negativo';
 
             return {
                 etiqueta:    y,
                 esDestacada: false,
                 celdas: [
-                    { valor: !isNaN(pobVal) ? fmt(pobVal, 'entero') : '—', clase: 'col-dato' },
-                    { valor: fmtDelta(delta),   clase: 'col-dato' },
-                    { valor: fmtDelta(cumDelta), clase: 'col-dato' },
-                    { valor: fmt(hogVal, 'entero'),           clase: 'col-dato' },
-                    { valor: fmt(cumHog, 'entero'),           clase: 'col-dato' },
+                    { valor: !isNaN(pobVal) ? fmt(pobVal, 'entero') : '—',  clase: 'col-dato' },
+                    { valor: fmtDelta(deltaP[y]),                           clase: 'col-dato' },
+                    { valor: fmtDelta(deltaA[y]),                           clase: 'col-dato' },
+                    { valor: fmt(hogNec[y]  || 0, 'entero'),                clase: 'col-dato' },
+                    { valor: fmt(hogAcum[y] || 0, 'entero'),                clase: 'col-dato' },
                     { valor: vivVal !== null ? fmt(vivVal, 'entero') : '—', clase: 'col-dato' },
-                    { valor: fmt(cumViv, 'entero'),           clase: 'col-dato' },
-                    { valor: fmtDelta(saldo),   clase: saldoClase },
+                    { valor: fmt(vivAcum[y] || 0, 'entero'),                clase: 'col-dato' },
+                    { valor: saldoV !== null ? fmtDelta(saldoV) : '—',      clase: saldoClase },
                 ],
             };
         });
