@@ -258,12 +258,36 @@ El eje va de 0 a 100 sin etiquetas de tick (escala relativa, no absoluta). El to
 
 ### Datasets derivados (`main.js` → `prepararDatosDerivados`)
 
-`window.visorProject.prepararDatosDerivados()` se llama en el paso A0 de la inicialización (antes de `window.visorProject.estado`), de modo que los datasets derivados estén disponibles para todos los gráficos y tablas.
+`window.visorProject.prepararDatosDerivados()` se llama en el paso A0 de la inicialización (antes de `window.visorProject.estado`), de modo que los datasets derivados estén disponibles para todos los gráficos, tablas y longtexts.
 
-Actualmente calcula:
-- **`$historico_hogares_necesarios`** — `{año: valor}` con hogares necesarios por crecimiento demográfico: `Δpoblación / 2,6`. El primer año del histórico de población actúa solo como base de referencia (no genera entrada) para que el delta del año siguiente sea correcto.
+Se calcula todo en un único recorrido sobre `$historico_poblacion`. El primer año solo actúa como base de referencia; no genera entradas en ningún dataset.
 
-El resultado se escribe en `drupalSettings.visorProject['$historico_hogares_necesarios']`. La convención de prefijo `$` distingue los datasets calculados en JS de los inyectados por PHP.
+Datasets escritos en `drupalSettings.visorProject`:
+
+| Dataset | Tipo | Descripción |
+|---|---|---|
+| `$historico_delta_poblacion` | `{año: int}` | Δ población respecto al año anterior |
+| `$historico_delta_poblacion_acum` | `{año: int}` | Δ población acumulada desde el año base |
+| `$historico_hogares_necesarios` | `{año: int}` | `round(Δpob / 2,6)` — hogares necesarios por año |
+| `$historico_hogares_necesarios_acum` | `{año: int}` | Hogares necesarios acumulados |
+| `$historico_viviendas_terminadas_acum` | `{año: int}` | Viviendas terminadas acumuladas |
+| `$historico_saldo_acum` | `{año: int}` | `viviendas_acum − hogares_acum` (positivo = superávit) |
+| `$pob_viv_ultimo` | objeto plano | Valores del último año (ver abajo) |
+
+**`$pob_viv_ultimo`** — objeto de un solo nivel accesible en longtexts con notación de punto:
+```
+{{ pob_viv_ultimo.anyo }}           → año del último dato disponible
+{{ pob_viv_ultimo.poblacion }}      → población total
+{{ pob_viv_ultimo.delta_pob }}      → Δ población ese año
+{{ pob_viv_ultimo.delta_pob_acum }} → Δ población acumulada
+{{ pob_viv_ultimo.hogares_nec }}    → hogares necesarios ese año
+{{ pob_viv_ultimo.hogares_acum }}   → hogares necesarios acumulados
+{{ pob_viv_ultimo.viv_terminadas }} → viviendas terminadas ese año
+{{ pob_viv_ultimo.viv_acum }}       → viviendas terminadas acumuladas
+{{ pob_viv_ultimo.saldo_acum }}     → saldo acumulado final
+```
+
+La convención de prefijo `$` distingue los datasets calculados en JS de los inyectados por PHP. El sistema de longtexts (`_prefetchLongtexts`) envía automáticamente todos los `$`-prefijados al servidor, strippeando el `$` para que en PHP sean accesibles como `extra['pob_viv_ultimo']`.
 
 ### Gráfico `pendiente-pob-viv` (`utils-graficos.js`)
 
