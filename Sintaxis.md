@@ -270,9 +270,10 @@ Los paréntesis alrededor de la condición son opcionales: `{% if( cond ) %}` eq
 {% endif %}
 ```
 
-> **Importante:** los tokens `{% %}` deben escribirse siempre en **modo
-> fuente** del editor Drupal. El editor visual convierte `>` en `&gt;` y los
-> espacios en `&nbsp;`, rompiendo la evaluación de condiciones.
+> **Importante:** todo el contenido con `{% %}`, `{{ }}` y `[[ ]]` debe
+> escribirse siempre en **modo fuente** del editor Drupal. El editor visual
+> convierte `>` en `&gt;`, los espacios en `&nbsp;` y puede romper tanto la
+> evaluación de condiciones como las expresiones aritméticas.
 
 Los condicionales se resuelven **antes** que las variables, por lo que el
 contenido de cada rama puede contener `{{ }}` y `[[ ]]` con normalidad.

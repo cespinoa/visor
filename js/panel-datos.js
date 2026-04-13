@@ -39,6 +39,22 @@
       // Definimos el "Guion Editorial" del Dashboard
       const esquema = [
 
+          { 
+          tituloBloque: "Actividad turistica por tipo de oferta y de zona",
+          intro: "Caracterizacion del modelo turistico.",
+          destino: '#ficha-contenido',
+          elementos: [
+            { tipo: 'longtext', id: 'afluencia-plazas-ocupacion', ancho: '12' },
+            { tipo: 'grafico', id: 'llegadas-vs-plazas', ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'tabla', id: 'historico-llegadas-plazas-ocupacion', ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'tabla', id: 'oferta-alojativa', ancho: '6'},
+            { tipo: 'tabla', id: 'distribucion-plazas-vacacionales', ancho: '6' },
+            { tipo: 'tabla', id: 'distribucion-plazas-regladas', ancho: '6' },
+            { tipo: 'tabla', id: 'plazas-turisticas-zona-residencial', ancho: '6' },
+            { tipo: 'tabla', id: 'plazas-turisticas-zona-turistica', ancho: '6'},
+            { tipo: 'tabla', id: 'oferta-alojativa-por-zona-ambito', ancho: '6' }
+          ]
+        },
 
          { 
           tituloBloque: "Situación de la vivienda",
@@ -80,15 +96,10 @@
             { tipo: 'grafico', id: 'no-hab-porc-mediano', ancho: '6', ambito: 'canarias'  },
             { tipo: 'grafico', id: 'no-hab-porc-pequeno', ancho: '6', ambito: 'canarias'  },
             
-            
-            { tipo: 'grafico', id: 'llegadas-vs-plazas', ancho: '12', ambito: ['canarias', 'isla'] },
-            { tipo: 'tabla', id: 'historico-llegadas-plazas-ocupacion', ancho: '12', ambito: ['canarias', 'isla'] },
-            
-            { tipo: 'salto' },
-            { tipo: 'tabla', id: 'presion-vv-sobre-vivienda', ancho: '6'}
           ]
         },
 
+        
       
         { 
           tituloBloque: "Datos principales",
@@ -96,22 +107,15 @@
           destino: '#ficha-contenido',
           elementos: [
             { tipo: 'tabla', id: 'resumen-ambito', ancho: '9' },
-            { tipo: 'imagen', tipo_imagen: 'silueta' , id: idSilueta, ancho: '3'}
+            { tipo: 'imagen', tipo_imagen: 'silueta' , id: idSilueta, ancho: '3'},
+            
+            
+            
+            { tipo: 'salto' },
+            { tipo: 'tabla', id: 'presion-vv-sobre-vivienda', ancho: '6'}
           ]
         },
-        { 
-          tituloBloque: "Actividad turistica por tipo de oferta y de zona",
-          intro: "Caracterizacion del modelo turistico.",
-          destino: '#ficha-contenido',
-          elementos: [
-            { tipo: 'tabla', id: 'oferta-alojativa', ancho: '6'},
-            { tipo: 'tabla', id: 'distribucion-plazas-vacacionales', ancho: '6' },
-            { tipo: 'tabla', id: 'distribucion-plazas-regladas', ancho: '6' },
-            { tipo: 'tabla', id: 'plazas-turisticas-zona-residencial', ancho: '6' },
-            { tipo: 'tabla', id: 'plazas-turisticas-zona-turistica', ancho: '6'},
-            { tipo: 'tabla', id: 'oferta-alojativa-por-zona-ambito', ancho: '6' }
-          ]
-        },
+
         { 
           tituloBloque: "Presión humana",
           intro: "Resumen de los indicadores clave de intensidad y presión turística en el ámbito seleccionado.",

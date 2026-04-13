@@ -294,18 +294,29 @@ final class InformeController extends ControllerBase {
           $ambito       = $entidadRef['ambito']       ?? NULL;
           $isla_id      = (string) ($entidadRef['isla_id']      ?? '');
           $municipio_id = (string) ($entidadRef['municipio_id'] ?? '');
-          $yearFilter   = isset($opts['y']) ? (string) $opts['y'] : NULL;
+          $yearFilter = isset($opts['y']) ? (string) $opts['y'] : NULL;
+          $candidatos = [];
           foreach ($ds as $record) {
             if (($record['ambito'] ?? NULL) !== $ambito) continue;
             if ($ambito === 'isla'      && (string) ($record['isla_id']      ?? '') !== $isla_id) continue;
             if ($ambito === 'municipio' && (string) ($record['municipio_id'] ?? '') !== $municipio_id) continue;
             if ($yearFilter !== NULL) {
-            $recordYear = $record['year'] ?? $record['ejercicio'] ?? '';
-            if ((string) $recordYear !== $yearFilter) continue;
+              $recordYear = (string) ($record['year'] ?? $record['ejercicio'] ?? '');
+              if ($recordYear !== $yearFilter) continue;
+              return $record[$clave] ?? NULL;
+            }
+            $candidatos[] = $record;
           }
-            return $record[$clave] ?? NULL;
+          // Sin filtro de año: devolver el registro con el año más reciente.
+          if (empty($candidatos)) return NULL;
+          if (count($candidatos) > 1) {
+            usort($candidatos, function ($a, $b) {
+              $ya = (int) ($a['year'] ?? $a['ejercicio'] ?? 0);
+              $yb = (int) ($b['year'] ?? $b['ejercicio'] ?? 0);
+              return $yb - $ya;
+            });
           }
-          return NULL;
+          return $candidatos[0][$clave] ?? NULL;
         }
 
         // Key-value simple (comportamiento original).
@@ -485,7 +496,10 @@ final class InformeController extends ControllerBase {
     $texto = preg_replace_callback(
       '/\[\[((?:(?!\]\]).)*)\]\]/s',
       function (array $m) use ($parsearOpts, $resolverCampo): string {
-        $contenido = $m[1];
+        // Normalizar entidades HTML (el WYSIWYG inserta &nbsp; entre tokens)
+        // y espacios no estándar que rompen la regex de seguridad.
+        $contenido = html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $contenido = preg_replace('/\xc2\xa0/', ' ', $contenido);
         $formato   = 'decimal_2';
 
         // Extraer formato si el último token tras | no es una opción de contexto.

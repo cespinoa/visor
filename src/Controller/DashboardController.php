@@ -297,11 +297,14 @@ final class DashboardController extends ControllerBase {
 
   public function getHistoricoLlegadas(){
     $conn = Database::getConnection('default', 'mapa_data');
-    $results = $conn->select('turistas_llegadas', 'h')
-      ->fields('h')
-      ->condition('year', 2026, '<')
-      ->execute()
-      ->fetchAll();
+    $query = $conn->select('turistas_llegadas', 'h');
+    $query->addField('h', 'isla_id');
+    $query->addField('h', 'year');
+    $query->addExpression('SUM(turistas)', 'turistas');
+    $query->condition('year', 2026, '<');
+    $query->groupBy('h.isla_id');
+    $query->groupBy('h.year');
+    $results = $query->execute()->fetchAll();
 
     $dataset = [];
     foreach ($results as $row) {
@@ -309,7 +312,7 @@ final class DashboardController extends ControllerBase {
         'isla_id' => $row->isla_id,
         'year' => $row->year,
         'ambito' => 'isla',
-        'turistas' => $row->turistas,
+        'turistas' => (int) $row->turistas,
       ];
     }
 

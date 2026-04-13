@@ -473,7 +473,11 @@ El campo `r_deficit_oferta_viviendas` **no existe** en el diccionario. El campo 
 
 ## Edición de longtexts en Drupal
 
-Los nodos de tipo `longtext` **deben editarse siempre en modo fuente HTML**, nunca en el editor visual (WYSIWYG). El editor visual convierte los espacios dentro de `{% %}` en `&nbsp;` y los operadores `>` / `<` en `&gt;` / `&lt;`, rompiendo silenciosamente la evaluación de condiciones y la sustitución de variables. El `InformeController` normaliza entidades dentro de `{% %}` antes de procesar, pero es más limpio no generar basura desde el principio.
+Los nodos de tipo `longtext` **deben editarse siempre en modo fuente HTML**, nunca en el editor visual (WYSIWYG). El editor visual:
+- Convierte los espacios dentro de `{% %}` en `&nbsp;` y `>` / `<` en `&gt;` / `&lt;` → rompe la evaluación de condiciones.
+- Inserta `&nbsp;` entre tokens dentro de `[[ ]]` → rompe la regex de seguridad del resolver aritmético.
+
+El `InformeController` normaliza entidades HTML dentro de `{% %}` y `[[ ]]` como defensa en profundidad, pero la práctica correcta es editar siempre en modo fuente.
 
 ## Convenciones propias
 
