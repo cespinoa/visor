@@ -289,6 +289,29 @@ Datasets escritos en `drupalSettings.visorProject`:
 
 La convención de prefijo `$` distingue los datasets calculados en JS de los inyectados por PHP. El sistema de longtexts (`_prefetchLongtexts`) envía automáticamente todos los `$`-prefijados al servidor, strippeando el `$` para que en PHP sean accesibles como `extra['pob_viv_ultimo']`.
 
+### Gráfico `pendiente-censos` (`utils-graficos.js`)
+
+Tipo para comparar la evolución de un indicador censal en tres cortes temporales (2001 / 2011 / 2021) indexado a base 100 = 2001. Diseñado para el dataset `$censo_viviendas_no_habituales` pero extensible a cualquier dataset con la misma nomenclatura de campos (`campo_200X`, `campo_200X_idx`).
+
+**Configuración en `CONFIG_GRAFICOS`:**
+```js
+'no-hab-censos': {
+    tipo:   'pendiente-censos',
+    titulo: 'Evolución de viviendas no habituales (censos 2001–2021)',
+    config: {
+        campo:  'no_hab',          // prefijo de campos: no_hab_2001, no_hab_2001_idx, …
+        yTitle: 'Índice (2001 = 100)',
+    },
+},
+```
+
+**Serie de referencia según ámbito:**
+- `municipio` — suma agregada de todos los municipios del mismo `tipo_municipio` → índice del grupo (no media de índices individuales)
+- `isla` — registro de Canarias
+- `canarias` — serie única, sin referencia
+
+**Tabla al pie** — columnas: año × (n | índice); filas: entidad activa + referencia.
+
 ### Gráfico `pendiente-pob-viv` (`utils-graficos.js`)
 
 Tipo declarado en `CONFIG_GRAFICOS` con `tipo: 'pendiente-pob-viv'`. Acepta en `config.series` un array de series, cada una con:
