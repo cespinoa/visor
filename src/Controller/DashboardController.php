@@ -147,11 +147,12 @@ final class DashboardController extends ControllerBase {
       ->execute()
       ->fetchAll();
 
-    // Mapa municipio_id → isla_id para poder agregar por isla
+    // Mapa id(municipio) → isla_id para poder agregar por isla
+    // En la tabla municipios el PK se llama 'id', no 'municipio_id'
     $muni2isla = $conn->select('municipios', 'm')
-      ->fields('m', ['municipio_id', 'isla_id'])
+      ->fields('m', ['id', 'isla_id'])
       ->execute()
-      ->fetchAllKeyed();
+      ->fetchAllKeyed(); // [id => isla_id]
 
     $dataset  = [];
     $porIsla  = [];
