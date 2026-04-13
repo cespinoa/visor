@@ -306,9 +306,11 @@ Tipo para comparar la evolución de un indicador censal en tres cortes temporale
 ```
 
 **Serie de referencia según ámbito:**
-- `municipio` — suma agregada de todos los municipios del mismo `tipo_municipio` → índice del grupo (no media de índices individuales)
+- `municipio` — suma agregada de todos los municipios del mismo `tipo_municipio` → índice del grupo. Se usa la suma agregada (no la media de índices individuales) para que cada municipio pese en proporción a su volumen, igual que un índice de precios ponderado.
 - `isla` — registro de Canarias
 - `canarias` — serie única, sin referencia
+
+**Eje Y:** `beginAtZero: false` — con solo 3 puntos y valores en torno a base 100, la legibilidad de las pendientes pesa más que mostrar el cero absoluto.
 
 **Tabla al pie** — columnas: año × (n | índice); filas: entidad activa + referencia.
 
