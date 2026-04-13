@@ -74,6 +74,9 @@ final class DashboardController extends ControllerBase {
 
     // Obtenemos el histórico de población
     $historico_poblacion = $this->getHistoricoPoblacion();
+
+    // Obtenemos los censos de viviendas no habituales
+    $censo_viviendas_no_habituales = $this->getCensoViviendasNoHabituales();
     
 
     // Obtenemos las siluetas
@@ -128,12 +131,84 @@ final class DashboardController extends ControllerBase {
             '$historico_personas_hogar_ccaa' => $historico_personas_hogar_ccaa,
             '$historico_viviendas_terminadas' => $historico_viviendas_terminadas,
             '$historico_poblacion' => $historico_poblacion,
+            '$censo_viviendas_no_habituales' => $censo_viviendas_no_habituales,
           ],
         ],
       ],
     ];
 
   }
+
+  public function getCensoViviendasNoHabituales(): array {
+    $conn = Database::getConnection('default', 'mapa_data');
+
+    $rows = $conn->select('viviendas_no_habituales_censos', 'h')
+      ->fields('h')
+      ->execute()
+      ->fetchAll();
+
+    // Mapa municipio_id → isla_id para poder agregar por isla
+    $muni2isla = $conn->select('municipios', 'm')
+      ->fields('m', ['municipio_id', 'isla_id'])
+      ->execute()
+      ->fetchAllKeyed();
+
+    $dataset  = [];
+    $porIsla  = [];
+    $canarias = ['no_hab_2001' => 0, 'no_hab_2011' => 0, 'no_hab_2021' => 0];
+
+    foreach ($rows as $row) {
+      $islaId = $muni2isla[$row->municipio_id] ?? NULL;
+      $v2001  = (int) $row->no_hab_2001;
+      $v2011  = (int) $row->no_hab_2011;
+      $v2021  = (int) $row->no_hab_2021;
+
+      $dataset[] = [
+        'ambito'       => 'municipio',
+        'municipio_id' => (int) $row->municipio_id,
+        'isla_id'      => $islaId ? (int) $islaId : NULL,
+        'no_hab_2001'  => $v2001,
+        'no_hab_2011'  => $v2011,
+        'no_hab_2021'  => $v2021,
+      ] + $this->indicesBase100($v2001, $v2011, $v2021);
+
+      if ($islaId) {
+        $porIsla[$islaId]['no_hab_2001'] = ($porIsla[$islaId]['no_hab_2001'] ?? 0) + $v2001;
+        $porIsla[$islaId]['no_hab_2011'] = ($porIsla[$islaId]['no_hab_2011'] ?? 0) + $v2011;
+        $porIsla[$islaId]['no_hab_2021'] = ($porIsla[$islaId]['no_hab_2021'] ?? 0) + $v2021;
+      }
+      $canarias['no_hab_2001'] += $v2001;
+      $canarias['no_hab_2011'] += $v2011;
+      $canarias['no_hab_2021'] += $v2021;
+    }
+
+    foreach ($porIsla as $islaId => $sumas) {
+      $dataset[] = [
+        'ambito'  => 'isla',
+        'isla_id' => (int) $islaId,
+      ] + $sumas + $this->indicesBase100($sumas['no_hab_2001'], $sumas['no_hab_2011'], $sumas['no_hab_2021']);
+    }
+
+    $dataset[] = ['ambito' => 'canarias']
+      + $canarias
+      + $this->indicesBase100($canarias['no_hab_2001'], $canarias['no_hab_2011'], $canarias['no_hab_2021']);
+
+    return $dataset;
+  }
+
+  /**
+   * Calcula índices base 100 respecto a 2001 para tres censos.
+   * Devuelve null en 2011/2021 si el valor base es 0 (evita división por cero).
+   */
+  private function indicesBase100(int $v2001, int $v2011, int $v2021): array {
+    $base = $v2001 ?: NULL;
+    return [
+      'no_hab_2001_idx' => 100.0,
+      'no_hab_2011_idx' => $base ? round($v2011 / $base * 100, 1) : NULL,
+      'no_hab_2021_idx' => $base ? round($v2021 / $base * 100, 1) : NULL,
+    ];
+  }
+
 
   public function getHistoricoPersonasHogarCCAA() {                                                                                                                                        
       $conn = Database::getConnection('default', 'mapa_data');
