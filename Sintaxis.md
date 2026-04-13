@@ -144,6 +144,23 @@ drupalSettings.visorProject['$poblacion_2021'] = [
 Si se está visualizando Lanzarote (isla_id=6) devuelve 156.189.
 Si se está visualizando Canarias devuelve 2.172.944.
 
+**Ejemplo real — censos de viviendas no habituales:**
+
+El dataset `$censo_viviendas_no_habituales` es un array de objetos con una
+entrada por entidad (Canarias, islas, municipios). Para cada año censal expone
+el valor absoluto, el índice base 100 = 2001 y el porcentaje sobre el total:
+
+```
+{{ censo_viviendas_no_habituales.no_hab_2001 }}       → n.º viviendas no habituales en 2001
+{{ censo_viviendas_no_habituales.no_hab_2021 }}       → ídem en 2021
+{{ censo_viviendas_no_habituales.no_hab_2021_porc }}  → % sobre total en 2021
+{{ censo_viviendas_no_habituales.no_hab_2001_idx }}   → índice 2001 (siempre 100)
+{{ censo_viviendas_no_habituales.no_hab_2021_idx }}   → índice 2021 respecto a 2001
+```
+
+La resolución es automática por entidad activa (`ambito` + `isla_id` /
+`municipio_id`), sin ningún modificador adicional.
+
 **Filtro por año (`y:`)** — datasets con múltiples registros por entidad:
 
 Cuando el array contiene varias filas para la misma entidad (p.ej. una por año),
@@ -236,6 +253,26 @@ Los paréntesis alrededor de la condición son opcionales: `{% if( cond ) %}` eq
   El tamaño medio de los hogares se ha mantenido estable.
 {% endif %}
 ```
+
+**Ejemplo real — evolución de viviendas no habituales:**
+
+```
+{% if censo_viviendas_no_habituales.no_hab_2001_porc > censo_viviendas_no_habituales.no_hab_2021_porc %}
+  El porcentaje de viviendas no habituales ha bajado del
+  {{ censo_viviendas_no_habituales.no_hab_2001_porc | decimal_1 }} %
+  al {{ censo_viviendas_no_habituales.no_hab_2021_porc | decimal_1 }} %.
+{% elseif censo_viviendas_no_habituales.no_hab_2001_porc < censo_viviendas_no_habituales.no_hab_2021_porc %}
+  El porcentaje de viviendas no habituales ha subido del
+  {{ censo_viviendas_no_habituales.no_hab_2001_porc | decimal_1 }} %
+  al {{ censo_viviendas_no_habituales.no_hab_2021_porc | decimal_1 }} %.
+{% else %}
+  El porcentaje de viviendas no habituales se ha mantenido estable.
+{% endif %}
+```
+
+> **Importante:** los tokens `{% %}` deben escribirse siempre en **modo
+> fuente** del editor Drupal. El editor visual convierte `>` en `&gt;` y los
+> espacios en `&nbsp;`, rompiendo la evaluación de condiciones.
 
 Los condicionales se resuelven **antes** que las variables, por lo que el
 contenido de cada rama puede contener `{{ }}` y `[[ ]]` con normalidad.
