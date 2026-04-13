@@ -14,7 +14,7 @@ window.visorProject.utilsGraficos = {
         if (config.tipo === 'radar') {
             return this.crearContenedorRadar(config, datosRaw, opciones);
         }
-        if (['linea-ext', 'linea-multi-ext', 'barras-ccaa-ext', 'pendiente-ccaa-ext', 'pendiente-pob-viv'].includes(config.tipo)) {
+        if (['linea-ext', 'linea-multi-ext', 'barras-ccaa-ext', 'pendiente-ccaa-ext', 'pendiente-pob-viv', 'pendiente-censos'].includes(config.tipo)) {
             return this.crearContenedorLineaExt(config, opciones);
         }
 
@@ -1306,6 +1306,151 @@ window.visorProject.utilsGraficos = {
         tablaEl.innerHTML = html;
     },
 
+    /**
+     * Gráfico de pendiente para viviendas no habituales (censos 2001/2011/2021).
+     * Compara el índice base 100 del ámbito activo con su grupo de referencia:
+     *   - municipio → suma agregada de municipios del mismo tipo_municipio
+     *   - isla       → registro de Canarias
+     *   - canarias   → serie única (sin referencia)
+     * La tabla al pie muestra valores absolutos e índice en cada año.
+     */
+    dibujarPendienteCensos: function(config, registro) {
+        const canvas = document.getElementById(config.canvasId);
+        if (!canvas || !registro) return;
+
+        const cfg    = config.config || {};
+        const campo  = cfg.campo || 'no_hab';
+        const census = drupalSettings.visorProject['$censo_viviendas_no_habituales'] || [];
+        const snap   = drupalSettings.visorProject.datosDashboard || [];
+        const años   = ['2001', '2011', '2021'];
+        const fmt    = n => n != null ? Math.round(n).toLocaleString('es-ES') : '—';
+
+        // ── Serie activa ─────────────────────────────────────────────────────
+        let registroActivo;
+        if (registro.ambito === 'canarias') {
+            registroActivo = census.find(d => d.ambito === 'canarias');
+        } else if (registro.ambito === 'isla') {
+            registroActivo = census.find(d => d.ambito === 'isla' && d.isla_id === registro.isla_id);
+        } else {
+            registroActivo = census.find(d => d.ambito === 'municipio' && d.municipio_id === registro.municipio_id);
+        }
+        if (!registroActivo) return;
+
+        const valoresIdx = años.map(y => registroActivo[`${campo}_${y}_idx`] ?? null);
+        const valoresRaw = años.map(y => registroActivo[`${campo}_${y}`]     ?? null);
+
+        // ── Serie de referencia ──────────────────────────────────────────────
+        let refIdx      = null;
+        let refRaw      = null;
+        let etiquetaRef = '';
+
+        if (registro.ambito === 'isla') {
+            const canarias = census.find(d => d.ambito === 'canarias');
+            if (canarias) {
+                refIdx      = años.map(y => canarias[`${campo}_${y}_idx`] ?? null);
+                refRaw      = años.map(y => canarias[`${campo}_${y}`]     ?? null);
+                etiquetaRef = 'Canarias';
+            }
+        } else if (registro.ambito === 'municipio' && registro.tipo_municipio) {
+            // Suma agregada de los municipios del mismo tipo → índice del grupo
+            const idsMismoTipo = new Set(
+                snap.filter(d => d.ambito === 'municipio' && d.tipo_municipio === registro.tipo_municipio)
+                    .map(d => d.municipio_id)
+            );
+            const grupoCenso = census.filter(d => d.ambito === 'municipio' && idsMismoTipo.has(d.municipio_id));
+
+            if (grupoCenso.length) {
+                const sumaBase = grupoCenso.reduce((s, d) => s + (d[`${campo}_2001`] || 0), 0);
+                refRaw      = años.map(y => grupoCenso.reduce((s, d) => s + (d[`${campo}_${y}`] || 0), 0));
+                refIdx      = refRaw.map(v => sumaBase > 0 ? Math.round((v / sumaBase) * 1000) / 10 : null);
+                refIdx[0]   = 100.0; // 2001 siempre es 100 en el índice del grupo
+                etiquetaRef = 'Media municipios ' + registro.tipo_municipio.toLowerCase();
+            }
+        }
+
+        // ── Chart.js ─────────────────────────────────────────────────────────
+        const datasets = [
+            {
+                label:           registro.etiqueta || 'Valor',
+                data:            valoresIdx,
+                borderColor:     '#a70000',
+                backgroundColor: 'rgba(167,0,0,0.07)',
+                borderWidth:     2,
+                pointRadius:     4,
+                tension:         0.3,
+                fill:            true,
+            },
+        ];
+
+        if (refIdx) {
+            datasets.push({
+                label:           etiquetaRef,
+                data:            refIdx,
+                borderColor:     '#999',
+                backgroundColor: 'transparent',
+                borderWidth:     1.5,
+                pointRadius:     3,
+                borderDash:      [5, 4],
+                tension:         0.3,
+                fill:            false,
+            });
+        }
+
+        new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: { labels: años, datasets },
+            options: {
+                responsive:          true,
+                maintainAspectRatio: true,
+                aspectRatio:         2.5,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: { display: true, text: cfg.yTitle || 'Índice (2001 = 100)' },
+                    },
+                },
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        mode:      'index',
+                        intersect: false,
+                        callbacks: {
+                            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}`,
+                        },
+                    },
+                },
+            },
+        });
+
+        // ── Tabla al pie: valores absolutos e índice por año ─────────────────
+        const tablaEl = document.getElementById(config.canvasId + '-tabla');
+        if (!tablaEl) return;
+
+        const fmtIdx = v => v != null ? v.toFixed(1) : '—';
+
+        const series = [
+            { etiqueta: registro.etiqueta || 'Valor', raw: valoresRaw, idx: valoresIdx },
+        ];
+        if (refIdx) series.push({ etiqueta: etiquetaRef, raw: refRaw, idx: refIdx });
+
+        let html = '<table class="linea-ext-tabla__table">'
+            + '<thead><tr><th></th>'
+            + años.map(y => `<th colspan="2">${y}</th>`).join('')
+            + '</tr>'
+            + '<tr><th></th>'
+            + años.map(() => '<th>n</th><th>índice</th>').join('')
+            + '</tr></thead><tbody>';
+
+        series.forEach(s => {
+            html += `<tr><th>${s.etiqueta}</th>`
+                + años.map((_, i) => `<td>${fmt(s.raw[i])}</td><td>${fmtIdx(s.idx[i])}</td>`).join('')
+                + '</tr>';
+        });
+
+        html += '</tbody></table>';
+        tablaEl.innerHTML = html;
+    },
+
     activarObservador: function(elemento, config, datos) {
         const self = this; 
         const observer = new IntersectionObserver((entries) => {
@@ -1343,6 +1488,9 @@ window.visorProject.utilsGraficos = {
                             break;
                         case 'pendiente-pob-viv':
                             self.dibujarPendientePobViv(config, Array.isArray(datos) ? datos[datos.length - 1] : datos);
+                            break;
+                        case 'pendiente-censos':
+                            self.dibujarPendienteCensos(config, Array.isArray(datos) ? datos[datos.length - 1] : datos);
                             break;
                     }
                     observer.unobserve(entry.target);

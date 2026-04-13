@@ -71,6 +71,17 @@ window.CONFIG_GRAFICOS = {
         },
     },
 
+    // ── Censos de viviendas no habituales (2001 / 2011 / 2021) ──────────────
+
+    'no-hab-censos': {
+        tipo:   'pendiente-censos',
+        titulo: 'Evolución de viviendas no habituales (censos 2001–2021)',
+        config: {
+            campo:  'no_hab',   // prefijo de los campos: no_hab_200X y no_hab_200X_idx
+            yTitle: 'Índice (2001 = 100)',
+        },
+    },
+
     // ── Gráficos de población y vivienda (nivel Canarias) ───────────────────
 
     'poblacion-vivienda-pendiente': {
