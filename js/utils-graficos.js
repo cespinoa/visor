@@ -1316,14 +1316,24 @@ window.visorProject.utilsGraficos = {
      */
     dibujarPendienteCensos: function(config, registro) {
         const canvas = document.getElementById(config.canvasId);
-        if (!canvas || !registro) return;
+        if (!canvas) return;
 
         const cfg    = config.config || {};
+
+        // Modo tipo fijo: muestra el agregado de un tipo de municipio vs Canarias
+        if (cfg.tipoMunicipio) {
+            return this._dibujarPendienteCensosTipo(config, cfg.tipoMunicipio);
+        }
+
+        if (!registro) return;
+
+        const modo   = cfg.modo || 'indice'; // 'indice' | 'porcentaje'
         const campo  = cfg.campo || 'no_hab';
         const census = drupalSettings.visorProject['$censo_viviendas_no_habituales'] || [];
         const snap   = drupalSettings.visorProject.datosDashboard || [];
         const años   = ['2001', '2011', '2021'];
         const fmt    = n => n != null ? Math.round(n).toLocaleString('es-ES') : '—';
+        const fmtDec = v => v != null ? v.toFixed(1) : '—';
 
         // ── Serie activa ─────────────────────────────────────────────────────
         let registroActivo;
@@ -1336,23 +1346,23 @@ window.visorProject.utilsGraficos = {
         }
         if (!registroActivo) return;
 
-        const valoresIdx = años.map(y => registroActivo[`${campo}_${y}_idx`] ?? null);
-        const valoresRaw = años.map(y => registroActivo[`${campo}_${y}`]     ?? null);
+        const sufijo     = modo === 'porcentaje' ? '_porc' : '_idx';
+        const valoresSerie = años.map(y => registroActivo[`${campo}_${y}${sufijo}`] ?? null);
+        const valoresRaw   = años.map(y => registroActivo[`${campo}_${y}`]          ?? null);
 
         // ── Serie de referencia ──────────────────────────────────────────────
-        let refIdx      = null;
+        let refSerie    = null;
         let refRaw      = null;
         let etiquetaRef = '';
 
         if (registro.ambito === 'isla') {
             const canarias = census.find(d => d.ambito === 'canarias');
             if (canarias) {
-                refIdx      = años.map(y => canarias[`${campo}_${y}_idx`] ?? null);
-                refRaw      = años.map(y => canarias[`${campo}_${y}`]     ?? null);
+                refSerie    = años.map(y => canarias[`${campo}_${y}${sufijo}`] ?? null);
+                refRaw      = años.map(y => canarias[`${campo}_${y}`]          ?? null);
                 etiquetaRef = 'Canarias';
             }
         } else if (registro.ambito === 'municipio' && registro.tipo_municipio) {
-            // Suma agregada de los municipios del mismo tipo → índice del grupo
             const idsMismoTipo = new Set(
                 snap.filter(d => d.ambito === 'municipio' && d.tipo_municipio === registro.tipo_municipio)
                     .map(d => d.municipio_id)
@@ -1360,10 +1370,17 @@ window.visorProject.utilsGraficos = {
             const grupoCenso = census.filter(d => d.ambito === 'municipio' && idsMismoTipo.has(d.municipio_id));
 
             if (grupoCenso.length) {
-                const sumaBase = grupoCenso.reduce((s, d) => s + (d[`${campo}_2001`] || 0), 0);
-                refRaw      = años.map(y => grupoCenso.reduce((s, d) => s + (d[`${campo}_${y}`] || 0), 0));
-                refIdx      = refRaw.map(v => sumaBase > 0 ? Math.round((v / sumaBase) * 1000) / 10 : null);
-                refIdx[0]   = 100.0; // 2001 siempre es 100 en el índice del grupo
+                refRaw = años.map(y => grupoCenso.reduce((s, d) => s + (d[`${campo}_${y}`] || 0), 0));
+                if (modo === 'porcentaje') {
+                    refSerie = años.map((y, i) => {
+                        const sumT = grupoCenso.reduce((s, d) => s + (d[`total_${y}`] || 0), 0);
+                        return sumT > 0 ? Math.round(refRaw[i] / sumT * 1000) / 10 : null;
+                    });
+                } else {
+                    const sumaBase = grupoCenso.reduce((s, d) => s + (d[`${campo}_2001`] || 0), 0);
+                    refSerie    = refRaw.map(v => sumaBase > 0 ? Math.round((v / sumaBase) * 1000) / 10 : null);
+                    refSerie[0] = 100.0;
+                }
                 etiquetaRef = 'Media municipios ' + registro.tipo_municipio.toLowerCase();
             }
         }
@@ -1372,7 +1389,7 @@ window.visorProject.utilsGraficos = {
         const datasets = [
             {
                 label:           registro.etiqueta || 'Valor',
-                data:            valoresIdx,
+                data:            valoresSerie,
                 borderColor:     '#a70000',
                 backgroundColor: 'rgba(167,0,0,0.07)',
                 borderWidth:     2,
@@ -1382,10 +1399,10 @@ window.visorProject.utilsGraficos = {
             },
         ];
 
-        if (refIdx) {
+        if (refSerie) {
             datasets.push({
                 label:           etiquetaRef,
-                data:            refIdx,
+                data:            refSerie,
                 borderColor:     '#999',
                 backgroundColor: 'transparent',
                 borderWidth:     1.5,
@@ -1406,7 +1423,7 @@ window.visorProject.utilsGraficos = {
                 scales: {
                     y: {
                         beginAtZero: false,
-                        title: { display: true, text: cfg.yTitle || 'Índice (2001 = 100)' },
+                        title: { display: true, text: cfg.yTitle || (modo === 'porcentaje' ? '% sobre total' : 'Índice (2001 = 100)') },
                     },
                 },
                 plugins: {
@@ -1422,28 +1439,165 @@ window.visorProject.utilsGraficos = {
             },
         });
 
-        // ── Tabla al pie: valores absolutos e índice por año ─────────────────
+        // ── Tabla al pie ─────────────────────────────────────────────────────
         const tablaEl = document.getElementById(config.canvasId + '-tabla');
         if (!tablaEl) return;
 
-        const fmtIdx = v => v != null ? v.toFixed(1) : '—';
-
+        const colLabel = modo === 'porcentaje' ? '%' : 'índice';
         const series = [
-            { etiqueta: registro.etiqueta || 'Valor', raw: valoresRaw, idx: valoresIdx },
+            { etiqueta: registro.etiqueta || 'Valor', raw: valoresRaw, display: valoresSerie },
         ];
-        if (refIdx) series.push({ etiqueta: etiquetaRef, raw: refRaw, idx: refIdx });
+        if (refSerie) series.push({ etiqueta: etiquetaRef, raw: refRaw, display: refSerie });
 
         let html = '<table class="linea-ext-tabla__table">'
             + '<thead><tr><th></th>'
             + años.map(y => `<th colspan="2">${y}</th>`).join('')
             + '</tr>'
             + '<tr><th></th>'
-            + años.map(() => '<th>n</th><th>índice</th>').join('')
+            + años.map(() => `<th>n</th><th>${colLabel}</th>`).join('')
             + '</tr></thead><tbody>';
 
         series.forEach(s => {
             html += `<tr><th>${s.etiqueta}</th>`
-                + años.map((_, i) => `<td>${fmt(s.raw[i])}</td><td>${fmtIdx(s.idx[i])}</td>`).join('')
+                + años.map((_, i) => `<td>${fmt(s.raw[i])}</td><td>${fmtDec(s.display[i])}</td>`).join('')
+                + '</tr>';
+        });
+
+        html += '</tbody></table>';
+        tablaEl.innerHTML = html;
+    },
+
+    /**
+     * Renderiza un gráfico de pendiente para un tipo de municipio fijo.
+     * Muestra el agregado (suma) del tipo indicado vs Canarias.
+     * No depende del registro activo.
+     */
+    _dibujarPendienteCensosTipo: function(config, tipoMunicipio) {
+        const canvas = document.getElementById(config.canvasId);
+        if (!canvas) return;
+
+        const cfg    = config.config || {};
+        const modo   = cfg.modo || 'indice'; // 'indice' | 'porcentaje'
+        const campo  = cfg.campo || 'no_hab';
+        const census = drupalSettings.visorProject['$censo_viviendas_no_habituales'] || [];
+        const snap   = drupalSettings.visorProject.datosDashboard || [];
+        const años   = ['2001', '2011', '2021'];
+        const fmt    = n => n != null ? Math.round(n).toLocaleString('es-ES') : '—';
+        const fmtDec = v => v != null ? v.toFixed(1) : '—';
+
+        // ── Agregado del tipo ────────────────────────────────────────────────
+        const idsTipo = new Set(
+            snap.filter(d => d.ambito === 'municipio' && d.tipo_municipio === tipoMunicipio)
+                .map(d => d.municipio_id)
+        );
+        const grupoCenso = census.filter(d => d.ambito === 'municipio' && idsTipo.has(d.municipio_id));
+
+        if (!grupoCenso.length) return;
+
+        const tipoRaw = años.map(y => grupoCenso.reduce((s, d) => s + (d[`${campo}_${y}`] || 0), 0));
+        let tipoSerie;
+        if (modo === 'porcentaje') {
+            tipoSerie = años.map((y, i) => {
+                const sumT = grupoCenso.reduce((s, d) => s + (d[`total_${y}`] || 0), 0);
+                return sumT > 0 ? Math.round(tipoRaw[i] / sumT * 1000) / 10 : null;
+            });
+        } else {
+            const sumaBase = grupoCenso.reduce((s, d) => s + (d[`${campo}_2001`] || 0), 0);
+            tipoSerie    = tipoRaw.map((v, i) => i === 0 ? 100.0 : (sumaBase > 0 ? Math.round((v / sumaBase) * 1000) / 10 : null));
+        }
+
+        // ── Canarias como referencia ─────────────────────────────────────────
+        const canarias = census.find(d => d.ambito === 'canarias');
+        let canRaw    = null;
+        let canSerie  = null;
+        if (canarias) {
+            canRaw   = años.map(y => canarias[`${campo}_${y}`] ?? null);
+            const sufijo = modo === 'porcentaje' ? '_porc' : '_idx';
+            canSerie = años.map(y => canarias[`${campo}_${y}${sufijo}`] ?? null);
+        }
+
+        // ── Chart.js ─────────────────────────────────────────────────────────
+        const etiquetaTipo = tipoMunicipio.charAt(0) + tipoMunicipio.slice(1).toLowerCase();
+        const datasets = [
+            {
+                label:           'Municipios ' + etiquetaTipo,
+                data:            tipoSerie,
+                borderColor:     '#a70000',
+                backgroundColor: 'rgba(167,0,0,0.07)',
+                borderWidth:     2.5,
+                pointRadius:     4,
+                tension:         0.3,
+                fill:            true,
+            },
+        ];
+
+        if (canSerie) {
+            datasets.push({
+                label:           'Canarias',
+                data:            canSerie,
+                borderColor:     '#999',
+                backgroundColor: 'transparent',
+                borderWidth:     1.5,
+                pointRadius:     3,
+                borderDash:      [5, 4],
+                tension:         0.3,
+                fill:            false,
+            });
+        }
+
+        const fontSize  = 10; // ~20% menor que el defecto de Chart.js (12px)
+        const yOptions  = modo === 'indice'
+            ? { min: 60, max: 160,  title: { display: true, text: cfg.yTitle || 'Índice (2001 = 100)', font: { size: fontSize } }, ticks: { font: { size: fontSize } } }
+            : { min: 18, max:  60,  title: { display: true, text: cfg.yTitle || '% sobre total',       font: { size: fontSize } }, ticks: { font: { size: fontSize } } };
+
+        new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: { labels: años, datasets },
+            options: {
+                responsive:          true,
+                maintainAspectRatio: true,
+                aspectRatio:         2.5,
+                scales: {
+                    y: yOptions,
+                    x: { ticks: { font: { size: fontSize } } },
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels:   { font: { size: fontSize } },
+                    },
+                    tooltip: {
+                        mode:      'index',
+                        intersect: false,
+                        callbacks: {
+                            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}`,
+                        },
+                    },
+                },
+            },
+        });
+
+        // ── Tabla al pie ─────────────────────────────────────────────────────
+        const tablaEl = document.getElementById(config.canvasId + '-tabla');
+        if (!tablaEl) return;
+
+        const colLabel = modo === 'porcentaje' ? '%' : 'índice';
+        const series = [
+            { etiqueta: 'Municipios ' + etiquetaTipo, raw: tipoRaw, display: tipoSerie },
+        ];
+        if (canSerie) series.push({ etiqueta: 'Canarias', raw: canRaw, display: canSerie });
+
+        let html = '<table class="linea-ext-tabla__table" style="font-size:0.66rem">'
+            + '<thead><tr><th></th>'
+            + años.map(y => `<th colspan="2">${y}</th>`).join('')
+            + '</tr>'
+            + '<tr><th></th>'
+            + años.map(() => `<th>n</th><th>${colLabel}</th>`).join('')
+            + '</tr></thead><tbody>';
+
+        series.forEach(s => {
+            html += `<tr><th>${s.etiqueta}</th>`
+                + años.map((_, i) => `<td>${fmt(s.raw[i])}</td><td>${fmtDec(s.display[i])}</td>`).join('')
                 + '</tr>';
         });
 

@@ -7,6 +7,11 @@ window.CONFIG_TABLAS = {
         titulo: 'Crecimiento de la población y la vivienda',
     },
 
+    'censos-islas-nohabituales': {
+        tipo:   'censos-islas',
+        titulo: 'Viviendas no habituales por isla — censos 2001, 2011 y 2021',
+    },
+
 
     'hogar-ccaa-tabla': {
         tipo:          'ccaa-ext',

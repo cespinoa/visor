@@ -71,14 +71,110 @@ window.CONFIG_GRAFICOS = {
         },
     },
 
-    // ── Censos de viviendas no habituales (2001 / 2011 / 2021) ──────────────
+    // ── Censos de viviendas no habituales — índice base 100 ─────────────────
 
     'no-hab-censos': {
         tipo:   'pendiente-censos',
         titulo: 'Evolución de viviendas no habituales (censos 2001–2021)',
         config: {
-            campo:  'no_hab',   // prefijo de los campos: no_hab_200X y no_hab_200X_idx
+            campo:  'no_hab',
             yTitle: 'Índice (2001 = 100)',
+        },
+    },
+
+    'no-hab-censos-turistico': {
+        tipo:   'pendiente-censos',
+        titulo: 'Viv. no habituales — municipios turísticos (2001=100)',
+        config: {
+            campo:         'no_hab',
+            tipoMunicipio: 'TURÍSTICO',
+            yTitle:        'Índice (2001 = 100)',
+        },
+    },
+
+    'no-hab-censos-grande': {
+        tipo:   'pendiente-censos',
+        titulo: 'Viv. no habituales — municipios grandes (2001=100)',
+        config: {
+            campo:         'no_hab',
+            tipoMunicipio: 'GRANDE',
+            yTitle:        'Índice (2001 = 100)',
+        },
+    },
+
+    'no-hab-censos-mediano': {
+        tipo:   'pendiente-censos',
+        titulo: 'Viv. no habituales — municipios medianos (2001=100)',
+        config: {
+            campo:         'no_hab',
+            tipoMunicipio: 'MEDIO',
+            yTitle:        'Índice (2001 = 100)',
+        },
+    },
+
+    'no-hab-censos-pequeno': {
+        tipo:   'pendiente-censos',
+        titulo: 'Viv. no habituales — municipios pequeños (2001=100)',
+        config: {
+            campo:         'no_hab',
+            tipoMunicipio: 'PEQUEÑO',
+            yTitle:        'Índice (2001 = 100)',
+        },
+    },
+
+    // ── Censos de viviendas no habituales — porcentaje sobre total ───────────
+
+    'no-hab-porc': {
+        tipo:   'pendiente-censos',
+        titulo: 'Viviendas no habituales sobre el total (%)',
+        config: {
+            campo:  'no_hab',
+            modo:   'porcentaje',
+            yTitle: '% sobre total de viviendas',
+        },
+    },
+
+    'no-hab-porc-turistico': {
+        tipo:   'pendiente-censos',
+        titulo: 'Viv. no habituales (%) — municipios turísticos',
+        config: {
+            campo:         'no_hab',
+            modo:          'porcentaje',
+            tipoMunicipio: 'TURÍSTICO',
+            yTitle:        '% sobre total de viviendas',
+        },
+    },
+
+    'no-hab-porc-grande': {
+        tipo:   'pendiente-censos',
+        titulo: 'Viv. no habituales (%) — municipios grandes',
+        config: {
+            campo:         'no_hab',
+            modo:          'porcentaje',
+            tipoMunicipio: 'GRANDE',
+            yTitle:        '% sobre total de viviendas',
+        },
+    },
+
+    'no-hab-porc-mediano': {
+        tipo:   'pendiente-censos',
+        titulo: 'Viv. no habituales (%) — municipios medianos',
+        config: {
+            campo:         'no_hab',
+            modo:          'porcentaje',
+            tipoMunicipio: 'MEDIO',
+            yTitle:        '% sobre total de viviendas',
+        },
+    },
+
+    'no-hab-porc-pequeno': {
+        tipo:   'pendiente-censos',
+        titulo: 'Viv. no habituales (%) — municipios pequeños',
+        config: {
+            campo:         'no_hab',
+            modo:          'porcentaje',
+            tipoMunicipio: 'PEQUEÑO',
+            yTitle:        '% sobre total de viviendas',
         },
     },
 

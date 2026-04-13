@@ -413,6 +413,7 @@ final class InformeController extends ControllerBase {
       $der = $resolverLado($p[3]);
       $op  = $p[2];
 
+
       return match ($op) {
         '=='    => (string) $izq === (string) $der,
         '!='    => (string) $izq !== (string) $der,
@@ -423,6 +424,14 @@ final class InformeController extends ControllerBase {
         default => FALSE,
       };
     };
+
+    // Normalizar entidades HTML dentro de los tags {% %} (el WYSIWYG convierte
+    // los espacios a &nbsp; y > a &gt; dentro de las condiciones).
+    $texto = preg_replace_callback(
+      '/\{%.*?%\}/s',
+      fn($m) => html_entity_decode($m[0], ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+      $texto,
+    );
 
     // ── Procesado de bloques if/elseif/else/endif ────────────────────────
     $texto = preg_replace_callback(

@@ -291,28 +291,54 @@ La convención de prefijo `$` distingue los datasets calculados en JS de los iny
 
 ### Gráfico `pendiente-censos` (`utils-graficos.js`)
 
-Tipo para comparar la evolución de un indicador censal en tres cortes temporales (2001 / 2011 / 2021) indexado a base 100 = 2001. Diseñado para el dataset `$censo_viviendas_no_habituales` pero extensible a cualquier dataset con la misma nomenclatura de campos (`campo_200X`, `campo_200X_idx`).
+Tipo para comparar la evolución de un indicador censal en tres cortes temporales (2001 / 2011 / 2021). Admite dos modos y dos estrategias de renderizado.
 
-**Configuración en `CONFIG_GRAFICOS`:**
+#### Parámetros de configuración
+
 ```js
 'no-hab-censos': {
     tipo:   'pendiente-censos',
     titulo: 'Evolución de viviendas no habituales (censos 2001–2021)',
     config: {
-        campo:  'no_hab',          // prefijo de campos: no_hab_2001, no_hab_2001_idx, …
-        yTitle: 'Índice (2001 = 100)',
+        campo:         'no_hab',          // prefijo: no_hab_2001, no_hab_2001_idx, no_hab_2001_porc…
+        modo:          'indice',          // 'indice' (base 100, default) | 'porcentaje' (% sobre total)
+        yTitle:        'Índice (2001 = 100)',
+        tipoMunicipio: 'TURÍSTICO',       // opcional — activa modo fijo (ver abajo)
     },
 },
 ```
 
-**Serie de referencia según ámbito:**
-- `municipio` — suma agregada de todos los municipios del mismo `tipo_municipio` → índice del grupo. Se usa la suma agregada (no la media de índices individuales) para que cada municipio pese en proporción a su volumen, igual que un índice de precios ponderado.
+#### Modo `indice` (default)
+
+Usa los campos `campo_YYYY_idx`. Muestra el registro activo vs. su referencia natural:
+- `municipio` — suma agregada de municipios del mismo `tipo_municipio` (ponderada por volumen)
 - `isla` — registro de Canarias
-- `canarias` — serie única, sin referencia
+- `canarias` — sin referencia
 
-**Eje Y:** `beginAtZero: false` — con solo 3 puntos y valores en torno a base 100, la legibilidad de las pendientes pesa más que mostrar el cero absoluto.
+Eje Y: `beginAtZero: false`, escala libre.
 
-**Tabla al pie** — columnas: año × (n | índice); filas: entidad activa + referencia.
+#### Modo `porcentaje`
+
+Usa los campos `campo_YYYY_porc`. La referencia en `municipio` se calcula como `sum(no_hab_YYYY) / sum(total_YYYY) * 100` del grupo tipo (suma ponderada, no media de porcentajes individuales).
+
+Eje Y: `beginAtZero: false`. Para los gráficos fijos por tipo (ver abajo) se fija `min: 18, max: 60`.
+
+#### Modo fijo por tipo (`tipoMunicipio`)
+
+Cuando se especifica `tipoMunicipio`, el gráfico ignora la entidad activa y dibuja siempre el agregado del tipo de municipio indicado vs. Canarias. Implementado en `_dibujarPendienteCensosTipo`. Usado para los 4 gráficos de tipo que se muestran juntos a escala fija (18–60%) en la vista Canarias.
+
+Font size reducido a 10px (vs. 12px por defecto) para los gráficos de tipo, que aparecen en columnas de ancho 6.
+
+**Tabla al pie** — columnas: año × (n | índice o %); filas: entidad activa + referencia.
+
+#### Dataset en `DashboardController`
+
+`getCensoViviendasNoHabituales()` lee de PostgreSQL los campos:
+- `no_hab_2001`, `no_hab_2011`, `no_hab_2021` — viviendas no habituales
+- `hab_2001`, `hab_2011`, `hab_2021` — viviendas habituales
+- `total_2001`, `total_2011`, `total_2021` — total viviendas
+
+Y calcula con `porcentajesCensos()` los campos `_porc` para no habituales y habituales (NULL si denominador = 0). El dataset se inyecta como `$censo_viviendas_no_habituales` en `drupalSettings.visorProject`.
 
 ### Gráfico `pendiente-pob-viv` (`utils-graficos.js`)
 
@@ -340,6 +366,23 @@ Entrada en `CONFIG_TABLAS` con `tipo: 'historico-pob-viv'`. No pasa por `dataSel
 Columnas: Año · Población · Δ Población · Δ Pob. acum. · Hogares nec. · Hogares acum. · Viv. terminadas · Viv. acum. · Saldo acum.
 
 El saldo acumulado usa `saldo-positivo` (verde) o `saldo-negativo` (rojo) según signo. Formatos con `formatearDato(n, 'entero')` (garantiza separador de millares incluso para cifras < 10.000 mediante `Intl.NumberFormat useGrouping: 'always'`).
+
+### Tabla `censos-islas` (`utils-tablas.js`)
+
+Entrada en `CONFIG_TABLAS` con `tipo: 'censos-islas'`. No pasa por `dataSelector`; `manejarTabla` en `row-compositor.js` la deriva directamente a `crearTablaCensosIslas(config)`.
+
+**Fuente de datos:** `drupalSettings.visorProject.$censo_viviendas_no_habituales`, cruzado con `datosDashboard` para obtener `etiqueta` y `tipo_isla`.
+
+**Cabecera de dos niveles:** primera fila con una celda por año (colspan 2: n | %); segunda fila con `n` y `%` bajo cada año.
+
+**Ordenación:** Orientales → Centrales → Occidentales, y alfabéticamente dentro de cada grupo. Canarias se añade al final con clase `fila-resaltada`.
+
+```js
+'censos-islas-nohabituales': {
+    tipo:   'censos-islas',
+    titulo: 'Viviendas no habituales por isla — censos 2001, 2011 y 2021',
+},
+```
 
 ### Notas metodológicas en bloques (`utils-layout.js`)
 
@@ -427,6 +470,10 @@ Cada indicador principal tiene dos variantes automáticas sin unidades:
 ### Aviso importante
 
 El campo `r_deficit_oferta_viviendas` **no existe** en el diccionario. El campo correcto es `deficit_oferta_viviendas` (formato `decimal_2`).
+
+## Edición de longtexts en Drupal
+
+Los nodos de tipo `longtext` **deben editarse siempre en modo fuente HTML**, nunca en el editor visual (WYSIWYG). El editor visual convierte los espacios dentro de `{% %}` en `&nbsp;` y los operadores `>` / `<` en `&gt;` / `&lt;`, rompiendo silenciosamente la evaluación de condiciones y la sustitución de variables. El `InformeController` normaliza entidades dentro de `{% %}` antes de procesar, pero es más limpio no generar basura desde el principio.
 
 ## Convenciones propias
 

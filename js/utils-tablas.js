@@ -931,6 +931,81 @@
      * Usa $historico_poblacion, $historico_viviendas_terminadas y el dataset
      * derivado $historico_hogares_necesarios (calculado en main.js).
      */
+    /**
+     * Tabla censal de viviendas no habituales por isla.
+     * Columnas: isla | 2001 (n, %) | 2011 (n, %) | 2021 (n, %)
+     * Orden: Orientales → Centrales → Occidentales, alfabético dentro de cada grupo.
+     * Canarias aparece destacada al pie.
+     */
+    crearTablaCensosIslas: function(config) {
+        const vp     = drupalSettings.visorProject || {};
+        const census = vp['$censo_viviendas_no_habituales'] || [];
+        const snap   = vp.datosDashboard || [];
+        const años   = ['2001', '2011', '2021'];
+
+        if (!census.length) return null;
+
+        const fmt    = n => n != null ? Math.round(n).toLocaleString('es-ES') : '—';
+        const fmtPct = v => v != null ? v.toFixed(1) + ' %' : '—';
+
+        const ordenTipo = { 'oriental': 0, 'central': 1, 'occidental': 2 };
+
+        // Islas: cruzar censo con snap para obtener etiqueta y tipo_isla
+        const islas = census
+            .filter(d => d.ambito === 'isla')
+            .map(d => {
+                const snapIsla = snap.find(s => s.ambito === 'isla' && s.isla_id === d.isla_id) || {};
+                return { ...d, etiqueta: snapIsla.etiqueta || 'Isla ' + d.isla_id, tipo_isla: snapIsla.tipo_isla || '' };
+            })
+            .sort((a, b) => {
+                const oa = ordenTipo[a.tipo_isla] ?? 9;
+                const ob = ordenTipo[b.tipo_isla] ?? 9;
+                if (oa !== ob) return oa - ob;
+                return a.etiqueta.localeCompare(b.etiqueta, 'es');
+            });
+
+        const canarias = census.find(d => d.ambito === 'canarias');
+
+        // Construir tabla a partir del template base
+        const tplBase = document.getElementById('tpl-tabla-base');
+        if (!tplBase) return null;
+
+        const fragment = tplBase.content.cloneNode(true);
+        const wrapper  = fragment.querySelector('.contenedor-tabla');
+        const table    = fragment.querySelector('table');
+        const thead    = fragment.querySelector('thead');
+        const tbody    = fragment.querySelector('tbody');
+
+        wrapper.querySelector('.tabla-titulo').textContent = config.titulo || 'Viviendas no habituales por isla (censos)';
+
+        // Cabeceras de dos filas
+        thead.innerHTML = `
+            <tr>
+                <th rowspan="2">Isla</th>
+                ${años.map(y => `<th colspan="2">${y}</th>`).join('')}
+            </tr>
+            <tr>
+                ${años.map(() => '<th>n</th><th>%</th>').join('')}
+            </tr>`;
+
+        const crearFila = (d, etiqueta, destacada) => {
+            const tr = document.createElement('tr');
+            if (destacada) tr.classList.add('fila-resaltada');
+            const celdas = `<th class="col-etiqueta">${etiqueta}</th>`
+                + años.map(y =>
+                    `<td class="col-dato">${fmt(d['no_hab_' + y])}</td>`
+                  + `<td class="col-dato">${fmtPct(d['no_hab_' + y + '_porc'])}</td>`
+                ).join('');
+            tr.innerHTML = celdas;
+            return tr;
+        };
+
+        islas.forEach(d => tbody.appendChild(crearFila(d, d.etiqueta, false)));
+        if (canarias) tbody.appendChild(crearFila(canarias, 'Canarias', true));
+
+        return wrapper;
+    },
+
     crearTablaHistoricoPobViv: function(config) {
         const vp      = drupalSettings.visorProject || {};
         const pob     = vp['$historico_poblacion']                  || {};

@@ -41,20 +41,9 @@
 
 
          { 
-          tituloBloque: "Déficit de viviendas",
-          intro: "Resumen de los indicadores clave de vivienda.",
+          tituloBloque: "Situación de la vivienda",
           destino: '#ficha-contenido',
           elementos: [
-            { tipo: 'tabla', id: 'historico-pob-viv', ancho: '12'},
-            { tipo: 'grafico', id: 'hogar-ccaa-barras',    ancho: '6' },                                                                                                                            
-            { tipo: 'grafico', id: 'hogar-ccaa-pendiente',  ancho: '6' },                                                                                                                           
-            { tipo: 'tabla',   id: 'hogar-ccaa-tabla',      ancho: '12' },   
-            { tipo: 'longtext', id: 'hogares-nucleos', ancho: '12' },
-            { tipo: 'tabla', id: 'ficha-hogares-por-nucleos', ancho: '6' },
-            { tipo: 'tabla', id: 'ficha-hogares-por-nucleos-deficit', ancho: '6' },
-            { tipo: 'grafico', id: 'personas-por-hogar', ancho: '12' },
-            { tipo: 'grafico', id: 'llegadas-vs-plazas', ancho: '12', ambito: ['canarias', 'isla'] },
-            { tipo: 'tabla', id: 'historico-llegadas-plazas-ocupacion', ancho: '12', ambito: ['canarias', 'isla'] },
             { tipo: 'longtext', id: 'disponibilidad-vivienda', ancho: '12' },
             { tipo: 'tabla', id: 'parque-viviendas', ancho: '6' },
             { tipo: 'tabla', id: 'viviendas-terminadas-canarias', ancho: '6', ambito: 'canarias' },
@@ -62,6 +51,39 @@
             { tipo: 'tabla', id: 'viviendas-necesarias', ancho: '6' },
             { tipo: 'tabla', id: 'deficit-de-viviendas', ancho: '6', ambito: ['isla', 'municipio'] },
             { tipo: 'tabla', id: 'deficit-de-viviendas-canarias', ancho: '6', ambito: 'canarias' },
+            { tipo: 'longtext', id: 'hogares-nucleos', ancho: '12' },
+            { tipo: 'tabla', id: 'ficha-hogares-por-nucleos', ancho: '6' },
+            { tipo: 'tabla', id: 'ficha-hogares-por-nucleos-deficit', ancho: '6' },
+            { tipo: 'longtext', id: 'tamanyo-medio-hogar', ancho: '12' },
+            { tipo: 'grafico', id: 'personas-por-hogar', ancho: '12' },
+            { tipo: 'grafico', id: 'hogar-ccaa-barras',    ancho: '6', ambito: 'canarias' },                                                                                                                            
+            { tipo: 'grafico', id: 'hogar-ccaa-pendiente',  ancho: '6', ambito: 'canarias'  },                                                                                                                           
+            { tipo: 'tabla',   id: 'hogar-ccaa-tabla',      ancho: '12', ambito: 'canarias' }, 
+            { tipo: 'longtext', id: 'construccion-viviendas-vs-crecimiento-poblacion', ancho: '12', ambito: 'canarias' },
+            { tipo: 'tabla', id: 'historico-pob-viv', ancho: '12'},
+            
+            
+
+
+            
+            { tipo: 'longtext', id: 'viviendas-no-habituales', ancho: '12' },
+            { tipo: 'tabla', id: 'censos-islas-nohabituales', ancho: 12, ambito: 'canarias' },
+            //~ { tipo: 'grafico', id: 'no-hab-censos', ancho: '12' },
+            //~ { tipo: 'grafico', id: 'no-hab-censos-grande', ancho: '6' },
+            //~ { tipo: 'grafico', id: 'no-hab-censos-turistico', ancho: '6' },
+            //~ { tipo: 'grafico', id: 'no-hab-censos-mediano', ancho: '6' },
+            //~ { tipo: 'grafico', id: 'no-hab-censos-pequeno', ancho: '6' },
+
+            { tipo: 'grafico', id: 'no-hab-porc', ancho: '12' },
+            { tipo: 'grafico', id: 'no-hab-porc-grande', ancho: '6', ambito: 'canarias'  },
+            { tipo: 'grafico', id: 'no-hab-porc-turistico', ancho: '6', ambito: 'canarias'  },
+            { tipo: 'grafico', id: 'no-hab-porc-mediano', ancho: '6', ambito: 'canarias'  },
+            { tipo: 'grafico', id: 'no-hab-porc-pequeno', ancho: '6', ambito: 'canarias'  },
+            
+            
+            { tipo: 'grafico', id: 'llegadas-vs-plazas', ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'tabla', id: 'historico-llegadas-plazas-ocupacion', ancho: '12', ambito: ['canarias', 'isla'] },
+            
             { tipo: 'salto' },
             { tipo: 'tabla', id: 'presion-vv-sobre-vivienda', ancho: '6'}
           ]

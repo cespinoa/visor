@@ -156,13 +156,23 @@ final class DashboardController extends ControllerBase {
 
     $dataset  = [];
     $porIsla  = [];
-    $canarias = ['no_hab_2001' => 0, 'no_hab_2011' => 0, 'no_hab_2021' => 0];
+    $canarias = [
+      'no_hab_2001' => 0, 'no_hab_2011' => 0, 'no_hab_2021' => 0,
+      'hab_2001'    => 0, 'hab_2011'    => 0, 'hab_2021'    => 0,
+      'total_2001'  => 0, 'total_2011'  => 0, 'total_2021'  => 0,
+    ];
 
     foreach ($rows as $row) {
       $islaId = $muni2isla[$row->municipio_id] ?? NULL;
       $v2001  = (int) $row->no_hab_2001;
       $v2011  = (int) $row->no_hab_2011;
       $v2021  = (int) $row->no_hab_2021;
+      $h2001  = (int) $row->hab_2001;
+      $h2011  = (int) $row->hab_2011;
+      $h2021  = (int) $row->hab_2021;
+      $t2001  = (int) $row->total_2001;
+      $t2011  = (int) $row->total_2011;
+      $t2021  = (int) $row->total_2021;
 
       $dataset[] = [
         'ambito'       => 'municipio',
@@ -171,28 +181,39 @@ final class DashboardController extends ControllerBase {
         'no_hab_2001'  => $v2001,
         'no_hab_2011'  => $v2011,
         'no_hab_2021'  => $v2021,
-      ] + $this->indicesBase100($v2001, $v2011, $v2021);
+        'hab_2001'     => $h2001,
+        'hab_2011'     => $h2011,
+        'hab_2021'     => $h2021,
+        'total_2001'   => $t2001,
+        'total_2011'   => $t2011,
+        'total_2021'   => $t2021,
+      ] + $this->indicesBase100($v2001, $v2011, $v2021)
+        + $this->porcentajesCensos($v2001, $v2011, $v2021, $h2001, $h2011, $h2021, $t2001, $t2011, $t2021);
 
       if ($islaId) {
-        $porIsla[$islaId]['no_hab_2001'] = ($porIsla[$islaId]['no_hab_2001'] ?? 0) + $v2001;
-        $porIsla[$islaId]['no_hab_2011'] = ($porIsla[$islaId]['no_hab_2011'] ?? 0) + $v2011;
-        $porIsla[$islaId]['no_hab_2021'] = ($porIsla[$islaId]['no_hab_2021'] ?? 0) + $v2021;
+        foreach (['no_hab_2001', 'no_hab_2011', 'no_hab_2021', 'hab_2001', 'hab_2011', 'hab_2021', 'total_2001', 'total_2011', 'total_2021'] as $f) {
+          $porIsla[$islaId][$f] = ($porIsla[$islaId][$f] ?? 0) + (int) $row->$f;
+        }
       }
-      $canarias['no_hab_2001'] += $v2001;
-      $canarias['no_hab_2011'] += $v2011;
-      $canarias['no_hab_2021'] += $v2021;
+      foreach (['no_hab_2001', 'no_hab_2011', 'no_hab_2021', 'hab_2001', 'hab_2011', 'hab_2021', 'total_2001', 'total_2011', 'total_2021'] as $f) {
+        $canarias[$f] += (int) $row->$f;
+      }
     }
 
-    foreach ($porIsla as $islaId => $sumas) {
+    foreach ($porIsla as $islaId => $s) {
       $dataset[] = [
         'ambito'  => 'isla',
         'isla_id' => (int) $islaId,
-      ] + $sumas + $this->indicesBase100($sumas['no_hab_2001'], $sumas['no_hab_2011'], $sumas['no_hab_2021']);
+      ] + $s
+        + $this->indicesBase100($s['no_hab_2001'], $s['no_hab_2011'], $s['no_hab_2021'])
+        + $this->porcentajesCensos($s['no_hab_2001'], $s['no_hab_2011'], $s['no_hab_2021'], $s['hab_2001'], $s['hab_2011'], $s['hab_2021'], $s['total_2001'], $s['total_2011'], $s['total_2021']);
     }
 
+    $c = $canarias;
     $dataset[] = ['ambito' => 'canarias']
-      + $canarias
-      + $this->indicesBase100($canarias['no_hab_2001'], $canarias['no_hab_2011'], $canarias['no_hab_2021']);
+      + $c
+      + $this->indicesBase100($c['no_hab_2001'], $c['no_hab_2011'], $c['no_hab_2021'])
+      + $this->porcentajesCensos($c['no_hab_2001'], $c['no_hab_2011'], $c['no_hab_2021'], $c['hab_2001'], $c['hab_2011'], $c['hab_2021'], $c['total_2001'], $c['total_2011'], $c['total_2021']);
 
     return $dataset;
   }
@@ -207,6 +228,26 @@ final class DashboardController extends ControllerBase {
       'no_hab_2001_idx' => 100.0,
       'no_hab_2011_idx' => $base ? round($v2011 / $base * 100, 1) : NULL,
       'no_hab_2021_idx' => $base ? round($v2021 / $base * 100, 1) : NULL,
+    ];
+  }
+
+  /**
+   * Calcula el porcentaje de viviendas no habituales y habituales sobre el total
+   * para cada uno de los tres censos. Devuelve null si el total es 0.
+   */
+  private function porcentajesCensos(
+    int $nv2001, int $nv2011, int $nv2021,
+    int $h2001,  int $h2011,  int $h2021,
+    int $t2001,  int $t2011,  int $t2021
+  ): array {
+    $p = fn(int $num, int $den) => $den > 0 ? round($num / $den * 100, 1) : NULL;
+    return [
+      'no_hab_2001_porc' => $p($nv2001, $t2001),
+      'no_hab_2011_porc' => $p($nv2011, $t2011),
+      'no_hab_2021_porc' => $p($nv2021, $t2021),
+      'hab_2001_porc'    => $p($h2001,  $t2001),
+      'hab_2011_porc'    => $p($h2011,  $t2011),
+      'hab_2021_porc'    => $p($h2021,  $t2021),
     ];
   }
 

@@ -329,6 +329,13 @@
             return tablaDOM;
         }
 
+        // Tabla censal de viviendas no habituales por isla
+        if (config.tipo === 'censos-islas') {
+            const tablaDOM = motorTablas.crearTablaCensosIslas(config);
+            if (tablaDOM) this.añadirFuncionalidadFullscreen(tablaDOM);
+            return tablaDOM;
+        }
+
         // Tabla desde drupalSettings: no pasa por el dataSelector de snapshot
         if (config.fuente) {
             const datosRaw = (drupalSettings.visorProject || {})[config.fuente];
