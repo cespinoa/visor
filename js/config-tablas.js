@@ -3,19 +3,22 @@
 window.CONFIG_TABLAS = {
 
     'historico-pob-viv': {
-        tipo:   'historico-pob-viv',
-        titulo: 'Crecimiento de la población y la vivienda',
+        tipo:      'historico-pob-viv',
+        titulo:    'Crecimiento de la población y la vivienda',
+        colapsible: true,
     },
 
     'censos-islas-nohabituales': {
-        tipo:   'censos-islas',
-        titulo: 'Viviendas no habituales por isla — censos 2001, 2011 y 2021',
+        tipo:      'censos-islas',
+        titulo:    'Viviendas no habituales por isla — censos 2001, 2011 y 2021',
+        colapsible: true,
     },
 
 
     'hogar-ccaa-tabla': {
         tipo:          'ccaa-ext',
         titulo:        'Tamaño medio del hogar por CCAA',
+        colapsible:    true,
         dataset:       '$historico_personas_hogar_ccaa',
         campo:         'miembros',
         yearField:     'ejercicio',
@@ -25,8 +28,9 @@ window.CONFIG_TABLAS = {
     },
 
     'historico-llegadas-plazas-ocupacion': {
-        tipo:    'historico-ext',
-        titulo:  'Evolución: llegadas, plazas regladas y tasa de ocupación',
+        tipo:      'historico-ext',
+        titulo:    'Evolución: llegadas, plazas regladas y tasa de ocupación',
+        colapsible: true,
         baseYear: '2010',
         series: [
             { dataset: 'historicoTasaOcupacion',  campo: 'tasa',     yearField: 'ejercicio', etiqueta: 'Ocupación', formato: 'decimal_1' },

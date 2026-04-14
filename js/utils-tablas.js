@@ -472,6 +472,7 @@
             tbody.appendChild(tr);
         });
 
+        if (config.colapsible) this._activarColapsible(wrapper);
         return wrapper;
     },
 
@@ -1003,6 +1004,7 @@
         islas.forEach(d => tbody.appendChild(crearFila(d, d.etiqueta, false)));
         if (canarias) tbody.appendChild(crearFila(canarias, 'Canarias', true));
 
+        if (config.colapsible) this._activarColapsible(wrapper);
         return wrapper;
     },
 
@@ -1064,6 +1066,18 @@
         dataset._datosPuros  = this.aplanarParaCSV(dataset);
 
         return this.crearTabla(config, dataset);
+    },
+
+    _activarColapsible: function(wrapper) {
+        wrapper.classList.add('tabla-colapsible', 'tabla-colapsada');
+        const header = wrapper.querySelector('.tabla-header');
+        const titulo = wrapper.querySelector('.tabla-titulo');
+        const icon = document.createElement('span');
+        icon.className = 'tabla-toggle-icon';
+        titulo.appendChild(icon);
+        header.addEventListener('click', () => {
+            wrapper.classList.toggle('tabla-colapsada');
+        });
     },
   };
 

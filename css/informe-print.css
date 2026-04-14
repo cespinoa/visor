@@ -382,6 +382,16 @@ tr.fila-destacada td {
     background: #fafafa !important;
 }
 
+/* Tablas colapsibles: en el PDF siempre expandidas */
+.tabla-colapsada table,
+.tabla-colapsada .tabla-footer-acciones {
+    display: revert !important;
+}
+
+.tabla-toggle-icon {
+    display: none !important;
+}
+
 /* ==========================================================================
    GRÁFICOS: imágenes generadas desde canvas
    ========================================================================== */

@@ -110,6 +110,19 @@ Función `visorProject.dataSelector.seleccionar(props, config)`. Recibe el regis
 
 Modos de periodo temporal: `ALL`, `LATEST`, `LAST_TWO`, `YEARLY_MAX`, fecha ISO como testigo.
 
+### Tablas colapsibles (`utils-tablas.js` + `components.css`)
+
+El parámetro `colapsible: true` en la entrada de `CONFIG_TABLAS` hace que la tabla arranque plegada: solo se ve el título y un chevron. Al hacer clic en el header se expande/colapsa.
+
+**Implementación:**
+- `_activarColapsible(wrapper)` — helper en `utils-tablas.js` que añade las clases `tabla-colapsible` y `tabla-colapsada` al wrapper, inyecta el `<span class="tabla-toggle-icon">` en el `h3.tabla-titulo` y enlaza el click al `.tabla-header`.
+- `crearTabla()` llama al helper si `config.colapsible`. `crearTablaCensosIslas()` también, ya que tiene su propio flujo sin pasar por `crearTabla`.
+- CSS en `components.css`: `.tabla-colapsada table` y `.tabla-colapsada .tabla-footer-acciones` ocultos con `display:none`; chevron CSS puro con rotación animada.
+
+**Comportamiento en PDF:** `informe-print.css` revierte el `display:none` con `display: revert !important` y oculta el chevron, garantizando que las tablas colapsibles aparezcan siempre expandidas en WeasyPrint.
+
+**Tablas actualmente colapsibles:** `historico-pob-viv`, `censos-islas-nohabituales`, `hogar-ccaa-tabla`, `historico-llegadas-plazas-ocupacion`.
+
 ### Tablas ficha con contexto `PARENTS` y `unidades: true` (`utils-tablas.js`)
 
 Las tablas en modo `ficha` admiten dos parámetros adicionales de nivel superior en `CONFIG_TABLAS`:

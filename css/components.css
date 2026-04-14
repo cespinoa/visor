@@ -275,6 +275,39 @@
     transform: rotate(180deg);
 }
 
+/* Tablas colapsibles
+   ========================================================================== */
+
+.tabla-colapsible .tabla-header {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+}
+
+.tabla-toggle-icon {
+    display: inline-block;
+    width: 0.55em;
+    height: 0.55em;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 200ms ease;
+    flex-shrink: 0;
+    margin-left: 0.75em;
+    opacity: 0.6;
+}
+
+.tabla-colapsada .tabla-toggle-icon {
+    transform: rotate(-45deg);
+}
+
+.tabla-colapsada table,
+.tabla-colapsada .tabla-footer-acciones {
+    display: none;
+}
+
 .acciones-tabla {
     display: flex;
     gap: 8px;
