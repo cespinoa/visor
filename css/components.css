@@ -275,6 +275,12 @@
     transform: rotate(180deg);
 }
 
+/* Tablas con columna de año estrecha (tablas densas multi-columna) */
+.tabla-anyo-estrecho .col-etiqueta {
+    width: 2.8rem;
+    white-space: nowrap;
+}
+
 /* Tablas colapsibles
    ========================================================================== */
 

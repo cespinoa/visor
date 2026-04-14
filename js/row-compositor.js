@@ -322,6 +322,13 @@
             return tablaDOM;
         }
 
+        // Tabla histórica de turismo con columnas derivadas (reglados / vacacionales)
+        if (config.tipo === 'historico-turismo') {
+            const tablaDOM = motorTablas.crearTablaHistoricoTurismo(config, props);
+            if (tablaDOM) this.añadirFuncionalidadFullscreen(tablaDOM);
+            return tablaDOM;
+        }
+
         // Tabla histórico población / vivienda (datos Canarias)
         if (config.tipo === 'historico-pob-viv') {
             const tablaDOM = motorTablas.crearTablaHistoricoPobViv(config);

@@ -1068,6 +1068,164 @@
         return this.crearTabla(config, dataset);
     },
 
+    /**
+     * Tabla histórica de turismo: turistas totales, plazas regladas, ocupación,
+     * estancia media y columnas derivadas (turistas reglados y vacacionales).
+     *
+     * Fórmula: turistas_reglados = (ocupacion/100) × plazas × 365 / estancia_media
+     * Turistas vacacionales = turistas_totales − turistas_reglados
+     */
+    crearTablaHistoricoTurismo: function(config, props) {
+        const vp       = drupalSettings.visorProject || {};
+        const baseYear = String(config.baseYear || '2010');
+        const fmt      = window.visorProject.utils.formatearDato;
+        const ambito   = props.ambito;
+        const islaId   = String(props.isla_id || '');
+
+        const filtrar = (ds, yearField) => {
+            const arr = Array.isArray(ds) ? ds : [];
+            if (ambito === 'canarias') return arr.filter(r => r.ambito === 'canarias');
+            return arr.filter(r => r.ambito === 'isla' && String(r.isla_id) === islaId);
+        };
+
+        const toMap = (ds, yearField, campo) => {
+            const m = {};
+            filtrar(ds).forEach(r => { m[String(r[yearField])] = parseFloat(r[campo]); });
+            return m;
+        };
+
+        // Mapa por isla: year → isla_id → valor (solo filas ambito='isla')
+        const toMapIslas = (ds, yearField, campo) => {
+            const m = {};
+            (Array.isArray(ds) ? ds : [])
+                .filter(r => r.ambito === 'isla')
+                .forEach(r => {
+                    const y = String(r[yearField]);
+                    if (!m[y]) m[y] = {};
+                    m[y][String(r.isla_id)] = parseFloat(r[campo]);
+                });
+            return m;
+        };
+
+        const llegadas  = toMap(vp['$historicoLlegadas']       || [], 'year',      'turistas');
+        const plazas    = toMap(vp['$historicoPlazasRegladas'] || [], 'ejercicio', 'plazas');
+        const ocupacion = toMap(vp['$historicoTasaOcupacion']  || [], 'ejercicio', 'tasa');
+        const estancia  = toMap(vp['$historico_estancia_media']|| [], 'ejercicio', 'estancia');
+
+        const años = [...new Set([
+            ...Object.keys(llegadas),
+            ...Object.keys(plazas),
+            ...Object.keys(ocupacion),
+            ...Object.keys(estancia),
+        ])].sort();
+
+        if (!años.length) return null;
+
+        // Calcular turistas reglados para cada año.
+        // Para canarias: suma isla a isla usando solo las islas presentes en llegadas
+        // (las mismas 5 de E16028B), evitando incluir El Hierro y La Gomera que no
+        // están en esa encuesta y provocarían que T. reglados > Turistas.
+        // Para isla individual: fórmula directa con el dato de esa isla.
+        const tReglados = {};
+
+        if (ambito === 'canarias') {
+            // Islas que tienen datos de llegadas (E16028B: FV, GC, LP, LZ, TF)
+            const islaIdsConLlegadas = new Set(
+                (vp['$historicoLlegadas'] || [])
+                    .filter(r => r.ambito === 'isla')
+                    .map(r => String(r.isla_id))
+            );
+
+            const plazasIsla   = toMapIslas(vp['$historicoPlazasRegladas'] || [], 'ejercicio', 'plazas');
+            const ocupacionIsla = toMapIslas(vp['$historicoTasaOcupacion']  || [], 'ejercicio', 'tasa');
+            const estanciaIsla  = toMapIslas(vp['$historico_estancia_media']|| [], 'ejercicio', 'estancia');
+
+            años.forEach(y => {
+                let suma = 0;
+                for (const iid of islaIdsConLlegadas) {
+                    const pl = (plazasIsla[y]    || {})[iid];
+                    const oc = (ocupacionIsla[y]  || {})[iid];
+                    const es = (estanciaIsla[y]   || {})[iid];
+                    if (pl != null && oc != null && es != null && es > 0) {
+                        suma += (oc / 100) * pl * 365 / es;
+                    }
+                }
+                if (islaIdsConLlegadas.size > 0) tReglados[y] = suma;
+            });
+        } else {
+            años.forEach(y => {
+                const oc = ocupacion[y];
+                const pl = plazas[y];
+                const es = estancia[y];
+                if (oc != null && pl != null && es != null && es > 0) {
+                    tReglados[y] = (oc / 100) * pl * 365 / es;
+                }
+            });
+        }
+
+        const varPct = (v, base) => {
+            if (v == null || base == null || base === 0) return null;
+            return (v / base - 1) * 100;
+        };
+
+        const fmtVar = v => v != null ? fmt(v, 'decimal_1') + '\u00a0%' : '—';
+
+        const base = {
+            turistas:   llegadas[baseYear]  ?? null,
+            plazas:     plazas[baseYear]    ?? null,
+            ocupacion:  ocupacion[baseYear] ?? null,
+            estancia:   estancia[baseYear]  ?? null,
+            tReglados:  tReglados[baseYear] ?? null,
+            tVacacional: llegadas[baseYear] != null && tReglados[baseYear] != null
+                ? llegadas[baseYear] - tReglados[baseYear] : null,
+        };
+
+        const dataset = años.map(y => {
+            const tur  = llegadas[y]  ?? null;
+            const pla  = plazas[y]   ?? null;
+            const ocu  = ocupacion[y] ?? null;
+            const est  = estancia[y]  ?? null;
+            const treg = tReglados[y] ?? null;
+            const tvac = (tur != null && treg != null) ? tur - treg : null;
+
+            return {
+                etiqueta:    y,
+                esDestacada: y === baseYear,
+                celdas: [
+                    { valor: tur  != null ? fmt(tur,  'entero')    : '—', clase: 'col-dato' },
+                    { valor: fmtVar(varPct(tur,  base.turistas)),          clase: 'col-dato' },
+                    { valor: pla  != null ? fmt(pla,  'entero')    : '—', clase: 'col-dato' },
+                    { valor: fmtVar(varPct(pla,  base.plazas)),            clase: 'col-dato' },
+                    { valor: ocu  != null ? fmt(ocu,  'decimal_1') : '—', clase: 'col-dato' },
+                    { valor: fmtVar(varPct(ocu,  base.ocupacion)),         clase: 'col-dato' },
+                    { valor: est  != null ? fmt(est,  'decimal_1') : '—', clase: 'col-dato' },
+                    { valor: fmtVar(varPct(est,  base.estancia)),          clase: 'col-dato' },
+                    { valor: treg != null ? fmt(treg, 'entero')    : '—', clase: 'col-dato' },
+                    { valor: fmtVar(varPct(treg, base.tReglados)),         clase: 'col-dato' },
+                    { valor: tvac != null ? fmt(tvac, 'entero')    : '—', clase: 'col-dato' },
+                    { valor: fmtVar(varPct(tvac, base.tVacacional)),       clase: 'col-dato' },
+                ],
+            };
+        });
+
+        const cab = [
+            'Año',
+            'Turistas', 'Var\u00a0%',
+            'Plazas',   'Var\u00a0%',
+            'Ocupación','Var\u00a0%',
+            'Estancia', 'Var\u00a0%',
+            'T. reglados', 'Var\u00a0%',
+            'T. vacacionales', 'Var\u00a0%',
+        ];
+        dataset._cabecerasTabla = cab;
+        dataset._columnasCSV    = cab;
+        dataset._datosPuros     = this.aplanarParaCSV(dataset);
+
+        const wrapper = this.crearTabla(config, dataset);
+        if (wrapper) wrapper.querySelector('table').classList.add('tabla-anyo-estrecho');
+        return wrapper;
+    },
+
     _activarColapsible: function(wrapper) {
         wrapper.classList.add('tabla-colapsible', 'tabla-colapsada');
         const header = wrapper.querySelector('.tabla-header');

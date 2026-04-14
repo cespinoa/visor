@@ -28,15 +28,10 @@ window.CONFIG_TABLAS = {
     },
 
     'historico-llegadas-plazas-ocupacion': {
-        tipo:      'historico-ext',
+        tipo:      'historico-turismo',
         titulo:    'Evolución: llegadas, plazas regladas y tasa de ocupación',
         colapsible: true,
-        baseYear: '2010',
-        series: [
-            { dataset: 'historicoTasaOcupacion',  campo: 'tasa',     yearField: 'ejercicio', etiqueta: 'Ocupación', formato: 'decimal_1' },
-            { dataset: 'historicoPlazasRegladas',  campo: 'plazas',   yearField: 'ejercicio', etiqueta: 'Plazas',   formato: 'entero'   },
-            { dataset: 'historicoLlegadas',        campo: 'turistas', yearField: 'year',      etiqueta: 'Turistas', formato: 'entero'   },
-        ],
+        baseYear:  '2010',
     },
 
     'viviendas-terminadas-canarias': {

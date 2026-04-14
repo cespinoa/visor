@@ -77,6 +77,9 @@ final class DashboardController extends ControllerBase {
 
     // Obtenemos los censos de viviendas no habituales
     $censo_viviendas_no_habituales = $this->getCensoViviendasNoHabituales();
+
+    // Obtenemos el histórico de estancia media en alojamiento reglado
+    $historico_estancia_media = $this->getHistoricoEstanciaMedia();
     
 
     // Obtenemos las siluetas
@@ -132,6 +135,7 @@ final class DashboardController extends ControllerBase {
             '$historico_viviendas_terminadas' => $historico_viviendas_terminadas,
             '$historico_poblacion' => $historico_poblacion,
             '$censo_viviendas_no_habituales' => $censo_viviendas_no_habituales,
+            '$historico_estancia_media' => $historico_estancia_media,
           ],
         ],
       ],
@@ -273,6 +277,26 @@ final class DashboardController extends ControllerBase {
   }
 
 
+
+  public function getHistoricoEstanciaMedia(): array {
+    $conn = Database::getConnection('default', 'mapa_data');
+    $results = $conn->select('historico_estancia_media_reglada', 'h')
+      ->fields('h')
+      ->condition('ejercicio', 2009, '>')
+      ->execute()
+      ->fetchAll();
+
+    $dataset = [];
+    foreach ($results as $row) {
+      $dataset[] = [
+        'ejercicio' => $row->ejercicio,
+        'ambito'    => $row->ambito,
+        'isla_id'   => $row->isla_id,
+        'estancia'  => $row->estancia_media,
+      ];
+    }
+    return $dataset;
+  }
 
   public function getHistoricoTasaOcupacion() {
     $conn = Database::getConnection('default', 'mapa_data');
