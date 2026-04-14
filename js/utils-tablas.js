@@ -1170,14 +1170,22 @@
 
         const fmtVar = v => v != null ? fmt(v, 'decimal_1') + '\u00a0%' : '—';
 
+        // La var% de T. vacacionales arranca en 2012 (base 2012) para evitar
+        // acumulados de 5 cifras: antes de ese año el volumen es < 1M y la
+        // serie no es comparable con los valores posteriores.
+        const baseYearVac = '2012';
+        const tVacBase = (() => {
+            const t = llegadas[baseYearVac] ?? null;
+            const r = tReglados[baseYearVac] ?? null;
+            return (t != null && r != null) ? t - r : null;
+        })();
+
         const base = {
             turistas:   llegadas[baseYear]  ?? null,
             plazas:     plazas[baseYear]    ?? null,
             ocupacion:  ocupacion[baseYear] ?? null,
             estancia:   estancia[baseYear]  ?? null,
             tReglados:  tReglados[baseYear] ?? null,
-            tVacacional: llegadas[baseYear] != null && tReglados[baseYear] != null
-                ? llegadas[baseYear] - tReglados[baseYear] : null,
         };
 
         const dataset = años.map(y => {
@@ -1203,7 +1211,7 @@
                     { valor: treg != null ? fmt(treg, 'entero')    : '—', clase: 'col-dato' },
                     { valor: fmtVar(varPct(treg, base.tReglados)),         clase: 'col-dato' },
                     { valor: tvac != null ? fmt(tvac, 'entero')    : '—', clase: 'col-dato' },
-                    { valor: fmtVar(varPct(tvac, base.tVacacional)),       clase: 'col-dato' },
+                    { valor: y > baseYearVac ? fmtVar(varPct(tvac, tVacBase)) : '—', clase: 'col-dato' },
                 ],
             };
         });
