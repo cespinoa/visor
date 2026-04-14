@@ -87,6 +87,7 @@
           case 'radar':      utils.dibujarRadar(config, datosRaiz);       break;
           case 'linea-ext':       utils.dibujarLineaExt(config, datosRaiz);       break;
           case 'linea-multi-ext':   utils.dibujarLineaMultiExt(config, datosRaiz);   break;
+          case 'linea-turismo':     utils.dibujarLineaTurismo(config, datosRaiz);    break;
           case 'barras-ccaa-ext':   utils.dibujarBarrasCCAA(config, datosRaiz);     break;
           case 'pendiente-ccaa-ext': utils.dibujarPendienteCCAA(config, datosRaiz); break;
           case 'line':

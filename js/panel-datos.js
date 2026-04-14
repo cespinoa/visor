@@ -45,8 +45,9 @@
           destino: '#ficha-contenido',
           elementos: [
             { tipo: 'longtext', id: 'afluencia-plazas-ocupacion', ancho: '12' },
-            { tipo: 'grafico', id: 'llegadas-vs-plazas', ancho: '12', ambito: ['canarias', 'isla'] },
-            { tipo: 'tabla', id: 'historico-llegadas-plazas-ocupacion', ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'grafico', id: 'llegadas-vs-plazas',    ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'grafico', id: 'reglado-vs-vacacional', ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'tabla',   id: 'historico-llegadas-plazas-ocupacion', ancho: '12', ambito: ['canarias', 'isla'] },
             { tipo: 'longtext', id: 'impacto-modelo-turistico', ancho: '12' },
             { tipo: 'tabla', id: 'oferta-alojativa', ancho: '6'},
             { tipo: 'tabla', id: 'distribucion-plazas-vacacionales', ancho: '6' },

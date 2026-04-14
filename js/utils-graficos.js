@@ -14,7 +14,7 @@ window.visorProject.utilsGraficos = {
         if (config.tipo === 'radar') {
             return this.crearContenedorRadar(config, datosRaw, opciones);
         }
-        if (['linea-ext', 'linea-multi-ext', 'barras-ccaa-ext', 'pendiente-ccaa-ext', 'pendiente-pob-viv', 'pendiente-censos'].includes(config.tipo)) {
+        if (['linea-ext', 'linea-multi-ext', 'linea-turismo', 'barras-ccaa-ext', 'pendiente-ccaa-ext', 'pendiente-pob-viv', 'pendiente-censos'].includes(config.tipo)) {
             return this.crearContenedorLineaExt(config, opciones);
         }
 
@@ -1010,6 +1010,155 @@ window.visorProject.utilsGraficos = {
     },
 
     /**
+     * Gráfico de línea: turismo reglado vs vacacional, base 100 en 2012.
+     * Los valores de TR y TV se calculan internamente con la misma fórmula
+     * que crearTablaHistoricoTurismo (no son datasets directos).
+     */
+    dibujarLineaTurismo: function(config, registro) {
+        const canvas = document.getElementById(config.canvasId);
+        if (!canvas || !registro) return;
+
+        const vp      = drupalSettings.visorProject || {};
+        const baseYear = '2012';
+        const ambito  = registro.ambito;
+        const islaId  = String(registro.isla_id || '');
+
+        const filtrar = ds => {
+            const arr = Array.isArray(ds) ? ds : [];
+            if (ambito === 'canarias') return arr.filter(r => r.ambito === 'canarias');
+            return arr.filter(r => r.ambito === 'isla' && String(r.isla_id) === islaId);
+        };
+        const toMap = (ds, yearField, campo) => {
+            const m = {};
+            filtrar(ds).forEach(r => { m[String(r[yearField])] = parseFloat(r[campo]); });
+            return m;
+        };
+        const toMapIslas = (ds, yearField, campo) => {
+            const m = {};
+            (Array.isArray(ds) ? ds : []).filter(r => r.ambito === 'isla').forEach(r => {
+                const y = String(r[yearField]);
+                if (!m[y]) m[y] = {};
+                m[y][String(r.isla_id)] = parseFloat(r[campo]);
+            });
+            return m;
+        };
+
+        const llegadas  = toMap(vp['$historicoLlegadas']        || [], 'year',      'turistas');
+        const plazas    = toMap(vp['$historicoPlazasRegladas']  || [], 'ejercicio', 'plazas');
+        const ocupacion = toMap(vp['$historicoTasaOcupacion']   || [], 'ejercicio', 'tasa');
+        const estancia  = toMap(vp['$historico_estancia_media'] || [], 'ejercicio', 'estancia');
+
+        const todosAños = [...new Set([
+            ...Object.keys(llegadas), ...Object.keys(plazas),
+            ...Object.keys(ocupacion), ...Object.keys(estancia),
+        ])].sort();
+
+        // Calcular T. reglados (isla a isla para canarias, directo para isla)
+        const tReglados = {};
+        if (ambito === 'canarias') {
+            const islaIdsConLlegadas = new Set(
+                (vp['$historicoLlegadas'] || []).filter(r => r.ambito === 'isla').map(r => String(r.isla_id))
+            );
+            const plazasI    = toMapIslas(vp['$historicoPlazasRegladas']  || [], 'ejercicio', 'plazas');
+            const ocupacionI = toMapIslas(vp['$historicoTasaOcupacion']   || [], 'ejercicio', 'tasa');
+            const estanciaI  = toMapIslas(vp['$historico_estancia_media'] || [], 'ejercicio', 'estancia');
+            todosAños.forEach(y => {
+                let suma = 0;
+                for (const iid of islaIdsConLlegadas) {
+                    const pl = (plazasI[y]    || {})[iid];
+                    const oc = (ocupacionI[y] || {})[iid];
+                    const es = (estanciaI[y]  || {})[iid];
+                    if (pl != null && oc != null && es != null && es > 0) suma += (oc / 100) * pl * 365 / es;
+                }
+                if (islaIdsConLlegadas.size > 0) tReglados[y] = suma;
+            });
+        } else {
+            todosAños.forEach(y => {
+                const oc = ocupacion[y], pl = plazas[y], es = estancia[y];
+                if (oc != null && pl != null && es != null && es > 0) tReglados[y] = (oc / 100) * pl * 365 / es;
+            });
+        }
+
+        // Filtrar años >= 2012 y calcular T. vacacional
+        const años    = todosAños.filter(y => y >= baseYear);
+        const baseReg = tReglados[baseYear] ?? null;
+        const baseTur = llegadas[baseYear]  ?? null;
+        const baseVac = (baseTur != null && baseReg != null) ? baseTur - baseReg : null;
+
+        const norm = (v, base) => (v != null && base) ? Math.round((v / base) * 1000) / 10 : null;
+
+        const regIdx = años.map(y => norm(tReglados[y] ?? null, baseReg));
+        const vacIdx = años.map(y => {
+            const tur  = llegadas[y]  ?? null;
+            const treg = tReglados[y] ?? null;
+            return norm((tur != null && treg != null) ? tur - treg : null, baseVac);
+        });
+
+        new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: años,
+                datasets: [
+                    {
+                        label:           'T. reglados',
+                        data:            regIdx,
+                        borderColor:     '#555555',
+                        backgroundColor: 'transparent',
+                        borderWidth:     2,
+                        pointRadius:     3,
+                        tension:         0.3,
+                        borderDash:      [5, 3],
+                    },
+                    {
+                        label:           'T. vacacionales',
+                        data:            vacIdx,
+                        borderColor:     '#a70000',
+                        backgroundColor: 'rgba(167,0,0,0.07)',
+                        borderWidth:     2,
+                        pointRadius:     3,
+                        tension:         0.3,
+                    },
+                ],
+            },
+            options: {
+                responsive:          true,
+                maintainAspectRatio: true,
+                aspectRatio:         3,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: { display: true, text: 'Índice (2012 = 100)', font: { size: 11 } },
+                    },
+                },
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        mode:      'index',
+                        intersect: false,
+                        callbacks: {
+                            label: ctx => {
+                                const v = ctx.parsed.y;
+                                return ` ${ctx.dataset.label}: ${v !== null ? v.toFixed(1) : '—'}`;
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        const tablaEl = document.getElementById(config.canvasId + '-tabla');
+        if (!tablaEl) return;
+
+        const fmt = v => (v == null || isNaN(v)) ? '—' : v.toFixed(1);
+        let html = '<table class="linea-ext-tabla__table">'
+            + '<thead><tr><th></th>' + años.map(y => `<th>${y}</th>`).join('') + '</tr></thead><tbody>'
+            + '<tr><th>T. reglados</th>'    + regIdx.map(v => `<td>${fmt(v)}</td>`).join('') + '</tr>'
+            + '<tr><th>T. vacacionales</th>' + vacIdx.map(v => `<td>${fmt(v)}</td>`).join('') + '</tr>'
+            + '</tbody></table>';
+        tablaEl.innerHTML = html;
+    },
+
+    /**
      * Barras horizontales ordenadas de mayor a menor para el último año disponible.
      * Destaca las entradas indicadas en config.config.destacadas con rojo más oscuro.
      */
@@ -1633,6 +1782,9 @@ window.visorProject.utilsGraficos = {
                             break;
                         case 'linea-multi-ext':
                             self.dibujarLineaMultiExt(config, Array.isArray(datos) ? datos[datos.length - 1] : datos);
+                            break;
+                        case 'linea-turismo':
+                            self.dibujarLineaTurismo(config, Array.isArray(datos) ? datos[datos.length - 1] : datos);
                             break;
                         case 'barras-ccaa-ext':
                             self.dibujarBarrasCCAA(config, Array.isArray(datos) ? datos[datos.length - 1] : datos);

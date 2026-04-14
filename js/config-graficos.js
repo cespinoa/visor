@@ -71,6 +71,11 @@ window.CONFIG_GRAFICOS = {
         },
     },
 
+    'reglado-vs-vacacional': {
+        tipo:   'linea-turismo',
+        titulo: 'Turismo reglado vs vacacional (base 2012 = 100)',
+    },
+
     // ── Censos de viviendas no habituales — índice base 100 ─────────────────
 
     'no-hab-censos': {
