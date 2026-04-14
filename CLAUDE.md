@@ -671,6 +671,88 @@ En publicaciones, puede mencionarse en una nota al pie: *«Los datos de llegadas
 
 ---
 
+## Correlación entre rit_r/rit_v y T. reglados/T. vacacionales
+
+### rit_r y T. reglados: misma fuente, correlación = 1
+
+Las tres variables proceden del mismo dato base (plazas regladas × tasa de ocupación):
+
+```
+pte_r       = plazas × (ocupacion / 100)          — turistas presentes de media por día
+T. reglados = pte_r × 365 / estancia_media_r       — llegadas anuales
+rit_r       = pte_r / población × 100              — presión diaria por residente
+```
+
+La única diferencia es el divisor — `estancia_media` (varía lentamente: 6,6–7,8 noches) y `población` (crece despacio). En la práctica la correlación es ~1,0. No aportan información independiente; son dos lentes sobre el mismo hecho: `T. reglados` mide volumen anual de llegadas, `rit_r` mide intensidad de presencia diaria por residente.
+
+### rit_v y T. vacacionales: fuentes distintas, divergencia estructural
+
+Proceden de metodologías completamente diferentes:
+
+| | `T. vacacionales` | `rit_v` / `pte_v` |
+|---|---|---|
+| **Fuente** | E16028B (encuesta llegadas) − T. reglados | `pte_vacacional`: noches\_vv / 365 |
+| **Qué mide** | Visitantes que llegan a Canarias sin alojamiento reglado | Ocupación media diaria de plazas VV |
+| **Turismo nacional peninsular** | Incluido (llegan por avión/ferry) | Incluido |
+| **Residentes canarios en VV** | No incluido | Incluido |
+| **Estancias largas no turísticas** | No incluido | Incluido |
+
+### Brecha de estancia media: reglada vs vacacional (2025)
+
+La VV tiene una estancia un 30–38% más corta que el alojamiento reglado:
+
+| Isla | Est. reglada | Est. VV | Diferencia |
+|---|---|---|---|
+| Fuerteventura | 7,80 n | 5,06 n | −35% |
+| Gran Canaria | 7,57 n | 4,71 n | −38% |
+| Lanzarote | 7,47 n | 5,07 n | −32% |
+| Tenerife | 6,69 n | 4,81 n | −28% |
+| La Palma | 6,62 n | 4,80 n | −27% |
+
+Al convertir `pte_v → turistas anuales` (`pte_v × 365 / estancia_vv`) se divide por un número más pequeño que en el sector reglado, lo que infla el recuento respecto al método residual.
+
+### Magnitud de la brecha (Canarias, usando estancia VV real por isla)
+
+| Año | T. reglados | T. vac residual | T. vac (registro VV) | Ratio residual/registro |
+|---|---|---|---|---|
+| 2019 | 12,38 M | 3,21 M | 11,07 M | 29% |
+| **2020** | **3,80 M** | **1,04 M** | **10,15 M** | **10%** |
+| **2021** | **5,73 M** | **1,20 M** | **10,35 M** | **12%** |
+| 2022 | 11,76 M | 3,23 M | 13,12 M | 25% |
+| 2023 | 12,86 M | 3,84 M | 13,15 M | 29% |
+| 2024 | 13,46 M | 4,96 M | 14,43 M | 34% |
+| 2025 | 13,57 M | 5,45 M | 13,24 M | 41% |
+
+### El año 2020 como experimento natural
+
+En 2020 el turismo internacional se desplomó al ~32% de lo normal (aeropuertos casi cerrados). El método residual da 1,04 M de turistas vacacionales. El registro VV da el equivalente a 10,15 M — **10 veces más**.
+
+Esos ~9 M de diferencia son ocupaciones en VV que no generaron ninguna "llegada" a Canarias en la encuesta: residentes canarios en turismo interno, estancias largas de trabajadores o nómadas digitales, y turismo de proximidad sin vuelo internacional. En 2020 el 90% de la ocupación VV era de ese tipo. En 2025, con el turismo exterior recuperado, el porcentaje exterior sube al ~41%.
+
+### Desglose por isla 2025: el patrón confirma la hipótesis
+
+| Isla | T. vac residual | T. vac registro VV | Ratio | Lectura |
+|---|---|---|---|---|
+| Lanzarote | 1,07 M | 2,38 M | 45% | VV muy ligada al turista internacional |
+| Fuerteventura | 0,79 M | 1,83 M | 43% | Ídem |
+| Tenerife | 2,33 M | 5,58 M | 42% | Mezcla: turismo nacional significativo |
+| Gran Canaria | 1,14 M | 2,93 M | 39% | Ídem |
+| La Palma | 0,12 M | 0,52 M | 23% | Solo 1 de cada 4 noches VV es turismo exterior |
+
+La Palma tiene el ratio más bajo porque su VV está usada predominantemente por viajeros nacionales, canarios y estancias largas, no por turismo masivo internacional.
+
+### Conclusión metodológica
+
+Los dos indicadores son **complementarios, no redundantes**:
+
+- **`T. vacacionales` (residual)** — para la tesis de la *transformación del modelo turístico*: mide cuánta demanda turística exterior ha migrado del canal reglado al vacacional. Es el indicador correcto para el análisis histórico de largo plazo (2010–2025).
+
+- **`rit_v` (registro VV)** — para el análisis de *presión sobre el territorio y la vivienda*: da igual que quien ocupa la VV sea un turista alemán, un madrileño o un canario de otra isla — la vivienda está igualmente sacada del mercado residencial y la presión sobre infraestructuras es la misma.
+
+No se puede comparar `T. vacacionales` con `pte_v × 365/estancia_vv` esperando coherencia: están midiendo universos solapados pero distintos.
+
+---
+
 ## Lo que está incompleto o en progreso
 
 - `panel-datos.js.antes_de_unificar` — versión anterior del panel de datos, conservada como referencia
