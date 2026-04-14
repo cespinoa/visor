@@ -560,6 +560,117 @@ El esquema del informe (método `_getEsquema`) replica el contenido de `panel-da
 - Botón "Generar PDF" en el nodo Drupal.
 - Menú de acceso a informes existentes, notas metodológicas y páginas de info (Views + menú Drupal).
 
+## Turismo reglado vs. vacacional — metodología y hallazgos
+
+### Contexto analítico
+
+El visor distingue dos modalidades de demanda turística:
+
+- **Turismo reglado (T. reglados)**: turistas que pernoctaron en alojamiento reglado (hoteles, apartamentos turísticos). Fuente: Encuesta de Turismo Receptor ISTAC / E16028B (Frontur-Canarias).
+- **Turismo vacacional (T. vacacionales)**: turistas totales menos T. reglados. No son turistas en vivienda vacacional en sentido estricto; son el residuo una vez separados los que usaron oferta reglada. Incluye turistas en casas de amigos, intercambios, etc., pero el grueso es vivienda vacacional.
+
+### Fórmula de T. reglados
+
+```
+T. reglados = (ocupacion / 100) × plazas_regladas × 365 / estancia_media
+```
+
+Donde `ocupacion` es la tasa de ocupación en plazas del alojamiento reglado, `plazas_regladas` son las plazas ofertadas ese año, y `estancia_media` es la estancia media en noches de ese año.
+
+**Por qué hay que usar estancia media año a año (no un coeficiente fijo):**
+La tasa de ocupación ya incorpora la estancia media en su cálculo: `ocupacion = (turistas × estancia_media) / (plazas × 365)`. Por tanto, si se usa un coeficiente de 1 pernoctación por turista (equivalente a congelar `estancia_media = 1`) o el valor de un año concreto, el resultado es incorrecto para los demás años. La tabla `historico_estancia_media_reglada` proporciona el valor real por año y ámbito.
+
+### Cobertura de la encuesta y agregación por islas (Canarias)
+
+La Encuesta de Turismo Receptor (E16028B) solo cubre **5 de las 7 islas** de Canarias:
+
+| Isla | isla_id | ¿En la encuesta? |
+|---|---|---|
+| Fuerteventura | 2 | Sí |
+| Gran Canaria | 3 | Sí |
+| La Palma | 5 | Sí |
+| Lanzarote | 6 | Sí |
+| Tenerife | 7 | Sí |
+| El Hierro | 1 | No |
+| La Gomera | 4 | No |
+
+El total de Canarias en `turistas_llegadas` ya es solo la suma de las 5 islas cubiertas (isla_ids 2, 3, 5, 6, 7), confirmado por consulta directa a la BD. Por ello:
+
+- **Para ámbito isla**: T. reglados se calcula con datos de esa isla directamente.
+- **Para ámbito canarias**: T. reglados se calcula sumando isla a isla, usando solo las islas presentes en `$historicoLlegadas` (el mapa isla_id → año → turistas). Así se evita usar el total de Canarias que excluiría las plazas y ocupación de El Hierro y La Gomera del numerador mientras estas islas sí están en el denominador.
+
+La lógica isla a isla se implementa con `toMapIslas()`, un helper que transforma el dataset en `{year → {isla_id → value}}`, permitiendo lookups cruzados eficientes.
+
+### Base de variación acumulada para T. vacacionales
+
+La columna "Var TV %" en `crearTablaHistoricoTurismo` usa **2012 como año base** (no 2010). Los años 2010, 2011 y 2012 muestran `—`. Motivo: hasta 2012 el turismo vacacional no había alcanzado 1 millón de turistas; el porcentaje acumulado desde 2010 generaría cifras de 5 dígitos que no serían interpretables.
+
+Variable interna: `baseYearVac = '2012'`.
+
+### Gráfico `reglado-vs-vacacional` (tipo `linea-turismo`)
+
+Configurado en `CONFIG_GRAFICOS` como `tipo: 'linea-turismo'`. Se renderiza con `dibujarLineaTurismo(config, registro)` en `utils-graficos.js`. Características:
+
+- Filtra años ≥ 2012.
+- Normaliza ambas series a **base 100 en 2012**.
+- Línea gris discontinua = T. reglados. Línea roja rellena = T. vacacionales.
+- Incluye tabla de índices al pie.
+- Registrado en `utils-informes.js` como `case 'linea-turismo'` para su generación en PDF.
+
+### Hallazgos clave del análisis (Canarias, datos hasta 2025)
+
+| Año | T. reglados | T. vacacionales | Total llegadas |
+|---|---|---|---|
+| 2010 | ~11,0 M | ~50 K | ~11,1 M |
+| 2012 | ~10,8 M | ~218 K | ~11,0 M |
+| 2017 | ~13,57 M | ~2,7 M | ~16,3 M |
+| 2019 | ~13,2 M | ~4,1 M | ~17,3 M |
+| 2023 | ~13,4 M | ~5,1 M | ~18,5 M |
+| 2025 | ~13,5 M | ~5,45 M | ~19,0 M |
+
+**Lectura:** el turismo reglado creció hasta 2017 y desde entonces se mantiene estable o baja ligeramente, sin haber superado ese techo. Todo el crecimiento posterior proviene del turismo vacacional: de ~50 K en 2010 a ~5,45 M en 2025, un factor ×109. La moratoría turística de 2001-2002 contuvo la oferta reglada visible, pero la demanda continuó creciendo y se canalizó hacia el segmento vacacional no reglado.
+
+**Tesis central**: El turismo vacacional ha transformado el modelo turístico de Canarias de manera estructural, sin gobernanza explícita, compitiendo directamente con el parque de vivienda residencial.
+
+---
+
+## Nota metodológica: El Hierro y La Gomera fuera de la encuesta
+
+### Situación
+
+La Encuesta de Turismo Receptor (E16028B / Frontur-Canarias) del ISTAC **no recoge datos de llegadas de turistas en El Hierro (isla_id 1) ni La Gomera (isla_id 4)**. El total de Canarias que usa el modelo es, de hecho, la suma de las 5 islas cubiertas (FV, GC, LP, LZ, TF).
+
+Esto significa que cuando se calcula T. vacacionales como `total − T. reglados`:
+
+- El "total" de Canarias ya excluye los turistas de El Hierro y La Gomera.
+- Pero al calcular T. reglados, si se usara el total de Canarias de plazas y ocupación (que sí incluye esas islas), T. reglados quedaría inflado y T. vacacionales negativo o erróneo.
+- La implementación isla a isla resuelve esto: T. reglados de Canarias = suma de T. reglados de las 5 islas de la encuesta. Las plazas y ocupación de El Hierro y La Gomera se excluyen del cálculo.
+
+### Consecuencia real
+
+El modelo **subestima** ligeramente el turismo vacacional total de Canarias, porque los turistas vacacionales que visitan El Hierro y La Gomera no aparecen en el "total" del que se resta T. reglados. No hay contaminación (T. reglados no se infla), solo una ligera omisión en T. vacacionales.
+
+### Magnitud de la omisión
+
+T. reglados estimados para El Hierro + La Gomera (usando sus plazas y ocupación del modelo):
+
+| Año | El Hierro | La Gomera | Total EH+LG |
+|---|---|---|---|
+| 2022 | ~53 K | ~76 K | ~129 K |
+| 2023 | ~55 K | ~78 K | ~133 K |
+| 2024 | ~57 K | ~81 K | ~138 K |
+| 2025 | ~59 K | ~82 K | ~141 K |
+
+Frente a un T. vacacionales de ~5,45 M en 2025, la corrección sería **< 2,6 %**. Frente al total de llegadas (~19 M), **< 0,75 %**.
+
+### Implicación para el discurso público
+
+La exclusión de estas dos islas no compromete las conclusiones del análisis. El Hierro y La Gomera son islas con turismo predominantemente de naturaleza y baja densidad de VV. Su inclusión elevaría marginalmente T. vacacionales pero no alteraría la tendencia estructural (crecimiento ×109 desde 2010) ni la tesis de la transformación del modelo sin gobernanza.
+
+En publicaciones, puede mencionarse en una nota al pie: *«Los datos de llegadas no incluyen El Hierro ni La Gomera (fuera del alcance de la E16028B). El efecto sobre el total de Canarias es inferior al 1 %.»*
+
+---
+
 ## Lo que está incompleto o en progreso
 
 - `panel-datos.js.antes_de_unificar` — versión anterior del panel de datos, conservada como referencia
