@@ -28,10 +28,18 @@ window.CONFIG_TABLAS = {
     },
 
     'historico-llegadas-plazas-ocupacion': {
-        tipo:      'historico-turismo',
-        titulo:    'Evolución: llegadas, plazas regladas y tasa de ocupación',
+        tipo:       'historico-turismo',
+        titulo:     'Evolución: llegadas, plazas regladas, ocupación y estancia media',
         colapsible: true,
-        baseYear:  '2010',
+        baseYear:   '2010',
+    },
+
+    'turismo-reglado-vs-vacacional': {
+        tipo:        'historico-turismo-derivado',
+        titulo:      'Turismo reglado y vacacional',
+        colapsible:  true,
+        baseYear:    '2010',
+        baseYearVac: '2012',
     },
 
     'viviendas-terminadas-canarias': {

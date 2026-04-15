@@ -322,9 +322,16 @@
             return tablaDOM;
         }
 
-        // Tabla histórica de turismo con columnas derivadas (reglados / vacacionales)
+        // Tabla histórica de turismo: llegadas, plazas, ocupación, estancia
         if (config.tipo === 'historico-turismo') {
             const tablaDOM = motorTablas.crearTablaHistoricoTurismo(config, props);
+            if (tablaDOM) this.añadirFuncionalidadFullscreen(tablaDOM);
+            return tablaDOM;
+        }
+
+        // Tabla derivada: turismo reglado vs vacacional
+        if (config.tipo === 'historico-turismo-derivado') {
+            const tablaDOM = motorTablas.crearTablaHistoricoTurismoDerivado(config, props);
             if (tablaDOM) this.añadirFuncionalidadFullscreen(tablaDOM);
             return tablaDOM;
         }

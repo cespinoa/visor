@@ -916,24 +916,33 @@ window.visorProject.utilsGraficos = {
             return ds.filter(r => r.ambito === 'isla' && String(r.isla_id) === islaId);
         };
 
-        // Construye los datos indexados de cada serie
+        // Construye los datos de cada serie (indexados o valores reales según ejeY)
         const seriesData = seriesConf.map(sc => {
             const ds       = settings[sc.dataset] || settings['$' + sc.dataset] || [];
             const filtro   = filtrarEntidad(ds);
             const ordenado = filtro.slice().sort((a, b) =>
                 String(a[sc.yearField]).localeCompare(String(b[sc.yearField])));
 
-            const baseRec   = ordenado.find(r => String(r[sc.yearField]) === baseYear);
-            const baseValue = baseRec ? parseFloat(baseRec[sc.campo]) : null;
+            const years = ordenado.map(r => String(r[sc.yearField]));
 
-            const years   = ordenado.map(r => String(r[sc.yearField]));
-            const indexed = ordenado.map(r => {
-                if (!baseValue) return null;
-                const v = parseFloat(r[sc.campo]);
-                return isNaN(v) ? null : Math.round((v / baseValue) * 1000) / 10; // 1 decimal
-            });
+            let valores;
+            if (sc.ejeY === 'derecha') {
+                // Valores reales, sin normalizar
+                valores = ordenado.map(r => {
+                    const v = parseFloat(r[sc.campo]);
+                    return isNaN(v) ? null : Math.round(v * 10) / 10;
+                });
+            } else {
+                const baseRec   = ordenado.find(r => String(r[sc.yearField]) === baseYear);
+                const baseValue = baseRec ? parseFloat(baseRec[sc.campo]) : null;
+                valores = ordenado.map(r => {
+                    if (!baseValue) return null;
+                    const v = parseFloat(r[sc.campo]);
+                    return isNaN(v) ? null : Math.round((v / baseValue) * 1000) / 10;
+                });
+            }
 
-            return { ...sc, years, indexed };
+            return { ...sc, years, valores };
         });
 
         // Eje X: unión ordenada de todos los años
@@ -942,8 +951,10 @@ window.visorProject.utilsGraficos = {
 
         const lookupVal = (s, year) => {
             const idx = s.years.indexOf(year);
-            return idx >= 0 ? s.indexed[idx] : null;
+            return idx >= 0 ? s.valores[idx] : null;
         };
+
+        const hayEjeDerecha = seriesData.some(s => s.ejeY === 'derecha');
 
         const chartDatasets = seriesData.map((s, i) => {
             const ds = {
@@ -954,10 +965,28 @@ window.visorProject.utilsGraficos = {
                 borderWidth:     i === 0 ? 2 : 1.5,
                 pointRadius:     i === 0 ? 3 : 2,
                 tension:         0.3,
+                yAxisID:         s.ejeY === 'derecha' ? 'yDer' : 'y',
             };
             if (s.borderDash) ds.borderDash = s.borderDash;
             return ds;
         });
+
+        const scalesConfig = {
+            y: {
+                beginAtZero: false,
+                title: { display: true, text: `Índice (${baseYear}=100)` },
+            },
+        };
+        if (hayEjeDerecha) {
+            const seriesDer = seriesData.filter(s => s.ejeY === 'derecha');
+            const tituloDer = config.config.tituloDer || seriesDer.map(s => s.etiqueta).join(' / ');
+            scalesConfig.yDer = {
+                position:    'right',
+                beginAtZero: false,
+                grid:        { drawOnChartArea: false },
+                title:       { display: true, text: tituloDer },
+            };
+        }
 
         new Chart(canvas.getContext('2d'), {
             type: 'line',
@@ -966,12 +995,7 @@ window.visorProject.utilsGraficos = {
                 responsive:          true,
                 maintainAspectRatio: true,
                 aspectRatio:         3,
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        title: { display: true, text: `Índice (${baseYear}=100)` },
-                    }
-                },
+                scales: scalesConfig,
                 plugins: {
                     legend: { position: 'bottom' },
                     tooltip: {
@@ -980,7 +1004,8 @@ window.visorProject.utilsGraficos = {
                         callbacks: {
                             label: ctx => {
                                 const v = ctx.parsed.y;
-                                return ` ${ctx.dataset.label}: ${v !== null ? v.toFixed(1) : '—'}`;
+                                if (v === null) return null;
+                                return ` ${ctx.dataset.label}: ${v.toFixed(1)}`;
                             }
                         }
                     }
@@ -992,7 +1017,10 @@ window.visorProject.utilsGraficos = {
         const tablaEl = document.getElementById(config.canvasId + '-tabla');
         if (!tablaEl) return;
 
-        const fmt = v => (v === null || v === undefined || isNaN(v)) ? '—' : v.toFixed(1);
+        const fmt = (v) => {
+            if (v === null || v === undefined || isNaN(v)) return '—';
+            return v.toFixed(1);
+        };
 
         let html = '<table class="linea-ext-tabla__table">';
         html += '<thead><tr><th></th>'

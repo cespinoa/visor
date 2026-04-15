@@ -40,7 +40,7 @@ window.CONFIG_GRAFICOS = {
 
     'llegadas-vs-plazas': {
         tipo:   'linea-multi-ext',
-        titulo: 'Llegadas de turistas vs plazas regladas (base 2010=100)',
+        titulo: 'Llegadas, plazas regladas, ocupación y estancia media (base 2010=100)',
         config: {
             baseYear: '2010',
             series: [
@@ -66,6 +66,14 @@ window.CONFIG_GRAFICOS = {
                     etiqueta:  'Tasa de ocupación reglada',
                     color:     '#2b7abf',
                     borderDash: [3, 3],
+                },
+                {
+                    dataset:    'historico_estancia_media',
+                    campo:      'estancia',
+                    yearField:  'ejercicio',
+                    etiqueta:   'Estancia media (noches)',
+                    color:      '#e67e22',
+                    borderDash: [2, 2],
                 },
             ],
         },
