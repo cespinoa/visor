@@ -392,6 +392,12 @@ tr.fila-destacada td {
     display: none !important;
 }
 
+/* Fórmulas matemáticas: evitar corte de página dentro del bloque */
+.formula-bloque {
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
 /* ==========================================================================
    GRÁFICOS: imágenes generadas desde canvas
    ========================================================================== */

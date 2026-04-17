@@ -1107,46 +1107,133 @@ window.visorProject.utilsGraficos = {
             });
         }
 
-        // Filtrar años >= 2012 y calcular T. vacacional
-        const años    = todosAños.filter(y => y >= baseYear);
-        const baseReg = tReglados[baseYear] ?? null;
-        const baseTur = llegadas[baseYear]  ?? null;
-        const baseVac = (baseTur != null && baseReg != null) ? baseTur - baseReg : null;
+        const modoAbsoluto = (config.config || {}).modo === 'absoluto';
+        const startYear   = modoAbsoluto ? '2010' : baseYear;
 
-        const norm = (v, base) => (v != null && base) ? Math.round((v / base) * 1000) / 10 : null;
+        // Filtrar años y calcular T. vacacional
+        const años = todosAños.filter(y => y >= startYear);
 
-        const regIdx = años.map(y => norm(tReglados[y] ?? null, baseReg));
-        const vacIdx = años.map(y => {
-            const tur  = llegadas[y]  ?? null;
-            const treg = tReglados[y] ?? null;
-            return norm((tur != null && treg != null) ? tur - treg : null, baseVac);
+        // Regresión lineal (mínimos cuadrados) sobre puntos {x, y} no nulos
+        const regresionLineal = (puntos) => {
+            if (puntos.length < 2) return null;
+            const n  = puntos.length;
+            const sx = puntos.reduce((s, p) => s + p.x, 0);
+            const sy = puntos.reduce((s, p) => s + p.y, 0);
+            const sx2 = puntos.reduce((s, p) => s + p.x * p.x, 0);
+            const sxy = puntos.reduce((s, p) => s + p.x * p.y, 0);
+            const denom = n * sx2 - sx * sx;
+            if (denom === 0) return null;
+            const slope     = (n * sxy - sx * sy) / denom;
+            const intercept = (sy - slope * sx) / n;
+            return { slope, intercept };
+        };
+
+        const COVID   = new Set(['2020', '2021', '2022']);
+        const PIVOTE  = '2017';
+
+        // Calcula los valores de tendencia para un subconjunto de índices,
+        // dejando null fuera de ese subconjunto. iDesde e iHasta son inclusivos.
+        const calcTendencia = (serie, iDesde, iHasta) => {
+            const puntos = años
+                .map((y, i) => ({ x: i, y: serie[i] }))
+                .filter(p => p.x >= iDesde && p.x <= iHasta && !COVID.has(años[p.x]) && p.y != null);
+            const lr = regresionLineal(puntos);
+            if (!lr) return null;
+            return años.map((_, i) => {
+                if (i < iDesde || i > iHasta) return null;
+                return Math.round((lr.slope * i + lr.intercept) * 10) / 10;
+            });
+        };
+
+        let serieReg, serieVac,
+            tendReg1, tendReg2, tendVac1, tendVac2,
+            yTitle, fmtTooltip, fmtTabla;
+
+        if (modoAbsoluto) {
+            // Valores absolutos en millones (1 decimal)
+            const toM = v => v != null ? Math.round(v / 100000) / 10 : null;
+            serieReg = años.map(y => toM(tReglados[y] ?? null));
+            serieVac = años.map(y => {
+                const tur  = llegadas[y]  ?? null;
+                const treg = tReglados[y] ?? null;
+                return toM((tur != null && treg != null) ? tur - treg : null);
+            });
+
+            // Índices de los tramos: hasta pivote (inclusivo) y desde pivote (inclusivo)
+            const iPivote = años.indexOf(PIVOTE);
+            const iUltimo = años.length - 1;
+            const iInicio = 0;
+
+            tendReg1 = iPivote >= 0 ? calcTendencia(serieReg, iInicio, iPivote) : null;
+            tendReg2 = iPivote >= 0 ? calcTendencia(serieReg, iPivote, iUltimo) : null;
+            tendVac1 = iPivote >= 0 ? calcTendencia(serieVac, iInicio, iPivote) : null;
+            tendVac2 = iPivote >= 0 ? calcTendencia(serieVac, iPivote, iUltimo) : null;
+
+            yTitle     = 'Millones de turistas';
+            fmtTooltip = (v) => v !== null ? v.toFixed(1) + ' M' : '—';
+            fmtTabla   = (v) => (v == null || isNaN(v)) ? '—' : v.toFixed(1) + ' M';
+        } else {
+            // Índice base 100 en 2012
+            const baseReg = tReglados[baseYear] ?? null;
+            const baseTur = llegadas[baseYear]  ?? null;
+            const baseVac = (baseTur != null && baseReg != null) ? baseTur - baseReg : null;
+            const norm    = (v, base) => (v != null && base) ? Math.round((v / base) * 1000) / 10 : null;
+            serieReg = años.map(y => norm(tReglados[y] ?? null, baseReg));
+            serieVac = años.map(y => {
+                const tur  = llegadas[y]  ?? null;
+                const treg = tReglados[y] ?? null;
+                return norm((tur != null && treg != null) ? tur - treg : null, baseVac);
+            });
+            tendReg1 = null; tendReg2 = null;
+            tendVac1 = null; tendVac2 = null;
+            yTitle     = 'Índice (2012 = 100)';
+            fmtTooltip = (v) => v !== null ? v.toFixed(1) : '—';
+            fmtTabla   = (v) => (v == null || isNaN(v)) ? '—' : v.toFixed(1);
+        }
+
+        const tendenciaDs = (label, data, color) => ({
+            label,
+            data,
+            borderColor:     color,
+            backgroundColor: 'transparent',
+            borderWidth:     1.5,
+            pointRadius:     0,
+            tension:         0,
+            borderDash:      [2, 4],
         });
+
+        const datasetsChart = [
+            {
+                label:           'T. reglados',
+                data:            serieReg,
+                borderColor:     '#555555',
+                backgroundColor: 'transparent',
+                borderWidth:     2,
+                pointRadius:     3,
+                tension:         0.3,
+                borderDash:      [5, 3],
+            },
+            {
+                label:           'T. vacacionales',
+                data:            serieVac,
+                borderColor:     '#a70000',
+                backgroundColor: 'rgba(167,0,0,0.07)',
+                borderWidth:     2,
+                pointRadius:     3,
+                tension:         0.3,
+            },
+        ];
+        if (tendReg1) datasetsChart.push(tendenciaDs('Tendencia reglados (hasta 2017)',    tendReg1, '#aaaaaa'));
+        if (tendReg2) datasetsChart.push(tendenciaDs('Tendencia reglados (desde 2017)',    tendReg2, '#aaaaaa'));
+        if (tendVac1) datasetsChart.push(tendenciaDs('Tendencia vacacionales (hasta 2017)', tendVac1, 'rgba(167,0,0,0.45)'));
+        if (tendVac2) datasetsChart.push(tendenciaDs('Tendencia vacacionales (desde 2017)', tendVac2, 'rgba(167,0,0,0.45)'));
+
 
         new Chart(canvas.getContext('2d'), {
             type: 'line',
             data: {
                 labels: años,
-                datasets: [
-                    {
-                        label:           'T. reglados',
-                        data:            regIdx,
-                        borderColor:     '#555555',
-                        backgroundColor: 'transparent',
-                        borderWidth:     2,
-                        pointRadius:     3,
-                        tension:         0.3,
-                        borderDash:      [5, 3],
-                    },
-                    {
-                        label:           'T. vacacionales',
-                        data:            vacIdx,
-                        borderColor:     '#a70000',
-                        backgroundColor: 'rgba(167,0,0,0.07)',
-                        borderWidth:     2,
-                        pointRadius:     3,
-                        tension:         0.3,
-                    },
-                ],
+                datasets: datasetsChart,
             },
             options: {
                 responsive:          true,
@@ -1154,8 +1241,8 @@ window.visorProject.utilsGraficos = {
                 aspectRatio:         3,
                 scales: {
                     y: {
-                        beginAtZero: false,
-                        title: { display: true, text: 'Índice (2012 = 100)', font: { size: 11 } },
+                        beginAtZero: modoAbsoluto,
+                        title: { display: true, text: yTitle, font: { size: 11 } },
                     },
                 },
                 plugins: {
@@ -1165,8 +1252,9 @@ window.visorProject.utilsGraficos = {
                         intersect: false,
                         callbacks: {
                             label: ctx => {
-                                const v = ctx.parsed.y;
-                                return ` ${ctx.dataset.label}: ${v !== null ? v.toFixed(1) : '—'}`;
+                                // Ocultar las líneas de tendencia del tooltip
+                                if (ctx.dataset.label.startsWith('Tendencia')) return null;
+                                return ` ${ctx.dataset.label}: ${fmtTooltip(ctx.parsed.y)}`;
                             },
                         },
                     },
@@ -1177,11 +1265,10 @@ window.visorProject.utilsGraficos = {
         const tablaEl = document.getElementById(config.canvasId + '-tabla');
         if (!tablaEl) return;
 
-        const fmt = v => (v == null || isNaN(v)) ? '—' : v.toFixed(1);
         let html = '<table class="linea-ext-tabla__table">'
             + '<thead><tr><th></th>' + años.map(y => `<th>${y}</th>`).join('') + '</tr></thead><tbody>'
-            + '<tr><th>T. reglados</th>'    + regIdx.map(v => `<td>${fmt(v)}</td>`).join('') + '</tr>'
-            + '<tr><th>T. vacacionales</th>' + vacIdx.map(v => `<td>${fmt(v)}</td>`).join('') + '</tr>'
+            + '<tr><th>T. reglados</th>'     + serieReg.map(v => `<td>${fmtTabla(v)}</td>`).join('') + '</tr>'
+            + '<tr><th>T. vacacionales</th>' + serieVac.map(v => `<td>${fmtTabla(v)}</td>`).join('') + '</tr>'
             + '</tbody></table>';
         tablaEl.innerHTML = html;
     },

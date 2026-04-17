@@ -839,3 +839,52 @@
 .breadcrumb-enlace:hover {
     text-decoration: underline;
 }
+
+/* ==========================================================================
+   FÓRMULAS MATEMÁTICAS (renderizadas desde $$...$$ en longtexts)
+   ========================================================================== */
+
+.formula-bloque {
+    display: block;
+    margin: 1.2em auto;
+    padding: 0.8em 1.5em;
+    border: 1px solid #d0d0d0;
+    border-left: 4px solid #a70000;
+    border-radius: 4px;
+    background: #fafafa;
+    text-align: center;
+    font-size: 1.05em;
+    line-height: 2.2;
+    overflow-x: auto;
+}
+
+/* Fracción vertical */
+.formula-frac {
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    margin: 0 0.25em;
+    line-height: 1.4;
+}
+
+.formula-num,
+.formula-den {
+    display: block;
+    padding: 0 0.4em;
+    text-align: center;
+}
+
+.formula-num {
+    border-bottom: 1.5px solid currentColor;
+    padding-bottom: 0.15em;
+}
+
+.formula-den {
+    padding-top: 0.15em;
+}
+
+/* Texto normal dentro de fórmula */
+.formula-text {
+    font-style: normal;
+    font-family: inherit;
+}

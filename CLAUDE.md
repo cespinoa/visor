@@ -302,6 +302,37 @@ Datasets escritos en `drupalSettings.visorProject`:
 
 La convención de prefijo `$` distingue los datasets calculados en JS de los inyectados por PHP. El sistema de longtexts (`_prefetchLongtexts`) envía automáticamente todos los `$`-prefijados al servidor, strippeando el `$` para que en PHP sean accesibles como `extra['pob_viv_ultimo']`.
 
+### Dataset `$turismo_derivado_ultimo` (`utils-tablas.js` → `calcularTurismoDerivadoUltimo`)
+
+Se calcula en `panel-datos.js` antes de `_prefetchLongtexts` y se almacena en `drupalSettings.visorProject['$turismo_derivado_ultimo']`. Devuelve un objeto plano dependiente del ámbito activo (canarias o isla). Claves disponibles en longtexts:
+
+```
+{{ turismo_derivado_ultimo.anyo }}          → último año con datos completos
+{{ turismo_derivado_ultimo.total }}         → total llegadas formateado
+{{ turismo_derivado_ultimo.t_reglados }}    → T. reglados formateado
+{{ turismo_derivado_ultimo.t_vacacionales }} → T. vacacionales formateado
+{{ turismo_derivado_ultimo.var_tr }}        → variación acumulada T. reglados desde 2010 (p.ej. "+29,7 %")
+{{ turismo_derivado_ultimo.var_tv }}        → variación acumulada T. vacacionales desde 2012
+{{ turismo_derivado_ultimo.pend_reg_a }}    → pendiente T. reglados tramo 2010–2017 (p.ej. "+0,35 M/año")
+{{ turismo_derivado_ultimo.pend_reg_b }}    → pendiente T. reglados tramo 2017–fin
+{{ turismo_derivado_ultimo.pend_vac_a }}    → pendiente T. vacacionales tramo 2010–2017
+{{ turismo_derivado_ultimo.pend_vac_b }}    → pendiente T. vacacionales tramo 2017–fin
+{{ turismo_derivado_ultimo.tend_reg }}      → 'incremento' | 'estable' | 'descenso'
+{{ turismo_derivado_ultimo.tend_vac }}      → ídem para T. vacacionales
+```
+
+Variantes `_n` para uso en `[[ ]]`: `total_n`, `t_reglados_n`, `t_vacacionales_n`, `pend_reg_a_n`, `pend_reg_b_n`, `pend_vac_a_n`, `pend_vac_b_n`.
+
+**Lógica de pendientes:** regresión lineal por mínimos cuadrados sobre valores en millones. Años 2020–2022 excluidos del ajuste. Pivote 2017 compartido entre ambos tramos. Umbral de categorización: ±0,1 M/año de diferencia entre pendientes para distinguir incremento/descenso de estable.
+
+**Uso típico con `{% if %}`:**
+```html
+{% if turismo_derivado_ultimo.tend_reg == 'descenso' %}
+El turismo reglado ha entrado en una fase de estancamiento desde 2017
+({{turismo_derivado_ultimo.pend_reg_b}} frente a {{turismo_derivado_ultimo.pend_reg_a}}).
+{% endif %}
+```
+
 ### Gráfico `pendiente-censos` (`utils-graficos.js`)
 
 Tipo para comparar la evolución de un indicador censal en tres cortes temporales (2001 / 2011 / 2021). Admite dos modos y dos estrategias de renderizado.
@@ -607,15 +638,24 @@ La columna "Var TV %" en `crearTablaHistoricoTurismo` usa **2012 como año base*
 
 Variable interna: `baseYearVac = '2012'`.
 
-### Gráfico `reglado-vs-vacacional` (tipo `linea-turismo`)
+### Gráficos `reglado-vs-vacacional` y `reglado-vs-vacacional-abs` (tipo `linea-turismo`)
 
-Configurado en `CONFIG_GRAFICOS` como `tipo: 'linea-turismo'`. Se renderiza con `dibujarLineaTurismo(config, registro)` en `utils-graficos.js`. Características:
+Ambos configurados en `CONFIG_GRAFICOS` como `tipo: 'linea-turismo'`. Se renderizan con `dibujarLineaTurismo(config, registro)` en `utils-graficos.js`. El modo de representación lo controla `config.config.modo`:
 
-- Filtra años ≥ 2012.
-- Normaliza ambas series a **base 100 en 2012**.
-- Línea gris discontinua = T. reglados. Línea roja rellena = T. vacacionales.
-- Incluye tabla de índices al pie.
-- Registrado en `utils-informes.js` como `case 'linea-turismo'` para su generación en PDF.
+**Modo índice** (`reglado-vs-vacacional`, sin `config`):
+- Filtra años ≥ 2012. Normaliza a base 100 en 2012.
+- Sin líneas de tendencia.
+
+**Modo absoluto** (`reglado-vs-vacacional-abs`, `config: { modo: 'absoluto' }`):
+- Parte de 2010. Eje Y en millones de turistas.
+- Añade **líneas de tendencia por tramos** con pivote en 2017: tramo 1 (2010–2017) y tramo 2 (2017–fin). Los años 2020, 2021 y 2022 se excluyen del cálculo de regresión pero la línea los atraviesa. Las tendencias no aparecen en el tooltip.
+
+**Implementación de tendencias:**
+- Regresión lineal por mínimos cuadrados (`regresionLineal`). El eje X es la posición del año en el array (0-based), lo que da pendiente en M/posición = M/año.
+- `calcTendencia(serie, iDesde, iHasta)` devuelve un array con valores solo en el rango indicado (null fuera), de modo que Chart.js rompe la línea entre tramos automáticamente.
+- El año pivote (2017) es compartido por ambos tramos → las líneas se tocan.
+
+Ambas variantes están registradas en `utils-informes.js` como `case 'linea-turismo'` para PDF.
 
 ### Hallazgos clave del análisis (Canarias, datos hasta 2025)
 

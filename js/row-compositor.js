@@ -396,7 +396,74 @@
       const div = document.createElement('div');
       div.className = 'bloque-texto';
       div.innerHTML = item._html;
+      this._renderizarFormulas(div);
       return div;
+    },
+
+    /**
+     * Busca bloques $$...$$ en el HTML ya insertado en el DOM y los sustituye
+     * por HTML estructurado con fracciones verticales y recuadro.
+     *
+     * Comandos soportados:
+     *   \frac{num}{den}   → fracción vertical (soporta anidamiento)
+     *   \times            → ×
+     *   \approx           → ≈
+     *   \cdot             → ·
+     *   \text{...}        → texto normal dentro de la fórmula
+     *   _{...} o _x       → subíndice
+     *   ^{...} o ^x       → superíndice
+     */
+    _renderizarFormulas: function(contenedor) {
+      contenedor.querySelectorAll('*').forEach(nodo => {
+        if (nodo.children.length) return; // solo nodos hoja de texto
+        // No procesar si ya es fórmula renderizada
+        if (nodo.closest('.formula-bloque')) return;
+      });
+
+      // Trabajamos sobre el HTML del contenedor buscando $$...$$
+      const html = contenedor.innerHTML;
+      if (!html.includes('$$')) return;
+
+      contenedor.innerHTML = html.replace(/\$\$([\s\S]*?)\$\$/g, (_, latex) => {
+        return '<div class="formula-bloque">' + this._latexAHtml(latex.trim()) + '</div>';
+      });
+    },
+
+    _latexAHtml: function(latex) {
+      let s = latex;
+
+      // \frac{num}{den}: procesar de dentro hacia afuera (iterativo para anidamiento)
+      let prev;
+      do {
+        prev = s;
+        s = s.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g,
+          '<span class="formula-frac"><span class="formula-num">$1</span><span class="formula-den">$2</span></span>');
+      } while (s !== prev);
+
+      // Guion bajo escapado: \_ → guion bajo literal (debe ir ANTES de subíndices)
+      s = s.replace(/\\_/g, '_');
+
+      // Símbolos
+      s = s.replace(/\\times/g,  '&times;');
+      s = s.replace(/\\approx/g, '&asymp;');
+      s = s.replace(/\\cdot/g,   '&middot;');
+      s = s.replace(/\\div/g,    '&divide;');
+      s = s.replace(/\\leq/g,    '&le;');
+      s = s.replace(/\\geq/g,    '&ge;');
+      s = s.replace(/\\neq/g,    '&ne;');
+
+      // \text{...}
+      s = s.replace(/\\text\{([^}]*)\}/g, '<span class="formula-text">$1</span>');
+
+      // Subíndices: solo con llaves explícitas _{...}
+      // El guion bajo simple (como en estancia_media) se deja como está
+      s = s.replace(/\_\{([^}]*)\}/g, '<sub>$1</sub>');
+
+      // Superíndices: ^{...} o ^x
+      s = s.replace(/\^\{([^}]*)\}/g, '<sup>$1</sup>');
+      s = s.replace(/\^([a-zA-Z0-9])/g, '<sup>$1</sup>');
+
+      return s;
     },
 
     // row-compositor.js -> manejarImagen

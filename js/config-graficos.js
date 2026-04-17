@@ -84,6 +84,12 @@ window.CONFIG_GRAFICOS = {
         titulo: 'Turismo reglado vs vacacional (base 2012 = 100)',
     },
 
+    'reglado-vs-vacacional-abs': {
+        tipo:   'linea-turismo',
+        titulo: 'Turismo reglado y vacacional (millones de turistas)',
+        config: { modo: 'absoluto' },
+    },
+
     // ── Censos de viviendas no habituales — índice base 100 ─────────────────
 
     'no-hab-censos': {

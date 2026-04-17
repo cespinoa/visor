@@ -226,7 +226,7 @@ window.CONFIG_TABLAS = {
         ]
     },
     'distribucion-plazas-regladas': {
-        titulo: "Distribución de las plazas regladas",
+        titulo: "Plazas regladas por zona",
         contexto: "SELF",
         modo: "ficha",
         cabecera: ["Tipo de zona", "Plazas", "Porcentaje"],
@@ -237,7 +237,7 @@ window.CONFIG_TABLAS = {
         ]
     },
     'distribucion-plazas-vacacionales': {
-        titulo: "Distribución de las plazas vacacionales",
+        titulo: "Plazas vacacionales por zona",
         contexto: "SELF",
         modo: "ficha",
         cabecera: ["Tipo de zona", "Plazas", "Porcentaje"],
@@ -248,7 +248,7 @@ window.CONFIG_TABLAS = {
         ]
     },
     'plazas-turisticas-zona-residencial': {
-        titulo: "Plazas turísticas en zona residencial",
+        titulo: "Plazas en zona residencial por tipo",
         contexto: "SELF",
         modo: "ficha",
         cabecera: ["Tipo de oferta", "Plazas", "Porcentaje"],
@@ -259,7 +259,7 @@ window.CONFIG_TABLAS = {
         ]
     },
     'plazas-turisticas-zona-turistica': {
-        titulo: "Plazas turísticas en zona turística",
+        titulo: "Plazas en zona turistica por tipo",
         contexto: "SELF",
         modo: "ficha",
         cabecera: ["Tipo de oferta", "Plazas", "Porcentaje"],

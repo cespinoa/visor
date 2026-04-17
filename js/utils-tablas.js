@@ -1301,6 +1301,189 @@
         return wrapper;
     },
 
+    /**
+     * Calcula T. reglados y T. vacacionales para el ámbito activo (props)
+     * y devuelve un objeto plano con los valores del último año disponible.
+     *
+     * Se inyecta en drupalSettings como $turismo_derivado_ultimo antes de
+     * llamar a _prefetchLongtexts, quedando disponible en longtexts como:
+     *   {{ turismo_derivado_ultimo.anyo }}
+     *   {{ turismo_derivado_ultimo.t_reglados }}
+     *   {{ turismo_derivado_ultimo.t_vacacionales }}
+     *   {{ turismo_derivado_ultimo.var_tr }}     (var% desde 2010, con signo)
+     *   {{ turismo_derivado_ultimo.var_tv }}     (var% desde 2012, con signo)
+     *   {{ turismo_derivado_ultimo.total }}
+     */
+    calcularTurismoDerivadoUltimo: function(props) {
+        const vp      = drupalSettings.visorProject || {};
+        const baseYear    = '2010';
+        const baseYearVac = '2012';
+        const fmt     = window.visorProject.utils.formatearDato;
+        const ambito  = props.ambito;
+        const islaId  = String(props.isla_id || '');
+
+        const filtrar = (ds) => {
+            const arr = Array.isArray(ds) ? ds : [];
+            if (ambito === 'canarias') return arr.filter(r => r.ambito === 'canarias');
+            return arr.filter(r => r.ambito === 'isla' && String(r.isla_id) === islaId);
+        };
+        const toMap = (ds, yearField, campo) => {
+            const m = {};
+            filtrar(ds).forEach(r => { m[String(r[yearField])] = parseFloat(r[campo]); });
+            return m;
+        };
+        const toMapIslas = (ds, yearField, campo) => {
+            const m = {};
+            (Array.isArray(ds) ? ds : []).filter(r => r.ambito === 'isla').forEach(r => {
+                const y = String(r[yearField]);
+                if (!m[y]) m[y] = {};
+                m[y][String(r.isla_id)] = parseFloat(r[campo]);
+            });
+            return m;
+        };
+
+        const llegadas  = toMap(vp['$historicoLlegadas']       || [], 'year',      'turistas');
+        const plazas    = toMap(vp['$historicoPlazasRegladas'] || [], 'ejercicio', 'plazas');
+        const ocupacion = toMap(vp['$historicoTasaOcupacion']  || [], 'ejercicio', 'tasa');
+        const estancia  = toMap(vp['$historico_estancia_media']|| [], 'ejercicio', 'estancia');
+
+        const años = [...new Set([
+            ...Object.keys(llegadas), ...Object.keys(plazas),
+            ...Object.keys(ocupacion), ...Object.keys(estancia),
+        ])].sort();
+
+        if (!años.length) return {};
+
+        // T. reglados por año (misma lógica que crearTablaHistoricoTurismoDerivado)
+        const tReglados = {};
+        if (ambito === 'canarias') {
+            const islaIdsConLlegadas = new Set(
+                (vp['$historicoLlegadas'] || []).filter(r => r.ambito === 'isla').map(r => String(r.isla_id))
+            );
+            const plazasIsla    = toMapIslas(vp['$historicoPlazasRegladas'] || [], 'ejercicio', 'plazas');
+            const ocupacionIsla = toMapIslas(vp['$historicoTasaOcupacion']  || [], 'ejercicio', 'tasa');
+            const estanciaIsla  = toMapIslas(vp['$historico_estancia_media']|| [], 'ejercicio', 'estancia');
+            años.forEach(y => {
+                let suma = 0;
+                for (const iid of islaIdsConLlegadas) {
+                    const pl = (plazasIsla[y]    || {})[iid];
+                    const oc = (ocupacionIsla[y]  || {})[iid];
+                    const es = (estanciaIsla[y]   || {})[iid];
+                    if (pl != null && oc != null && es != null && es > 0) suma += (oc / 100) * pl * 365 / es;
+                }
+                if (islaIdsConLlegadas.size > 0) tReglados[y] = suma;
+            });
+        } else {
+            años.forEach(y => {
+                const oc = ocupacion[y], pl = plazas[y], es = estancia[y];
+                if (oc != null && pl != null && es != null && es > 0)
+                    tReglados[y] = (oc / 100) * pl * 365 / es;
+            });
+        }
+
+        // Último año con todos los datos disponibles
+        const ultimoAño = [...años].reverse().find(y =>
+            llegadas[y] != null && tReglados[y] != null
+        );
+        if (!ultimoAño) return {};
+
+        const tur  = llegadas[ultimoAño];
+        const treg = Math.round(tReglados[ultimoAño]);
+        const tvac = Math.round(tur - treg);
+
+        const varPct = (v, base) => (v != null && base != null && base !== 0)
+            ? ((v / base - 1) * 100) : null;
+
+        const tRegBase = tReglados[baseYear]    ? Math.round(tReglados[baseYear]) : null;
+        const tVacBase = (llegadas[baseYearVac] != null && tReglados[baseYearVac] != null)
+            ? Math.round(llegadas[baseYearVac] - tReglados[baseYearVac]) : null;
+
+        const varTr = varPct(treg, tRegBase);
+        const varTv = varPct(tvac, tVacBase);
+
+        const fmtVar = v => v != null
+            ? (v >= 0 ? '+' : '') + fmt(v, 'decimal_1') + '\u00a0%'
+            : '—';
+
+        // ── Pendientes por tramo (2010-2017 / 2017-fin), excluyendo COVID ──
+        const PIVOTE  = '2017';
+        const COVID   = new Set(['2020', '2021', '2022']);
+
+        // Regresión lineal — devuelve solo la pendiente
+        const lrPendiente = (puntos) => {
+            if (puntos.length < 2) return null;
+            const n   = puntos.length;
+            const sx  = puntos.reduce((s, p) => s + p.x, 0);
+            const sy  = puntos.reduce((s, p) => s + p.y, 0);
+            const sx2 = puntos.reduce((s, p) => s + p.x * p.x, 0);
+            const sxy = puntos.reduce((s, p) => s + p.x * p.y, 0);
+            const den = n * sx2 - sx * sx;
+            return den ? (n * sxy - sx * sy) / den : null;
+        };
+
+        // Valores de cada serie en millones (eje X = posición del año en el array)
+        const regM = años.map(y => tReglados[y] != null ? tReglados[y] / 1e6 : null);
+        const vacM = años.map(y => {
+            const t = llegadas[y], r = tReglados[y];
+            return (t != null && r != null) ? (t - r) / 1e6 : null;
+        });
+
+        const iPivote = años.indexOf(PIVOTE);
+        const slopeTramo = (serie, iDesde, iHasta) => {
+            const pts = [];
+            for (let i = iDesde; i <= iHasta && i < años.length; i++) {
+                if (!COVID.has(años[i]) && serie[i] != null) pts.push({ x: i, y: serie[i] });
+            }
+            return lrPendiente(pts);
+        };
+
+        let pRegA = null, pRegB = null, pVacA = null, pVacB = null;
+        if (iPivote >= 0) {
+            pRegA = slopeTramo(regM, 0,        iPivote);
+            pRegB = slopeTramo(regM, iPivote,  años.length - 1);
+            pVacA = slopeTramo(vacM, 0,        iPivote);
+            pVacB = slopeTramo(vacM, iPivote,  años.length - 1);
+        }
+
+        // Categoría: compara pendientes de ambos tramos.
+        // Umbral: diferencia > 0,1 M/año (~100.000 turistas/año) para llamarlo cambio.
+        const categTend = (a, b) => {
+            if (a == null || b == null) return '—';
+            if (b - a >  0.10) return 'incremento';
+            if (b - a < -0.10) return 'descenso';
+            return 'estable';
+        };
+
+        // Formato de pendiente: "+0,35 M/año" con signo explícito
+        const fmtP = v => v != null
+            ? (v >= 0 ? '+' : '−') + fmt(Math.abs(v), 'decimal_2') + '\u00a0M/año'
+            : '—';
+
+        return {
+            anyo:              ultimoAño,
+            total:             fmt(tur,  'entero'),
+            t_reglados:        fmt(treg, 'entero'),
+            t_vacacionales:    fmt(tvac, 'entero'),
+            var_tr:            fmtVar(varTr),
+            var_tv:            fmtVar(varTv),
+            // Pendientes por tramo
+            pend_reg_a:        fmtP(pRegA),
+            pend_reg_b:        fmtP(pRegB),
+            pend_vac_a:        fmtP(pVacA),
+            pend_vac_b:        fmtP(pVacB),
+            tend_reg:          categTend(pRegA, pRegB),
+            tend_vac:          categTend(pVacA, pVacB),
+            // Valores numéricos sin formato
+            total_n:           Math.round(tur),
+            t_reglados_n:      treg,
+            t_vacacionales_n:  tvac,
+            pend_reg_a_n:      pRegA != null ? Math.round(pRegA * 1e5) / 1e5 : null,
+            pend_reg_b_n:      pRegB != null ? Math.round(pRegB * 1e5) / 1e5 : null,
+            pend_vac_a_n:      pVacA != null ? Math.round(pVacA * 1e5) / 1e5 : null,
+            pend_vac_b_n:      pVacB != null ? Math.round(pVacB * 1e5) / 1e5 : null,
+        };
+    },
+
     _activarColapsible: function(wrapper) {
         wrapper.classList.add('tabla-colapsible', 'tabla-colapsada');
         const header = wrapper.querySelector('.tabla-header');

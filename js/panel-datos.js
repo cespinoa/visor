@@ -44,19 +44,41 @@
           //~ intro: "",
           destino: '#ficha-contenido',
           elementos: [
-            { tipo: 'longtext', id: 'afluencia-plazas-ocupacion', ancho: '12' },
+            { tipo: 'longtext', id: 'afluencia-plazas-ocupacion', ancho: '12', ambito: ['canarias', 'isla']  },
             { tipo: 'grafico', id: 'llegadas-vs-plazas',    ancho: '12', ambito: ['canarias', 'isla'] },
             { tipo: 'tabla',   id: 'historico-llegadas-plazas-ocupacion', ancho: '12', ambito: ['canarias', 'isla'] },
             { tipo: 'longtext', id: 'turistas-reglados-vs-vacacionales', ancho: '12', ambito: ['canarias', 'isla'] },
-            { tipo: 'grafico', id: 'reglado-vs-vacacional', ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'grafico', id: 'reglado-vs-vacacional-abs', ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'grafico', id: 'reglado-vs-vacacional',     ancho: '12', ambito: ['canarias', 'isla'] },
             { tipo: 'tabla',   id: 'turismo-reglado-vs-vacacional', ancho: '12', ambito: ['canarias', 'isla'] },
-            { tipo: 'longtext', id: 'impacto-modelo-turistico', ancho: '12' },
-            { tipo: 'tabla', id: 'oferta-alojativa', ancho: '6'},
+
+            
+            { tipo: 'longtext', id: 'distribucion-plazas-vacacionales', ancho: '6' },
             { tipo: 'tabla', id: 'distribucion-plazas-vacacionales', ancho: '6' },
+
+            { tipo: 'longtext', id: 'distribucion-plazas-regladas', ancho: '6' },
             { tipo: 'tabla', id: 'distribucion-plazas-regladas', ancho: '6' },
+
+            { tipo: 'longtext', id: 'plazas-zona-residencial-por-tipo', ancho: '6' },
             { tipo: 'tabla', id: 'plazas-turisticas-zona-residencial', ancho: '6' },
+
+            { tipo: 'longtext', id: 'plazas-zona-turistica-por-tipo', ancho: '6' },
             { tipo: 'tabla', id: 'plazas-turisticas-zona-turistica', ancho: '6'},
-            { tipo: 'tabla', id: 'oferta-alojativa-por-zona-ambito', ancho: '6' }
+
+            { tipo: 'longtext', id: 'deslocalizacion-actividad-turistica', ancho: '6' },
+            { tipo: 'tabla', id: 'oferta-alojativa-por-zona-ambito', ancho: '6' },
+
+            { tipo: 'longtext', id: 'transformacion-del-alojamiento', ancho: '6' },
+            { tipo: 'tabla', id: 'oferta-alojativa', ancho: '6'},
+
+
+            { tipo: 'longtext', id: 'impacto-modelo-turistico', ancho: '12' },
+            
+            
+            
+            
+            
+            
           ]
         },
 
@@ -145,6 +167,12 @@
       ];
 
       
+
+      // Precalcular T. reglados / T. vacacionales del ámbito activo para longtexts
+      if (window.visorProject.utilsTablas) {
+          drupalSettings.visorProject['$turismo_derivado_ultimo'] =
+              window.visorProject.utilsTablas.calcularTurismoDerivadoUltimo(props);
+      }
 
       // Llamamos al compositor para que haga todo el trabajo sucio
       if (window.visorProject.rowCompositor) {
