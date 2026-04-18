@@ -86,21 +86,36 @@
           tituloBloque: "Situación de la vivienda",
           destino: '#ficha-contenido',
           elementos: [
-            { tipo: 'longtext', id: 'disponibilidad-vivienda', ancho: '12' },
+            { tipo: 'longtext', id: 'hogares-nucleos', ancho: '6' },
+            { tipo: 'tabla', id: 'ficha-hogares-por-nucleos', ancho: '6' },
+            { tipo: 'longtext', id: 'hogares-nucleos-2', ancho: '6' },
+            { tipo: 'tabla', id: 'ficha-hogares-por-nucleos-deficit', ancho: '6' },
+            { tipo: 'longtext', id: 'tamanyo-medio-hogares', ancho: '6' },
+            { tipo: 'grafico', id: 'personas-por-hogar', ancho: '6' },
+
+            
+            { tipo: 'longtext', id: 'tamanyo-medio-hogar', ancho: '12' },
+            
+            { tipo: 'grafico', id: 'hogar-ccaa-barras',    ancho: '6', ambito: 'canarias' },                                                                                                                            
+            { tipo: 'grafico', id: 'hogar-ccaa-pendiente',  ancho: '6', ambito: 'canarias'  },                                                                                                                           
+            { tipo: 'tabla',   id: 'hogar-ccaa-tabla',      ancho: '12', ambito: 'canarias' }, 
+            
+            { tipo: 'longtext', id: 'parque-de-viviendas', ancho: '6' },
             { tipo: 'tabla', id: 'parque-viviendas', ancho: '6' },
+
+            { tipo: 'longtext', id: 'viviendas-construidas', ancho: '6', ambito: 'canarias' },
             { tipo: 'tabla', id: 'viviendas-terminadas-canarias', ancho: '6', ambito: 'canarias' },
+
+            
+            { tipo: 'longtext', id: 'disponibilidad-vivienda', ancho: '12' },
+            
+            
             { tipo: 'tabla', id: 'viviendas-habituales-mas-terminadas', ancho: '6', ambito: 'canarias' },
             { tipo: 'tabla', id: 'viviendas-necesarias', ancho: '6' },
             { tipo: 'tabla', id: 'deficit-de-viviendas', ancho: '6', ambito: ['isla', 'municipio'] },
             { tipo: 'tabla', id: 'deficit-de-viviendas-canarias', ancho: '6', ambito: 'canarias' },
-            { tipo: 'longtext', id: 'hogares-nucleos', ancho: '12' },
-            { tipo: 'tabla', id: 'ficha-hogares-por-nucleos', ancho: '6' },
-            { tipo: 'tabla', id: 'ficha-hogares-por-nucleos-deficit', ancho: '6' },
-            { tipo: 'longtext', id: 'tamanyo-medio-hogar', ancho: '12' },
-            { tipo: 'grafico', id: 'personas-por-hogar', ancho: '12' },
-            { tipo: 'grafico', id: 'hogar-ccaa-barras',    ancho: '6', ambito: 'canarias' },                                                                                                                            
-            { tipo: 'grafico', id: 'hogar-ccaa-pendiente',  ancho: '6', ambito: 'canarias'  },                                                                                                                           
-            { tipo: 'tabla',   id: 'hogar-ccaa-tabla',      ancho: '12', ambito: 'canarias' }, 
+            
+            
             { tipo: 'longtext', id: 'construccion-viviendas-vs-crecimiento-poblacion', ancho: '12', ambito: 'canarias' },
             { tipo: 'tabla', id: 'historico-pob-viv', ancho: '12'},
             
@@ -172,6 +187,8 @@
       if (window.visorProject.utilsTablas) {
           drupalSettings.visorProject['$turismo_derivado_ultimo'] =
               window.visorProject.utilsTablas.calcularTurismoDerivadoUltimo(props);
+          drupalSettings.visorProject['$hogar_derivado_ultimo'] =
+              window.visorProject.utilsTablas.calcularHogarDerivadoUltimo(props);
       }
 
       // Llamamos al compositor para que haga todo el trabajo sucio

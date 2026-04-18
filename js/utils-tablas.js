@@ -1484,6 +1484,101 @@
         };
     },
 
+    calcularHogarDerivadoUltimo: function(props) {
+        const vp     = drupalSettings.visorProject || {};
+        const fmt    = window.visorProject.utils.formatearDato;
+        const ambito = props.ambito;
+        const islaId = String(props.isla_id || '');
+        const muniId = String(props.municipio_id || '');
+
+        const filtrar = (ds) => {
+            const arr = Array.isArray(ds) ? ds : [];
+            if (ambito === 'canarias') return arr.filter(r => r.ambito === 'canarias');
+            if (ambito === 'isla')     return arr.filter(r => r.ambito === 'isla' && String(r.isla_id) === islaId);
+            return arr.filter(r => r.ambito === 'municipio' && String(r.municipio_id) === muniId);
+        };
+
+        const registros = filtrar(vp['$personas_hogar'] || []);
+        if (!registros.length) return {};
+
+        const hogarMap = {};
+        registros.forEach(r => { hogarMap[String(r.year)] = parseFloat(r.miembros); });
+
+        // Datos censales: 1981, 1991, 2001, 2011, 2021
+        const años = Object.keys(hogarMap).sort();
+        if (años.length < 2) return {};
+
+        const ultimoAño = años[años.length - 1];
+
+        // Tramo A: 1981–2011 (4 puntos); tramo B: 2011–2021 (2 puntos).
+        // x = año real → pendiente en p/año.
+        const PIVOTE = '2011';
+
+        const lrPendiente = (puntos) => {
+            if (puntos.length < 2) return null;
+            const n   = puntos.length;
+            const sx  = puntos.reduce((s, p) => s + p.x, 0);
+            const sy  = puntos.reduce((s, p) => s + p.y, 0);
+            const sx2 = puntos.reduce((s, p) => s + p.x * p.x, 0);
+            const sxy = puntos.reduce((s, p) => s + p.x * p.y, 0);
+            const den = n * sx2 - sx * sx;
+            return den ? (n * sxy - sx * sy) / den : null;
+        };
+
+        const slopeTramo = (iDesde, iHasta) => {
+            const pts = [];
+            for (let i = iDesde; i <= iHasta && i < años.length; i++) {
+                const v = hogarMap[años[i]];
+                if (v != null) pts.push({ x: parseInt(años[i]), y: v });
+            }
+            return lrPendiente(pts);
+        };
+
+        const iPivote = años.indexOf(PIVOTE);
+        let pHogarA = null, pHogarB = null;
+        if (iPivote >= 0) {
+            pHogarA = slopeTramo(0,       iPivote);
+            pHogarB = slopeTramo(iPivote, años.length - 1);
+        }
+
+        const v2011 = hogarMap[PIVOTE];
+        const v2021 = hogarMap[ultimoAño];
+        const delta  = (v2011 != null && v2021 != null) ? v2021 - v2011 : null;
+
+        // Categoría basada en delta 2011–2021 y comparación con tendencia histórica.
+        // Umbral estabilidad: ±0,05 p en la década (≈ ±0,005 p/año).
+        const categTend = (d, pA, pB) => {
+            if (d == null) return '—';
+            if (d >  0.05) return 'sube';            // 2021 > 2011
+            if (d > -0.05) return 'estable';         // sin cambio significativo
+            // 2021 < 2011: distinguir si la bajada se modera o se mantiene
+            if (pA != null && pB != null && pB > pA) return 'baja_modera';      // ritmo se reduce
+            return 'baja_consistente';               // ritmo se mantiene o acelera
+        };
+
+        const fmtP = v => v != null
+            ? (v >= 0 ? '+' : '\u2212') + fmt(Math.abs(v), 'decimal_3') + '\u00a0p/año'
+            : '—';
+        const fmtD = v => v != null
+            ? (v >= 0 ? '+' : '\u2212') + fmt(Math.abs(v), 'decimal_2')
+            : '—';
+
+        return {
+            anyo:              ultimoAño,
+            valor:             fmt(v2021, 'decimal_2'),
+            valor_2011:        v2011 != null ? fmt(v2011, 'decimal_2') : '—',
+            delta_ultimo:      fmtD(delta),
+            pend_historica:    fmtP(pHogarA),
+            pend_reciente:     fmtP(pHogarB),
+            tend_ultimo:       categTend(delta, pHogarA, pHogarB),
+            valor_n:           v2021 != null ? Math.round(v2021 * 1e3) / 1e3 : null,
+            valor_2011_n:      v2011 != null ? Math.round(v2011 * 1e3) / 1e3 : null,
+            delta_ultimo_n:    delta != null ? Math.round(delta * 1e4) / 1e4 : null,
+            pend_historica_n:  pHogarA != null ? Math.round(pHogarA * 1e7) / 1e7 : null,
+            pend_reciente_n:   pHogarB != null ? Math.round(pHogarB * 1e7) / 1e7 : null,
+        };
+    },
+
     _activarColapsible: function(wrapper) {
         wrapper.classList.add('tabla-colapsible', 'tabla-colapsada');
         const header = wrapper.querySelector('.tabla-header');

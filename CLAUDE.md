@@ -333,6 +333,36 @@ El turismo reglado ha entrado en una fase de estancamiento desde 2017
 {% endif %}
 ```
 
+### Dataset `$hogar_derivado_ultimo` (`utils-tablas.js` → `calcularHogarDerivadoUltimo`)
+
+Se calcula en `panel-datos.js` antes de `_prefetchLongtexts` y se almacena en `drupalSettings.visorProject['$hogar_derivado_ultimo']`. Funciona para los tres ámbitos (canarias, isla, municipio). Claves disponibles en longtexts:
+
+```
+{{ hogar_derivado_ultimo.anyo }}            → último año con datos (2021)
+{{ hogar_derivado_ultimo.valor }}           → tamaño medio del hogar formateado (decimal_2)
+{{ hogar_derivado_ultimo.delta_ultimo }}    → diferencia 2021−2011 con signo (p.ej. "−0,20")
+{{ hogar_derivado_ultimo.pend_historica }}  → pendiente tramo 1981–2011 (p.ej. "−0,032 p/año")
+{{ hogar_derivado_ultimo.pend_reciente }}   → pendiente tramo 2011–2021
+{{ hogar_derivado_ultimo.tend_ultimo }}     → 'sube' | 'estable' | 'baja_modera' | 'baja_consistente'
+```
+
+Variantes `_n` para uso en `[[ ]]`: `valor_n`, `delta_ultimo_n`, `pend_historica_n`, `pend_reciente_n`.
+
+**Lógica de categorización:** `tend_ultimo` se determina por `delta_ultimo` (2021−2011): si > +0,05 → `sube`; si > −0,05 → `estable`; si ≤ −0,05 se comparan pendientes: reciente menos negativa que histórica → `baja_modera`; igual o más negativa → `baja_consistente`.
+
+**Uso típico con `{% if %}`:**
+```html
+{% if hogar_derivado_ultimo.tend_ultimo == 'sube' %}
+  El tamaño medio del hogar ha crecido en la última década ({{hogar_derivado_ultimo.delta_ultimo}}), revirtiendo la tendencia histórica.
+{% elseif hogar_derivado_ultimo.tend_ultimo == 'estable' %}
+  El tamaño medio del hogar se ha estabilizado en la última década, tras décadas de reducción continuada.
+{% elseif hogar_derivado_ultimo.tend_ultimo == 'baja_modera' %}
+  La reducción continúa pero a menor ritmo que en décadas anteriores ({{hogar_derivado_ultimo.pend_reciente}} frente a {{hogar_derivado_ultimo.pend_historica}}).
+{% elseif hogar_derivado_ultimo.tend_ultimo == 'baja_consistente' %}
+  La reducción del tamaño del hogar se mantiene al mismo ritmo que en décadas anteriores ({{hogar_derivado_ultimo.pend_reciente}}).
+{% endif %}
+```
+
 ### Gráfico `pendiente-censos` (`utils-graficos.js`)
 
 Tipo para comparar la evolución de un indicador censal en tres cortes temporales (2001 / 2011 / 2021). Admite dos modos y dos estrategias de renderizado.
