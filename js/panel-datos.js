@@ -90,16 +90,24 @@
             { tipo: 'tabla', id: 'ficha-hogares-por-nucleos', ancho: '6' },
             { tipo: 'longtext', id: 'hogares-nucleos-2', ancho: '6' },
             { tipo: 'tabla', id: 'ficha-hogares-por-nucleos-deficit', ancho: '6' },
+
+            { tipo: 'grafico', id: 'hogares-tipo-linea', ancho: '8', ambito: 'canarias' },
+            { tipo: 'tabla',   id: 'hogares-tipo-tabla', ancho: '12', ambito: 'canarias' },
+
             { tipo: 'longtext', id: 'tamanyo-medio-hogares', ancho: '6' },
             { tipo: 'grafico', id: 'personas-por-hogar', ancho: '6' },
 
             
+
+            
             { tipo: 'longtext', id: 'tamanyo-medio-hogar', ancho: '12' },
             
-            { tipo: 'grafico', id: 'hogar-ccaa-barras',    ancho: '6', ambito: 'canarias' },                                                                                                                            
-            { tipo: 'grafico', id: 'hogar-ccaa-pendiente',  ancho: '6', ambito: 'canarias'  },                                                                                                                           
-            { tipo: 'tabla',   id: 'hogar-ccaa-tabla',      ancho: '12', ambito: 'canarias' }, 
+            { tipo: 'grafico', id: 'hogar-ccaa-barras',    ancho: '6', ambito: 'canarias' },
+            { tipo: 'grafico', id: 'hogar-ccaa-pendiente',  ancho: '6', ambito: 'canarias'  },
+            { tipo: 'tabla',   id: 'hogar-ccaa-tabla',      ancho: '12', ambito: 'canarias' },
+
             
+
             { tipo: 'longtext', id: 'parque-de-viviendas', ancho: '6' },
             { tipo: 'tabla', id: 'parque-viviendas', ancho: '6' },
 

@@ -1366,6 +1366,8 @@ window.visorProject.utilsGraficos = {
         const yearField = cfg.yearField    || 'ejercicio';
         const etiqField = cfg.etiquetaField || 'ccaa_nombre';
         const seriesCfg = cfg.series       || [];
+        const baseYear  = cfg.baseYear ? String(cfg.baseYear) : null;
+        const usarTend  = cfg.tendencia === true;
 
         const allYears = [...new Set(ds.map(r => String(r[yearField])))].sort();
 
@@ -1373,22 +1375,43 @@ window.visorProject.utilsGraficos = {
             const rows = ds
                 .filter(r => r[etiqField] === sc.nombre)
                 .sort((a, b) => String(a[yearField]).localeCompare(String(b[yearField])));
-            const data = allYears.map(y => {
+            const rawData = allYears.map(y => {
                 const r = rows.find(x => String(x[yearField]) === y);
                 return r ? parseFloat(r[campo]) : null;
             });
+            let data = rawData;
+            if (baseYear) {
+                const baseIdx = allYears.indexOf(baseYear);
+                const baseVal = baseIdx >= 0 ? rawData[baseIdx] : null;
+                data = baseVal ? rawData.map(v => v !== null ? parseFloat((v / baseVal * 100).toFixed(2)) : null) : rawData;
+            }
+            if (usarTend) {
+                // Regresión anclada: la recta pasa por (x₀, 100) y solo ajusta la pendiente.
+                // Si hay baseYear, x₀ es su índice; si no, x₀ = 0.
+                const x0    = baseYear ? allYears.indexOf(baseYear) : 0;
+                const y0    = baseYear ? 100 : (data.find(v => v !== null) ?? 0);
+                const puntos = data.map((v, idx) => ({ x: idx, y: v })).filter(p => p.y !== null);
+                const num   = puntos.reduce((s, p) => s + (p.x - x0) * (p.y - y0), 0);
+                const den   = puntos.reduce((s, p) => s + (p.x - x0) ** 2, 0);
+                if (den !== 0) {
+                    const slope = num / den;
+                    data = data.map((v, idx) => v !== null ? parseFloat((y0 + slope * (idx - x0)).toFixed(2)) : null);
+                }
+            }
             const color = sc.color || (i === 0 ? '#555555' : '#a70000');
             return {
                 label:           sc.nombre,
                 data,
+                _raw:            rawData,
                 borderColor:     color,
                 backgroundColor: 'transparent',
-                borderWidth:     i === 0 ? 1.5 : 2.5,
-                pointRadius:     4,
-                tension:         0.2,
+                borderWidth:     2,
+                pointRadius:     usarTend ? 0 : 4,
+                tension:         0,
             };
         });
 
+        const yTitle = baseYear ? `Índice (${baseYear} = 100)` : null;
         new Chart(canvas.getContext('2d'), {
             type: 'line',
             data: { labels: allYears, datasets: chartDatasets },
@@ -1396,17 +1419,28 @@ window.visorProject.utilsGraficos = {
                 responsive:          true,
                 maintainAspectRatio: true,
                 aspectRatio:         3,
-                scales: { y: { beginAtZero: false } },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: yTitle ? { display: true, text: yTitle } : undefined,
+                    },
+                },
                 plugins: {
                     legend: { position: 'bottom' },
                     tooltip: {
                         mode:      'index',
                         intersect: false,
                         callbacks: {
-                            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(2) : '—'}`,
-                        }
-                    }
-                }
+                            label: ctx => {
+                                const v = ctx.parsed.y;
+                                if (v === null) return null;
+                                return baseYear
+                                    ? ` ${ctx.dataset.label}: ${v.toFixed(1)}`
+                                    : ` ${ctx.dataset.label}: ${v.toFixed(2)}`;
+                            },
+                        },
+                    },
+                },
             }
         });
 
@@ -1414,14 +1448,18 @@ window.visorProject.utilsGraficos = {
         const tablaEl = document.getElementById(config.canvasId + '-tabla');
         if (!tablaEl) return;
 
-        const fmt = v => (v !== null && !isNaN(v)) ? parseFloat(v).toFixed(2) : '—';
+        const fmtTabla = (v, idx) => {
+            if (v === null || isNaN(v)) return '—';
+            return baseYear ? parseFloat(v).toFixed(1) : parseFloat(v).toFixed(2);
+        };
         let html = '<table class="linea-ext-tabla__table"><thead><tr><th></th>'
             + allYears.map(y => `<th>${y}</th>`).join('')
             + '</tr></thead><tbody>';
 
         chartDatasets.forEach(s => {
-            html += `<tr><th>${s.label}</th>`
-                + s.data.map(v => `<td>${fmt(v)}</td>`).join('')
+            const swatch = `<span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:${s.borderColor};margin-right:6px;vertical-align:middle;flex-shrink:0"></span>`;
+            html += `<tr><th style="white-space:nowrap">${swatch}${s.label}</th>`
+                + s.data.map((v, i) => `<td>${fmtTabla(v, i)}</td>`).join('')
                 + '</tr>';
         });
 

@@ -27,6 +27,17 @@ window.CONFIG_TABLAS = {
         formato:       'decimal_2',
     },
 
+    'hogares-tipo-tabla': {
+        tipo:          'ccaa-ext',
+        titulo:        'Hogares por tipo de composición familiar — ECH (miles)',
+        colapsible:    true,
+        dataset:       '$ech_hogares_tipo_agrupada',
+        campo:         'hogares_miles',
+        yearField:     'anyo',
+        etiquetaField: 'categoria',
+        formato:       'decimal_1',
+    },
+
     'historico-llegadas-plazas-ocupacion': {
         tipo:       'historico-turismo',
         titulo:     'Evolución: llegadas, plazas regladas, ocupación y estancia media',

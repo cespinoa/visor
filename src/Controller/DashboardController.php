@@ -80,7 +80,10 @@ final class DashboardController extends ControllerBase {
 
     // Obtenemos el histórico de estancia media en alojamiento reglado
     $historico_estancia_media = $this->getHistoricoEstanciaMedia();
-    
+
+    // Obtenemos la composición de hogares por tipo (ECH)
+    $ech_hogares_tipo_agrupada = $this->getEchHogaresTipoAgrupada();
+    $ech_hogares_tipo_variacion = $this->getEchHogaresTipoVariacion($ech_hogares_tipo_agrupada);
 
     // Obtenemos las siluetas
     $ruta_json_imagenes = 'public://assets/siluetas.json';
@@ -136,6 +139,8 @@ final class DashboardController extends ControllerBase {
             '$historico_poblacion' => $historico_poblacion,
             '$censo_viviendas_no_habituales' => $censo_viviendas_no_habituales,
             '$historico_estancia_media' => $historico_estancia_media,
+            '$ech_hogares_tipo_agrupada' => $ech_hogares_tipo_agrupada,
+            '$ech_hogares_tipo_variacion' => $ech_hogares_tipo_variacion,
           ],
         ],
       ],
@@ -543,7 +548,56 @@ final class DashboardController extends ControllerBase {
     return $options;
   }
 
+  public function getEchHogaresTipoAgrupada(): array {
+    $conn = Database::getConnection('default', 'mapa_data');
+    $results = $conn->select('ech_hogares_tipo_agrupada', 'h')
+      ->fields('h')
+      ->orderBy('anyo', 'ASC')
+      ->orderBy('categoria', 'ASC')
+      ->execute()
+      ->fetchAll();
 
-  
+    $dataset = [];
+    foreach ($results as $row) {
+      $dataset[] = [
+        'anyo'          => (int) $row->anyo,
+        'categoria'     => $row->categoria,
+        'hogares_miles' => (float) $row->hogares_miles,
+      ];
+    }
+    return $dataset;
+  }
+
+  public function getEchHogaresTipoVariacion(array $dataset): array {
+    $by_cat = [];
+    foreach ($dataset as $row) {
+      $by_cat[$row['categoria']][] = $row;
+    }
+
+    $claves = [
+      'Hogar unipersonal'              => 'unipersonal',
+      'Hogares con un núcleo familiar' => 'un_nucleo',
+      'Dos o más núcleos familiares'   => 'dos_nucleos',
+      'Personas sin núcleo entre sí'   => 'sin_nucleo',
+    ];
+
+    $result = [];
+    foreach ($by_cat as $categoria => $rows) {
+      $clave        = $claves[$categoria] ?? preg_replace('/[^a-z0-9]+/', '_', strtolower($categoria));
+      $primer_valor = (float) reset($rows)['hogares_miles'];
+      $ultimo_valor = (float) end($rows)['hogares_miles'];
+      $var_porc     = $primer_valor > 0 ? round(($ultimo_valor - $primer_valor) / $primer_valor * 100, 1) : NULL;
+
+      $result[$clave . '_primer_anyo']  = (int) reset($rows)['anyo'];
+      $result[$clave . '_ultimo_anyo']  = (int) end($rows)['anyo'];
+      $result[$clave . '_primer_valor'] = $primer_valor;
+      $result[$clave . '_ultimo_valor'] = $ultimo_valor;
+      $result[$clave . '_var_porc']     = $var_porc;
+    }
+    return $result;
+  }
+
+
+
 
 }

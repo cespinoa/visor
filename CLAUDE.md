@@ -333,6 +333,24 @@ El turismo reglado ha entrado en una fase de estancamiento desde 2017
 {% endif %}
 ```
 
+### Datasets `$ech_hogares_tipo_agrupada` y `$ech_hogares_tipo_variacion` (`DashboardController.php`)
+
+Inyectados directamente desde PHP. Solo disponibles en ámbito `canarias`.
+
+`$ech_hogares_tipo_agrupada` — array plano `[{anyo, categoria, hogares_miles}]`. Fuente: tabla `ech_hogares_tipo_agrupada` (2013–2020). Usado por la tabla `hogares-tipo-tabla` (tipo `ccaa-ext`) y el gráfico `hogares-tipo-linea` (tipo `pendiente-ccaa-ext`).
+
+`$ech_hogares_tipo_variacion` — objeto plano con variación por categoría. Claves disponibles en longtexts (sustituir `{clave}` por `unipersonal`, `un_nucleo`, `dos_nucleos` o `sin_nucleo`):
+
+```
+{{ ech_hogares_tipo_variacion.{clave}_primer_anyo }}   → primer año de la serie
+{{ ech_hogares_tipo_variacion.{clave}_ultimo_anyo }}   → último año de la serie
+{{ ech_hogares_tipo_variacion.{clave}_primer_valor }}  → valor en miles en el primer año
+{{ ech_hogares_tipo_variacion.{clave}_ultimo_valor }}  → valor en miles en el último año
+{{ ech_hogares_tipo_variacion.{clave}_var_porc }}      → variación % entre primer y último año
+```
+
+Ejemplo: `{{ ech_hogares_tipo_variacion.unipersonal_var_porc }}` → `12.9`
+
 ### Dataset `$hogar_derivado_ultimo` (`utils-tablas.js` → `calcularHogarDerivadoUltimo`)
 
 Se calcula en `panel-datos.js` antes de `_prefetchLongtexts` y se almacena en `drupalSettings.visorProject['$hogar_derivado_ultimo']`. Funciona para los tres ámbitos (canarias, isla, municipio). Claves disponibles en longtexts:
@@ -413,6 +431,37 @@ Font size reducido a 10px (vs. 12px por defecto) para los gráficos de tipo, que
 - `total_2001`, `total_2011`, `total_2021` — total viviendas
 
 Y calcula con `porcentajesCensos()` los campos `_porc` para no habituales y habituales (NULL si denominador = 0). El dataset se inyecta como `$censo_viviendas_no_habituales` en `drupalSettings.visorProject`.
+
+### Gráfico `pendiente-ccaa-ext` (`utils-graficos.js` → `dibujarPendienteCCAA`)
+
+Dibuja series de línea sobre un dataset externo (array plano de registros). Admite tres parámetros opcionales en `config.config`:
+
+- **`baseYear`** — año base para indexar a 100. Todos los valores se normalizan como `(valor / valor_base) * 100`. El eje Y muestra `Índice (XXXX = 100)`.
+- **`tendencia: true`** — sustituye los valores (o los índices si hay `baseYear`) por su regresión lineal. La regresión es **anclada**: la recta se fuerza a pasar por `(baseYearIdx, 100)` ajustando solo la pendiente, de modo que todas las series arrancan en exactamente 100. Sin `baseYear`, ancla en el primer punto no nulo. No dibuja marcadores de punto.
+- Combinados (`baseYear` + `tendencia`): se indexa primero y luego se calcula la tendencia anclada — el resultado son rectas que parten de 100 en el año base y muestran el ritmo de crecimiento relativo sin ruido de oscilaciones.
+
+La tabla compañera del gráfico incluye un **swatch de color** (cuadrado 12×12 px inline) antes del nombre de cada serie, usando el mismo `borderColor` del dataset Chart.js, para mantener coherencia visual entre leyenda y tabla.
+
+```js
+'hogares-tipo-linea': {
+    tipo:   'pendiente-ccaa-ext',
+    titulo: 'Tendencia de hogares por tipo — ECH (base 2013 = 100)',
+    config: {
+        dataset:       '$ech_hogares_tipo_agrupada',
+        campo:         'hogares_miles',
+        yearField:     'anyo',
+        etiquetaField: 'categoria',
+        baseYear:      '2013',
+        tendencia:     true,
+        series: [
+            { nombre: 'Hogares con un núcleo familiar', color: '#1565C0' },
+            { nombre: 'Hogar unipersonal',              color: '#a70000' },
+            { nombre: 'Personas sin núcleo entre sí',   color: '#EF6C00' },
+            { nombre: 'Dos o más núcleos familiares',   color: '#555555' },
+        ],
+    },
+},
+```
 
 ### Gráfico `pendiente-pob-viv` (`utils-graficos.js`)
 

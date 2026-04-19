@@ -29,6 +29,25 @@ window.CONFIG_GRAFICOS = {
         },
     },
 
+    'hogares-tipo-linea': {
+        tipo:   'pendiente-ccaa-ext',
+        titulo: 'Tendencia de hogares por tipo de composición familiar — ECH (base 2013 = 100)',
+        config: {
+            dataset:       '$ech_hogares_tipo_agrupada',
+            campo:         'hogares_miles',
+            yearField:     'anyo',
+            etiquetaField: 'categoria',
+            baseYear:      '2013',
+            tendencia:     true,
+            series: [
+                { nombre: 'Hogares con un núcleo familiar', color: '#1565C0' },
+                { nombre: 'Hogar unipersonal',              color: '#a70000' },
+                { nombre: 'Personas sin núcleo entre sí',   color: '#EF6C00' },
+                { nombre: 'Dos o más núcleos familiares',   color: '#555555' },
+            ],
+        },
+    },
+
     'personas-por-hogar': {
         tipo:   'linea-ext',
         titulo: 'Evolución del tamaño medio de los hogares',
