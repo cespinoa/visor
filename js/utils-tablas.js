@@ -472,6 +472,7 @@
             tbody.appendChild(tr);
         });
 
+        this._inyectarFuente(wrapper, config);
         if (config.colapsible) this._activarColapsible(wrapper);
         return wrapper;
     },
@@ -1004,6 +1005,7 @@
         islas.forEach(d => tbody.appendChild(crearFila(d, d.etiqueta, false)));
         if (canarias) tbody.appendChild(crearFila(canarias, 'Canarias', true));
 
+        this._inyectarFuente(wrapper, config);
         if (config.colapsible) this._activarColapsible(wrapper);
         return wrapper;
     },
@@ -1288,14 +1290,14 @@
         if (!wrapper) return null;
         wrapper.querySelector('table').classList.add('tabla-anyo-estrecho');
 
+        const fuenteDiv = this._inyectarFuente(wrapper, config);
+
         // Nota al pie solo para canarias: El Hierro y La Gomera excluidos
         if (ambito === 'canarias') {
             const nota = document.createElement('p');
             nota.className = 'tabla-nota-metodologica';
             nota.textContent = 'Nota: El Hierro y La Gomera no están incluidos en la Encuesta de Turismo Receptor (E16028B/Frontur-Canarias). Los turistas reglados de ambas islas (~141.000 en 2025) no se suman al total para mantener consistencia con el dato de llegadas totales. El efecto sobre el resultado es inferior al 1\u00a0%.';
-            const footer = wrapper.querySelector('.tabla-footer-acciones');
-            if (footer) footer.before(nota);
-            else wrapper.appendChild(nota);
+            fuenteDiv.prepend(nota);
         }
 
         return wrapper;
@@ -1484,6 +1486,30 @@
         };
     },
 
+    calcularEcepovDerivadoUltimo: function(props) {
+        const fmt = window.visorProject.utils.formatearDato;
+        const censo  = parseFloat(props.viviendas_habituales);
+        const ecepov = parseFloat(props.hogares_total);
+        if (isNaN(censo) || isNaN(ecepov) || ecepov === 0) return {};
+
+        const dif    = censo - ecepov;
+        const difPct = (dif / ecepov) * 100;
+
+        const signo = n => (n >= 0 ? '+' : '') + fmt(n, 'entero');
+        const signoPct = n => (n >= 0 ? '+' : '') + fmt(n, 'decimal_1') + '\u00a0%';
+
+        return {
+            censo:       fmt(censo,  'entero'),
+            ecepov:      fmt(ecepov, 'entero'),
+            dif:         signo(dif),
+            dif_pct:     signoPct(difPct),
+            censo_n:     Math.round(censo),
+            ecepov_n:    Math.round(ecepov),
+            dif_n:       Math.round(dif),
+            dif_pct_n:   Math.round(difPct * 10) / 10,
+        };
+    },
+
     calcularHogarDerivadoUltimo: function(props) {
         const vp     = drupalSettings.visorProject || {};
         const fmt    = window.visorProject.utils.formatearDato;
@@ -1563,6 +1589,23 @@
             ? (v >= 0 ? '+' : '\u2212') + fmt(Math.abs(v), 'decimal_2')
             : '—';
 
+        const tendUltimo = categTend(delta, pHogarA, pHogarB);
+
+        const variacion2021 = parseFloat(props.tamanio_hogar_variacion_2021);
+        const tend2021Hoy = isNaN(variacion2021) ? '—'
+            : variacion2021 >  0.05 ? 'sube'
+            : variacion2021 < -0.05 ? 'baja'
+            : 'estable';
+
+        const tend1simple = tendUltimo.startsWith('baja') ? 'baja'
+            : tendUltimo === 'estable' ? 'estable'
+            : tendUltimo === 'sube' ? 'sube'
+            : '—';
+
+        const tendCombinada = (tend1simple !== '—' && tend2021Hoy !== '—')
+            ? tend1simple + '_' + tend2021Hoy
+            : '—';
+
         return {
             anyo:              ultimoAño,
             valor:             fmt(v2021, 'decimal_2'),
@@ -1570,7 +1613,9 @@
             delta_ultimo:      fmtD(delta),
             pend_historica:    fmtP(pHogarA),
             pend_reciente:     fmtP(pHogarB),
-            tend_ultimo:       categTend(delta, pHogarA, pHogarB),
+            tend_ultimo:       tendUltimo,
+            tend_2021_hoy:     tend2021Hoy,
+            tend_combinada:    tendCombinada,
             valor_n:           v2021 != null ? Math.round(v2021 * 1e3) / 1e3 : null,
             valor_2011_n:      v2011 != null ? Math.round(v2011 * 1e3) / 1e3 : null,
             delta_ultimo_n:    delta != null ? Math.round(delta * 1e4) / 1e4 : null,
@@ -1579,13 +1624,90 @@
         };
     },
 
+    crearTablaEcepovDiferencia: function(config) {
+        const snap    = (drupalSettings.visorProject || {}).datosDashboard || [];
+        const fmt     = v => window.visorProject.utils.formatearDato(v, 'entero');
+        const fmtPct  = v => v != null
+            ? (v >= 0 ? '+' : '') + window.visorProject.utils.formatearDato(v, 'decimal_1') + '\u00a0%'
+            : '—';
+        const fmtDif  = v => v != null
+            ? (v >= 0 ? '+' : '') + window.visorProject.utils.formatearDato(v, 'entero')
+            : '—';
+
+        // Orientales → Centrales → Occidentales, alfabético dentro de cada grupo
+        const ordenIsla = { 2: 1, 6: 2, 3: 3, 7: 4, 1: 5, 4: 6, 5: 7 };
+        const islas = snap
+            .filter(d => d.ambito === 'isla')
+            .sort((a, b) => (ordenIsla[a.isla_id] || 99) - (ordenIsla[b.isla_id] || 99));
+        const canarias = snap.find(d => d.ambito === 'canarias');
+
+        const tpl = document.getElementById('tpl-tabla-base');
+        if (!tpl) return null;
+        const wrapper = tpl.content.cloneNode(true).querySelector('.contenedor-tabla');
+
+        wrapper.querySelector('.tabla-titulo').textContent = config.titulo;
+
+        const thead = wrapper.querySelector('thead tr');
+        ['Isla / Territorio', 'Censo', 'ECEPOV', 'Diferencia', 'Dif.\u00a0%'].forEach((texto, i) => {
+            const th = document.createElement('th');
+            th.className = i === 0 ? 'col-etiqueta' : 'col-dato';
+            th.textContent = texto;
+            thead.appendChild(th);
+        });
+
+        const tbody = wrapper.querySelector('tbody');
+        const crearFila = (d, etiqueta, destacada) => {
+            const censo  = parseFloat(d.viviendas_habituales);
+            const ecepov = parseFloat(d.hogares_total);
+            const dif    = !isNaN(censo) && !isNaN(ecepov) ? censo - ecepov : null;
+            const difPct = dif != null && ecepov !== 0 ? (dif / ecepov) * 100 : null;
+            const tr = document.createElement('tr');
+            if (destacada) tr.classList.add('fila-resaltada');
+            tr.innerHTML = `<th class="col-etiqueta">${etiqueta}</th>`
+                + `<td class="col-dato">${fmt(censo)}</td>`
+                + `<td class="col-dato">${fmt(ecepov)}</td>`
+                + `<td class="col-dato">${fmtDif(dif)}</td>`
+                + `<td class="col-dato">${fmtPct(difPct)}</td>`;
+            return tr;
+        };
+
+        islas.forEach(d => tbody.appendChild(crearFila(d, d.etiqueta, false)));
+        if (canarias) tbody.appendChild(crearFila(canarias, 'Canarias', true));
+
+        this._inyectarFuente(wrapper, config);
+        return wrapper;
+    },
+
+    _inyectarFuente: function(wrapper, config) {
+        const div = document.createElement('div');
+        div.className = 'tabla-fuente';
+        if (config.fuente || config.fecha) {
+            const p = document.createElement('p');
+            p.className = 'tabla-fuente-dato';
+            const parts = [];
+            if (config.fuente) parts.push('Fuente: ' + config.fuente);
+            if (config.fecha) parts.push('Datos: ' + config.fecha);
+            p.textContent = parts.join(' · ');
+            div.appendChild(p);
+        }
+        wrapper.appendChild(div);
+        return div;
+    },
+
     _activarColapsible: function(wrapper) {
         wrapper.classList.add('tabla-colapsible', 'tabla-colapsada');
         const header = wrapper.querySelector('.tabla-header');
         const titulo = wrapper.querySelector('.tabla-titulo');
-        const icon = document.createElement('span');
-        icon.className = 'tabla-toggle-icon';
-        titulo.appendChild(icon);
+
+        const tableIcon = document.createElement('i');
+        tableIcon.className = 'material-icons tabla-tipo-icon';
+        tableIcon.textContent = 'table_chart';
+        titulo.prepend(tableIcon);
+
+        const chevron = document.createElement('span');
+        chevron.className = 'tabla-toggle-icon';
+        titulo.appendChild(chevron);
+
         header.addEventListener('click', () => {
             wrapper.classList.toggle('tabla-colapsada');
         });
