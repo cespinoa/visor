@@ -12,6 +12,8 @@ window.CONFIG_GRAFICOS = {
             etiquetaField: 'ccaa_nombre',
             destacadas:    ['Total Nacional', 'Canarias'],
         },
+        fuente: 'INE (Encuesta Continua de Hogares)',
+        fecha: '2026-T1',
     },
 
     'hogar-ccaa-pendiente': {
@@ -27,6 +29,8 @@ window.CONFIG_GRAFICOS = {
                 { nombre: 'Canarias',       color: '#a70000' },
             ],
         },
+        fuente: 'INE (Encuesta Continua de Hogares)',
+        fecha: '2026-T1',
     },
 
     'hogares-tipo-linea': {
@@ -46,6 +50,8 @@ window.CONFIG_GRAFICOS = {
                 { nombre: 'Dos o más núcleos familiares',   color: '#555555' },
             ],
         },
+        fuente: 'INE (Encuesta de Condiciones de Vida 2013–2020 / ECEPOV 2021)',
+        fecha: '2021',
     },
 
     'personas-por-hogar': {
@@ -54,7 +60,21 @@ window.CONFIG_GRAFICOS = {
         config: {
             campo:   'miembros',
             dataset: '$personas_hogar',
-        }
+        },
+        fuente: 'ISTAC (Censos de Población y Viviendas)',
+        fecha: '2021',
+    },
+
+    'personas-por-hogar-proyeccion': {
+        tipo:   'linea-ext',
+        titulo: 'Evolución del tamaño medio de los hogares (con estimación actual)',
+        config: {
+            campo:      'miembros',
+            dataset:    '$personas_hogar',
+            proyeccion: true,
+        },
+        fuente: 'ISTAC (Censos) · Estimación actual: población / viviendas disponibles',
+        fecha: '2021',
     },
 
     'llegadas-vs-plazas': {
@@ -96,17 +116,23 @@ window.CONFIG_GRAFICOS = {
                 },
             ],
         },
+        fuente: 'ISTAC (FRONTUR + Encuesta de Ocupación en Alojamientos Turísticos)',
+        fecha: '2025',
     },
 
     'reglado-vs-vacacional': {
         tipo:   'linea-turismo',
         titulo: 'Turismo reglado vs vacacional (base 2012 = 100)',
+        fuente: 'ISTAC (FRONTUR + Estadística de Vivienda Vacacional — derivado)',
+        fecha: '2026-M02',
     },
 
     'reglado-vs-vacacional-abs': {
         tipo:   'linea-turismo',
         titulo: 'Turismo reglado y vacacional (millones de turistas)',
         config: { modo: 'absoluto' },
+        fuente: 'ISTAC (FRONTUR + Estadística de Vivienda Vacacional — derivado)',
+        fecha: '2026-M02',
     },
 
     // ── Censos de viviendas no habituales — índice base 100 ─────────────────
@@ -118,6 +144,8 @@ window.CONFIG_GRAFICOS = {
             campo:  'no_hab',
             yTitle: 'Índice (2001 = 100)',
         },
+        fuente: 'INE (Censos de Población y Viviendas 2001, 2011 y 2021)',
+        fecha: '2021',
     },
 
     'no-hab-censos-turistico': {
@@ -128,6 +156,8 @@ window.CONFIG_GRAFICOS = {
             tipoMunicipio: 'TURÍSTICO',
             yTitle:        'Índice (2001 = 100)',
         },
+        fuente: 'INE (Censos de Población y Viviendas 2001, 2011 y 2021)',
+        fecha: '2021',
     },
 
     'no-hab-censos-grande': {
@@ -138,6 +168,8 @@ window.CONFIG_GRAFICOS = {
             tipoMunicipio: 'GRANDE',
             yTitle:        'Índice (2001 = 100)',
         },
+        fuente: 'INE (Censos de Población y Viviendas 2001, 2011 y 2021)',
+        fecha: '2021',
     },
 
     'no-hab-censos-mediano': {
@@ -148,6 +180,8 @@ window.CONFIG_GRAFICOS = {
             tipoMunicipio: 'MEDIO',
             yTitle:        'Índice (2001 = 100)',
         },
+        fuente: 'INE (Censos de Población y Viviendas 2001, 2011 y 2021)',
+        fecha: '2021',
     },
 
     'no-hab-censos-pequeno': {
@@ -158,6 +192,8 @@ window.CONFIG_GRAFICOS = {
             tipoMunicipio: 'PEQUEÑO',
             yTitle:        'Índice (2001 = 100)',
         },
+        fuente: 'INE (Censos de Población y Viviendas 2001, 2011 y 2021)',
+        fecha: '2021',
     },
 
     // ── Censos de viviendas no habituales — porcentaje sobre total ───────────
@@ -170,6 +206,8 @@ window.CONFIG_GRAFICOS = {
             modo:   'porcentaje',
             yTitle: '% sobre total de viviendas',
         },
+        fuente: 'INE (Censos de Población y Viviendas 2001, 2011 y 2021)',
+        fecha: '2021',
     },
 
     'no-hab-porc-turistico': {
@@ -181,6 +219,8 @@ window.CONFIG_GRAFICOS = {
             tipoMunicipio: 'TURÍSTICO',
             yTitle:        '% sobre total de viviendas',
         },
+        fuente: 'INE (Censos de Población y Viviendas 2001, 2011 y 2021)',
+        fecha: '2021',
     },
 
     'no-hab-porc-grande': {
@@ -192,6 +232,8 @@ window.CONFIG_GRAFICOS = {
             tipoMunicipio: 'GRANDE',
             yTitle:        '% sobre total de viviendas',
         },
+        fuente: 'INE (Censos de Población y Viviendas 2001, 2011 y 2021)',
+        fecha: '2021',
     },
 
     'no-hab-porc-mediano': {
@@ -203,6 +245,8 @@ window.CONFIG_GRAFICOS = {
             tipoMunicipio: 'MEDIO',
             yTitle:        '% sobre total de viviendas',
         },
+        fuente: 'INE (Censos de Población y Viviendas 2001, 2011 y 2021)',
+        fecha: '2021',
     },
 
     'no-hab-porc-pequeno': {
@@ -214,6 +258,8 @@ window.CONFIG_GRAFICOS = {
             tipoMunicipio: 'PEQUEÑO',
             yTitle:        '% sobre total de viviendas',
         },
+        fuente: 'INE (Censos de Población y Viviendas 2001, 2011 y 2021)',
+        fecha: '2021',
     },
 
     // ── Gráficos de población y vivienda (nivel Canarias) ───────────────────
@@ -233,14 +279,16 @@ window.CONFIG_GRAFICOS = {
                     acumular: true,
                 },
                 {
-                    dataset:   '$historico_hogares_necesarios',
-                    etiqueta:  'Hogares necesarios por crecimiento poblacional (acumulado)',
-                    color:     '#2b7abf',
+                    dataset:    '$historico_hogares_necesarios',
+                    etiqueta:   'Hogares necesarios por crecimiento poblacional (acumulado)',
+                    color:      '#2b7abf',
                     borderDash: [5, 4],
-                    acumular:  true,
+                    acumular:   true,
                 },
             ],
         },
+        fuente: 'ISTAC (Viviendas iniciadas y terminadas en Canarias) + ISTAC + INE (Padrón Municipal)',
+        fecha: '2025-M12',
     },
 
     // ── Radar ────────────────────────────────────────────────────────────────
@@ -279,7 +327,9 @@ window.CONFIG_GRAFICOS = {
                 'RIT_Km²',
                 'Res_Km²',
             ],
-        }
+        },
+        fuente: 'Gobierno de Canarias (Registro de VV y AT) + ISTAC + INE',
+        fecha: '2026-M02',
     },
 
     'gauge-rit': {
@@ -290,8 +340,11 @@ window.CONFIG_GRAFICOS = {
             campo_max: 'rit_max',
             campo_media: 'rit_avg',
             tipo_escala: 'calor',
-        }
+        },
+        fuente: 'ISTAC (Población Turística Equivalente + Estadística de VV + Padrón Municipal)',
+        fecha: '2026-M02',
     },
+
     'gauge-rit-r': {
         tipo: 'gauge',
         titulo: 'RIT reglada',
@@ -300,8 +353,11 @@ window.CONFIG_GRAFICOS = {
             campo_max: 'rit_r_max',
             campo_media: 'rit_r_avg',
             tipo_escala: 'calor',
-        }
+        },
+        fuente: 'ISTAC (Población Turística Equivalente + Padrón Municipal)',
+        fecha: '2026-M02',
     },
+
     'gauge-rit-v': {
         tipo: 'gauge',
         titulo: 'RIT vacacional',
@@ -310,8 +366,11 @@ window.CONFIG_GRAFICOS = {
             campo_max: 'rit_v_max',
             campo_media: 'rit_v_avg',
             tipo_escala: 'calor',
-        }
+        },
+        fuente: 'ISTAC (Estadística de VV + Padrón Municipal)',
+        fecha: '2026-M02',
     },
+
     'donut-rit': {
         tipo: 'donut',
         titulo: 'Distribución de RIT',
@@ -319,13 +378,14 @@ window.CONFIG_GRAFICOS = {
         config: {
             campos: ['rit_v_porc', 'rit_r_porc'],
             labels: ['Porcentaje Vacacional', 'Porcentaje reglado'],
-            paleta: 'paleta-donuts', 
+            paleta: 'paleta-donuts',
         },
         campo_central: 'rit_v_porc',
-        etiqueta_central: 'Porcentaje RIT vacacional'
+        etiqueta_central: 'Porcentaje RIT vacacional',
+        fuente: 'ISTAC (Población Turística Equivalente + Estadística de VV + Padrón Municipal)',
+        fecha: '2026-M02',
     },
 
-    
     'gauge-rit-km2': {
         tipo: 'gauge',
         titulo: 'RIT total / km²',
@@ -334,8 +394,11 @@ window.CONFIG_GRAFICOS = {
             campo_max: 'rit_km2_max',
             campo_media: 'rit_km2_avg',
             tipo_escala: 'calor',
-        }
+        },
+        fuente: 'ISTAC (Población Turística Equivalente + Estadística de VV + Padrón Municipal)',
+        fecha: '2026-M02',
     },
+
     'gauge-rit-r-km2': {
         tipo: 'gauge',
         titulo: 'RIT reglada / km²',
@@ -344,8 +407,11 @@ window.CONFIG_GRAFICOS = {
             campo_max: 'rit_r_km2_max',
             campo_media: 'rit_r_km2_avg',
             tipo_escala: 'calor',
-        }
+        },
+        fuente: 'ISTAC (Población Turística Equivalente + Padrón Municipal)',
+        fecha: '2026-M02',
     },
+
     'gauge-rit-v-km2': {
         tipo: 'gauge',
         titulo: 'RIT vacacional / km²',
@@ -354,8 +420,11 @@ window.CONFIG_GRAFICOS = {
             campo_max: 'rit_v_km2_max',
             campo_media: 'rit_v_km2_avg',
             tipo_escala: 'calor',
-        }
+        },
+        fuente: 'ISTAC (Estadística de VV + Padrón Municipal)',
+        fecha: '2026-M02',
     },
+
     'donut-rit-km2': {
         tipo: 'donut',
         titulo: 'Distribución de RIT km²',
@@ -363,13 +432,14 @@ window.CONFIG_GRAFICOS = {
         config: {
             campos: ['rit_v_km2', 'rit_r_km2'],
             labels: ['Porcentaje Vacacional', 'Porcentaje reglado'],
-            paleta: 'paleta-donuts', 
+            paleta: 'paleta-donuts',
         },
         campo_central: 'rit_v_km2',
-        etiqueta_central: 'Porcentaje RIT vacacional'
+        etiqueta_central: 'Porcentaje RIT vacacional',
+        fuente: 'ISTAC (Población Turística Equivalente + Estadística de VV + Padrón Municipal)',
+        fecha: '2026-M02',
     },
 
-    
     'gauge-presion-humana': {
         tipo: 'gauge',
         titulo: 'Presión humana',
@@ -378,9 +448,12 @@ window.CONFIG_GRAFICOS = {
             campo_max: 'presion_humana_km2_max',
             campo_media: 'presion_humana_km2_avg',
             tipo_escala: 'calor',
-        }
+        },
+        fuente: 'ISTAC (Población Turística Equivalente + Estadística de VV + Padrón Municipal)',
+        fecha: '2026-M02',
     },
-    'gauge-densidad-de-poblacion' : {
+
+    'gauge-densidad-de-poblacion': {
         tipo: 'gauge',
         titulo: 'Residentes por km²',
         config: {
@@ -388,8 +461,11 @@ window.CONFIG_GRAFICOS = {
             campo_max: 'residentes_km2_max',
             campo_media: 'residentes_km2_avg',
             tipo_escala: 'calor',
-        }
+        },
+        fuente: 'ISTAC + INE (Padrón Municipal)',
+        fecha: '2025',
     },
+
     'donut-presion-humana': {
         tipo: 'donut',
         titulo: 'Distribución de Presión Humana',
@@ -397,17 +473,14 @@ window.CONFIG_GRAFICOS = {
         config: {
             campos: ['rit_km2', 'residentes_km2'],
             labels: ['Porcentaje Turistas', 'Porcentaje Residentes'],
-            paleta: 'paleta-donuts', 
+            paleta: 'paleta-donuts',
         },
         campo_central: 'rit_km2',
-        etiqueta_central: 'Porcentaje RIT total'
+        etiqueta_central: 'Porcentaje RIT total',
+        fuente: 'ISTAC (Población Turística Equivalente + Estadística de VV + Padrón Municipal)',
+        fecha: '2026-M02',
     },
 
-
-
-
-
-    
     'gauge-viviendas-vacias': {
         tipo: 'gauge',
         titulo: 'Porc. de viviendas vacías',
@@ -416,8 +489,11 @@ window.CONFIG_GRAFICOS = {
             campo_max: 'viviendas_vacias_viviendas_total_max',
             campo_media: 'viviendas_vacias_viviendas_total_avg',
             tipo_escala: 'calor',
-        }
+        },
+        fuente: 'INE (Censo de Población y Viviendas 2021)',
+        fecha: '2021',
     },
+
     'gauge-viviendas-esporadicas': {
         tipo: 'gauge',
         titulo: 'Porc. de viviendas de uso esporádico',
@@ -426,8 +502,11 @@ window.CONFIG_GRAFICOS = {
             campo_max: 'viviendas_esporadicas_viviendas_total_max',
             campo_media: 'viviendas_esporadicas_viviendas_total_avg',
             tipo_escala: 'calor',
-        }
+        },
+        fuente: 'INE (Censo de Población y Viviendas 2021)',
+        fecha: '2021',
     },
+
     'gauge-viviendas-vacacional': {
         tipo: 'gauge',
         titulo: 'Porc. de viviendas en vacacional',
@@ -436,8 +515,11 @@ window.CONFIG_GRAFICOS = {
             campo_max: 'vacacional_por_viviendas_habituales_max',
             campo_media: 'vacacional_por_viviendas_habituales_avg',
             tipo_escala: 'calor',
-        }
+        },
+        fuente: 'Gobierno de Canarias (Registro de VV) + INE (Censo 2021)',
+        fecha: '2026-03-31',
     },
+
     'gauge-uds-vv-habitantes': {
         tipo: 'gauge',
         titulo: 'Viviendas vacacionales por 100 habitantes',
@@ -446,11 +528,10 @@ window.CONFIG_GRAFICOS = {
             campo_max: 'uds_vv_habitantes_max',
             campo_media: 'uds_vv_habitantes_avg',
             tipo_escala: 'calor',
-        }
+        },
+        fuente: 'Gobierno de Canarias (Registro de VV) + ISTAC + INE (Padrón)',
+        fecha: '2026-03-31',
     },
-
-
-
 
     'gauge-deficit-viviendas': {
         tipo: 'gauge',
@@ -460,9 +541,11 @@ window.CONFIG_GRAFICOS = {
             campo_max: 'deficit_oferta_viviendas_max',
             campo_media: 'deficit_oferta_viviendas_avg',
             tipo_escala: 'calor',
-        }
+        },
+        fuente: 'INE (Censo 2021) + Gobierno de Canarias (Registro de VV) + ISTAC + INE (Padrón)',
+        fecha: '2025',
     },
-    
+
     'gauge-plazas-suelo-residencial': {
         tipo: 'gauge',
         titulo: 'Desplazamiento a zonas residenciales',
@@ -471,8 +554,11 @@ window.CONFIG_GRAFICOS = {
             campo_max: 'plazas_suelo_residencial_porc_max',
             campo_media: 'plazas_suelo_residencial_porc_avg',
             tipo_escala: 'calor',
-        }
+        },
+        fuente: 'Gobierno de Canarias (Registro de VV y AT)',
+        fecha: '2026-03-31',
     },
+
     'gauge-peso-oferta-vacacional': {
         tipo: 'gauge',
         titulo: 'Peso de la oferta vacacional',
@@ -481,8 +567,11 @@ window.CONFIG_GRAFICOS = {
             campo_max: 'plazas_vacacionales_plazas_total_porc_max',
             campo_media: 'plazas_vacacionales_plazas_total_porc_avg',
             tipo_escala: 'calor',
-        }
+        },
+        fuente: 'Gobierno de Canarias (Registro de VV y AT)',
+        fecha: '2026-03-31',
     },
+
     'donut-vv-por-zona': {
         tipo: 'donut',
         titulo: 'VV por tipo de zona',
@@ -492,8 +581,11 @@ window.CONFIG_GRAFICOS = {
             paleta: 'paleta-donuts',
         },
         campo_central: 'plazas_vv_residenciales_porc',
-        etiqueta_central: 'En zonas residenciales'
+        etiqueta_central: 'En zonas residenciales',
+        fuente: 'Gobierno de Canarias (Registro de VV)',
+        fecha: '2026-03-31',
     },
+
     'donut-regladas-por-zona': {
         tipo: 'donut',
         titulo: 'Plazas regladas por tipo de zona',
@@ -503,8 +595,11 @@ window.CONFIG_GRAFICOS = {
             paleta: 'paleta-donuts',
         },
         campo_central: 'plazas_at_residenciales_porc',
-        etiqueta_central: 'En zonas residenciales'
+        etiqueta_central: 'En zonas residenciales',
+        fuente: 'Gobierno de Canarias (Registro de AT)',
+        fecha: '2026-03-31',
     },
+
     'donut-plazas': {
         tipo: 'donut',
         titulo: 'Distribución de Plazas',
@@ -512,207 +607,184 @@ window.CONFIG_GRAFICOS = {
         config: {
             campos: ['plazas_vacacionales', 'plazas_regladas'],
             labels: ['Viv. Vacacional', 'Resto'],
-            paleta: 'paleta-donuts', 
+            paleta: 'paleta-donuts',
         },
         campo_central: 'plazas_vacacionales',
-        etiqueta_central: 'Plazas vacacionales'
+        etiqueta_central: 'Plazas vacacionales',
+        fuente: 'Gobierno de Canarias (Registro de VV y AT)',
+        fecha: '2026-03-31',
     },
+
     'bar-viviendas': {
         tipo: 'bar',
         titulo: 'Uso de las viviendas',
         subtitulo: 'Viviendas según uso',
         contexto: 'CHILDREN',
-        stacked: true,   
+        stacked: true,
         base100: true,
         config: {
             campos: ['viviendas_vacias', 'viviendas_esporadicas', 'viviendas_habituales'],
-            paleta: 'paleta-donuts', 
+            paleta: 'paleta-donuts',
         },
+        fuente: 'INE (Censo de Población y Viviendas 2021)',
+        fecha: '2021',
     },
-    
 
     // PANEL - DASHBOARD
     'evolucion-vivienda-vacacional': {
-        tipo: 'line',
-        titulo: 'Evolución de la vivienda vacacional',
-        contexto: 'CHILDREN_HISTORIC', // <--- El Selector buscará en datosSeries
-        periodo: 'YEARLY_MAX',     // <--- Refinará para tener un punto por año (diciembre)
-        stacked: true,
-        //~ agrupacion: {
-            //~ campo: 'tipo_municipio',
-            //~ series_a_agrupar: ['GRANDE', 'MEDIANO', 'PEQUEÑO', 'TURÍSTICO'], // Solo estos se funden
-            //~ etiqueta_grupo: ['Grandes municipios', 'Municipios medianos','Municipios pequeños', 'Municipios turísticos'],
-            //~ color: '#6c757d'
-        //~ },
+        tipo:    'line',
+        titulo:  'Evolución de la vivienda vacacional',
+        contexto: 'CHILDREN_HISTORIC',
+        periodo:  'YEARLY_MAX',
+        stacked:  true,
         config: {
             campos: ['uds_vv_total'],
             paleta: 'islas',
             fill: true
-        }
+        },
+        fuente: 'ISTAC (Estadística de Vivienda Vacacional)',
+        fecha: '2026-M02',
     },
+
     'evolucion-vivienda-vacacional-junio-2023': {
-        tipo: 'line',
-        titulo: 'Evolución de la vivienda vacacional',
-        contexto: 'CHILDREN_HISTORIC', // <--- El Selector buscará en datosSeries
-        periodo: '2023-06-30',
-        stacked: true,
-        //~ agrupacion: {
-            //~ campo: 'tipo_municipio',
-            //~ series_a_agrupar: ['GRANDE', 'MEDIANO', 'PEQUEÑO', 'TURÍSTICO'], // Solo estos se funden
-            //~ etiqueta_grupo: ['Grandes municipios', 'Municipios medianos','Municipios pequeños', 'Municipios turísticos'],
-            //~ color: '#6c757d'
-        //~ },
+        tipo:    'line',
+        titulo:  'Evolución de la vivienda vacacional',
+        contexto: 'CHILDREN_HISTORIC',
+        periodo:  '2023-06-30',
+        stacked:  true,
         config: {
             campos: ['uds_vv_total'],
             paleta: 'islas',
             fill: true
-        }
+        },
+        fuente: 'ISTAC (Estadística de Vivienda Vacacional)',
+        fecha: '2023-06-30',
     },
+
     'bar-plazas': {
-        tipo: 'bar',
-        titulo: 'Plazas alojativas por zona',
-        //~ subtitulo: 'VV vs Otros tipos de alojamiento',
+        tipo:    'bar',
+        titulo:  'Plazas alojativas por zona',
         contexto: 'CHILDREN',
-        stacked: true,   
-        base100: true,
+        stacked:  true,
+        base100:  true,
         config: {
             campos: ['plazas_suelo_residencial', 'plazas_suelo_turistico'],
-            paleta: 'paleta-donuts', 
+            paleta: 'paleta-donuts',
         },
-        //~ agrupacion: {
-            //~ campo: 'tipo_isla',
-            //~ series_a_agrupar: ['Occidental'], 
-            //~ etiqueta_grupo: ['Islas occidentales'],
-            //~ color: '#6c757d'
-        //~ },
+        fuente: 'Gobierno de Canarias (Registro de VV y AT)',
+        fecha: '2026-03-31',
     },
+
     'bar-vv-por-zona': {
-        tipo: 'bar',
-        titulo: 'Viviendas vacacionales por zona',
-        //~ subtitulo: 'VV vs Otros tipos de alojamiento',
+        tipo:    'bar',
+        titulo:  'Viviendas vacacionales por zona',
         contexto: 'CHILDREN',
-        stacked: true,   
-        base100: true,
+        stacked:  true,
+        base100:  true,
         config: {
             campos: ['uds_vv_residenciales', 'uds_vv_turisticas'],
-            paleta: 'paleta-donuts', 
+            paleta: 'paleta-donuts',
         },
-        //~ agrupacion: {
-            //~ campo: 'tipo_isla',
-            //~ series_a_agrupar: ['Occidental'], 
-            //~ etiqueta_grupo: ['Islas occidentales'],
-            //~ color: '#6c757d'
-        //~ },
+        fuente: 'Gobierno de Canarias (Registro de VV)',
+        fecha: '2026-03-31',
     },
+
     'bar-reglado-no-reglado': {
-        tipo: 'bar',
-        titulo: 'Plazas por tipo de alojamiento',
+        tipo:    'bar',
+        titulo:  'Plazas por tipo de alojamiento',
         contexto: 'CHILDREN',
-        stacked: true,   
-        base100: true,
+        stacked:  true,
+        base100:  true,
         config: {
             campos: ['plazas_vacacionales', 'plazas_regladas'],
-            paleta: 'paleta-donuts', 
+            paleta: 'paleta-donuts',
         },
-        //~ agrupacion: {
-            //~ campo: 'tipo_isla',
-            //~ series_a_agrupar: ['Occidental'], 
-            //~ etiqueta_grupo: ['Islas occidentales'],
-            //~ color: '#6c757d'
-        //~ },
+        fuente: 'Gobierno de Canarias (Registro de VV y AT)',
+        fecha: '2026-03-31',
     },
+
     'bar-ptev-pter': {
-        tipo: 'bar',
-        titulo: 'Población turística equivalente por tipo de alojamiento',
+        tipo:    'bar',
+        titulo:  'Población turística equivalente por tipo de alojamiento',
         contexto: 'CHILDREN',
-        stacked: true,   
-        base100: true,
+        stacked:  true,
+        base100:  true,
         config: {
             campos: ['pte_v', 'pte_r'],
-            paleta: 'paleta-donuts', 
+            paleta: 'paleta-donuts',
         },
-        //~ agrupacion: {
-            //~ campo: 'tipo_isla',
-            //~ series_a_agrupar: ['Occidental'], 
-            //~ etiqueta_grupo: ['Islas occidentales'],
-            //~ color: '#6c757d'
-        //~ },
+        fuente: 'ISTAC (Población Turística Equivalente + Estadística de VV)',
+        fecha: '2026-M02',
     },
+
     'bar-ritr_ritv': {
-        tipo: 'bar',
-        titulo: 'Intensidad turística por tipo de alojamiento',
+        tipo:    'bar',
+        titulo:  'Intensidad turística por tipo de alojamiento',
         contexto: 'CHILDREN',
-        stacked: true,   
-        base100: true,
+        stacked:  true,
+        base100:  true,
         config: {
             campos: ['rit_v', 'rit_r'],
-            paleta: 'paleta-donuts', 
+            paleta: 'paleta-donuts',
         },
-        //~ agrupacion: {
-            //~ campo: 'tipo_isla',
-            //~ series_a_agrupar: ['Occidental'], 
-            //~ etiqueta_grupo: ['Islas occidentales'],
-            //~ color: '#6c757d'
-        //~ },
+        fuente: 'ISTAC (Población Turística Equivalente + Estadística de VV + Padrón Municipal)',
+        fecha: '2026-M02',
     },
+
     'bar-presion-humana': {
-        tipo: 'bar',
-        titulo: 'Intensidad turística por tipo de alojamiento',
+        tipo:    'bar',
+        titulo:  'Intensidad turística por tipo de alojamiento',
         contexto: 'CHILDREN',
-        stacked: true,   
-        base100: true,
+        stacked:  true,
+        base100:  true,
         config: {
-            campos: ['rit_v_km2', 'rit_r_km2','residentes_km2'],
-            paleta: 'triada', 
+            campos: ['rit_v_km2', 'rit_r_km2', 'residentes_km2'],
+            paleta: 'triada',
         },
-        //~ agrupacion: {
-            //~ campo: 'tipo_isla',
-            //~ series_a_agrupar: ['Occidental'], 
-            //~ etiqueta_grupo: ['Islas occidentales'],
-            //~ color: '#6c757d'
-        //~ },
+        fuente: 'ISTAC (Población Turística Equivalente + Estadística de VV + Padrón Municipal)',
+        fecha: '2026-M02',
     },
+
     'bar-uso-vivienda': {
-        tipo: 'bar',
-        titulo: 'Uso de la vivienda',
+        tipo:    'bar',
+        titulo:  'Uso de la vivienda',
         contexto: 'CHILDREN',
-        stacked: true,   
-        base100: true,
+        stacked:  true,
+        base100:  true,
         config: {
-            campos: ['viviendas_vacias', 'viviendas_esporadicas','viviendas_habituales'],
-            paleta: 'triada', 
+            campos: ['viviendas_vacias', 'viviendas_esporadicas', 'viviendas_habituales'],
+            paleta: 'triada',
         },
         agrupacion: {
             campo: 'tipo_isla',
-            series_a_agrupar: ['Occidental'], 
+            series_a_agrupar: ['Occidental'],
             etiqueta_grupo: ['Islas occidentales'],
             color: '#6c757d'
         },
+        fuente: 'INE (Censo de Población y Viviendas 2021)',
+        fecha: '2021',
     },
+
     'bar-presion-vivienda-habitual': {
-        tipo: 'bar',
-        titulo: 'Presion sobre la vivienda habitual',
+        tipo:    'bar',
+        titulo:  'Presion sobre la vivienda habitual',
         contexto: 'CHILDREN',
-        stacked: false,   
-        base100: false,
+        stacked:  false,
+        base100:  false,
         config: {
             campos: ['uds_vv_residenciales'],
-            paleta: 'paleta-donuts', 
+            paleta: 'paleta-donuts',
         },
-        //~ agrupacion: {
-            //~ campo: 'tipo_isla',
-            //~ series_a_agrupar: ['Occidental'], 
-            //~ etiqueta_grupo: ['Islas occidentales'],
-            //~ color: '#6c757d'
-        //~ },
+        fuente: 'Gobierno de Canarias (Registro de VV)',
+        fecha: '2026-03-31',
     },
 
     'bar-necesidad-de-vivienda': {
-        tipo: 'bar',
-        titulo: 'Necesidad de vivienda',
+        tipo:    'bar',
+        titulo:  'Necesidad de vivienda',
         contexto: 'CHILDREN',
-        stacked: false,
-        base100: false,
+        stacked:  false,
+        base100:  false,
         config: {
             campos: ['viviendas_necesarias', 'viviendas_disponibles'],
             paleta: 'paleta-donuts',
@@ -721,58 +793,60 @@ window.CONFIG_GRAFICOS = {
         },
         agrupacion: {
             campo: 'tipo_isla',
-            series_a_agrupar: ['Occidental'], 
+            series_a_agrupar: ['Occidental'],
             etiqueta_grupo: ['Islas occidentales'],
             color: '#6c757d'
         },
+        fuente: 'INE (Censo 2021) + Gobierno de Canarias (Registro de VV) + ISTAC + INE (Padrón)',
+        fecha: '2025',
     },
 
     'bar-hogares-nucleos': {
-        tipo: 'bar',
-        titulo: 'Necesidad de vivienda',
+        tipo:    'bar',
+        titulo:  'Necesidad de vivienda',
         contexto: 'CHILDREN',
-        stacked: true,
-        base100: true,
+        stacked:  true,
+        base100:  true,
         config: {
             campos: ['hogares_0', 'hogares_1', 'hogares_2', 'hogares_3'],
             paleta: 'progreso-calor',
             fill: true,
             tipo: 'bar',
         },
+        fuente: 'INE (Censo de Población y Viviendas 2021)',
+        fecha: '2021',
     },
 
     'bar-hogares-nucleos-deficit': {
-        tipo: 'bar',
-        titulo: 'Necesidad de vivienda',
+        tipo:    'bar',
+        titulo:  'Necesidad de vivienda',
         contexto: 'CHILDREN',
-        stacked: false,
-        base100: false,
+        stacked:  false,
+        base100:  false,
         config: {
             campos: ['deficit_teorico_viviendas_porc'],
             paleta: 'paleta-donuts',
             fill: true,
             tipo: 'bar',
         },
+        fuente: 'INE (Censo de Población y Viviendas 2021)',
+        fecha: '2021',
     },
 
     'bar-cobertura-de-vivienda': {
-        tipo: 'bar',
-        titulo: 'Cobertura de viviendas',
+        tipo:    'bar',
+        titulo:  'Cobertura de viviendas',
         contexto: 'CHILDREN',
-        stacked: false,
-        base100: false,
+        stacked:  false,
+        base100:  false,
         config: {
             campos: ['deficit_oferta_viviendas'],
             paleta: 'paleta-donuts',
             fill: true,
             tipo: 'bar',
         },
-        //~ agrupacion: {
-            //~ campo: 'tipo_isla',
-            //~ series_a_agrupar: ['Occidental'], 
-            //~ etiqueta_grupo: ['Islas occidentales'],
-            //~ color: '#6c757d'
-        //~ },
+        fuente: 'INE (Censo 2021) + Gobierno de Canarias (Registro de VV) + ISTAC + INE (Padrón)',
+        fecha: '2025',
     },
-    
+
 };

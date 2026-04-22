@@ -83,6 +83,16 @@ window.visorProject.utilsGraficos = {
             contenedor.style.marginRight = 'auto';
         }
 
+        if (config.fuente || config.fecha) {
+            const p = document.createElement('p');
+            p.className = 'grafico-fuente-dato';
+            const parts = [];
+            if (config.fuente) parts.push('Fuente: ' + config.fuente);
+            if (config.fecha) parts.push('Datos: ' + config.fecha);
+            p.textContent = parts.join(' · ');
+            contenedor.appendChild(p);
+        }
+
         return contenedor;
     },
 
@@ -325,6 +335,16 @@ window.visorProject.utilsGraficos = {
             wrapper.style.maxWidth    = opciones['ancho-pdf'];
             wrapper.style.marginLeft  = 'auto';
             wrapper.style.marginRight = 'auto';
+        }
+
+        if (config.fuente || config.fecha) {
+            const p = document.createElement('p');
+            p.className = 'grafico-fuente-dato';
+            const parts = [];
+            if (config.fuente) parts.push('Fuente: ' + config.fuente);
+            if (config.fecha) parts.push('Datos: ' + config.fecha);
+            p.textContent = parts.join(' · ');
+            wrapper.appendChild(p);
         }
 
         return wrapper;
@@ -739,6 +759,16 @@ window.visorProject.utilsGraficos = {
         tablaDiv.className = 'linea-ext-tabla';
         contenedor.appendChild(tablaDiv);
 
+        if (config.fuente || config.fecha) {
+            const p = document.createElement('p');
+            p.className = 'grafico-fuente-dato';
+            const parts = [];
+            if (config.fuente) parts.push('Fuente: ' + config.fuente);
+            if (config.fecha) parts.push('Datos: ' + config.fecha);
+            p.textContent = parts.join(' · ');
+            contenedor.appendChild(p);
+        }
+
         if (opciones['ancho-pdf']) {
             contenedor.style.maxWidth    = opciones['ancho-pdf'];
             contenedor.style.marginLeft  = 'auto';
@@ -815,35 +845,102 @@ window.visorProject.utilsGraficos = {
             refLabel = 'Media municipios ' + tipoMun;
         }
 
+        // ── Proyección (punto estimado en el año del snapshot) ───────────────
+        const conProyeccion = !!config.config.proyeccion;
+        let proyYear  = null;
+        let proyMy    = null;
+        let proyRef   = null;
+        let labelsExt = years;
+
+        if (conProyeccion) {
+            proyYear = String(registro.fecha_calculo).substring(0, 4);
+            proyMy   = parseFloat(registro.tamanio_hogar_actual);
+            if (isNaN(proyMy)) proyMy = null;
+
+            const snapshot = drupalSettings.visorProject.datosDashboard || [];
+            if (ambito === 'isla') {
+                const can = snapshot.find(s => s.ambito === 'canarias');
+                proyRef = can ? parseFloat(can.tamanio_hogar_actual) : null;
+                if (isNaN(proyRef)) proyRef = null;
+            } else if (ambito === 'municipio') {
+                const tipoMun = registro.tipo_municipio;
+                const peers = snapshot.filter(s => s.ambito === 'municipio' && s.tipo_municipio === tipoMun);
+                const vals  = peers.map(s => parseFloat(s.tamanio_hogar_actual)).filter(v => !isNaN(v));
+                proyRef = vals.length
+                    ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 100) / 100
+                    : null;
+            }
+
+            labelsExt = [...years, proyYear];
+        }
+
         // ── Gráfico Chart.js ─────────────────────────────────────────────────
+        const nulls = labelsExt.map(() => null);
+
+        // Serie principal — sólida hasta el último censo, null en año proyectado
+        const mainSolid = conProyeccion ? [...myData, null] : myData;
         const datasets = [
             {
                 label:           registro.etiqueta,
-                data:            myData,
+                data:            mainSolid,
                 borderColor:     '#a70000',
                 backgroundColor: 'rgba(167,0,0,0.07)',
                 borderWidth:     2,
-                pointRadius:     3,
+                pointRadius:     conProyeccion ? [...myData.map(() => 3), 0] : 3,
                 tension:         0.3,
             }
         ];
 
-        if (refData) {
+        // Tramo discontinuo de la serie principal: null hasta 2021, luego dos puntos
+        if (conProyeccion && proyMy !== null) {
+            const dashData = nulls.slice();
+            dashData[dashData.length - 2] = myData[myData.length - 1]; // último censo
+            dashData[dashData.length - 1] = proyMy;
             datasets.push({
-                label:           refLabel,
-                data:            refData,
-                borderColor:     '#aaaaaa',
+                label:           '_' + registro.etiqueta,
+                data:            dashData,
+                borderColor:     '#a70000',
                 backgroundColor: 'transparent',
-                borderWidth:     1.5,
+                borderWidth:     2,
                 borderDash:      [5, 4],
-                pointRadius:     2,
+                pointRadius:     dashData.map((v, i) => i === dashData.length - 1 ? 4 : 0),
                 tension:         0.3,
             });
         }
 
+        if (refData) {
+            const refSolid = conProyeccion ? [...refData, null] : refData;
+            datasets.push({
+                label:           refLabel,
+                data:            refSolid,
+                borderColor:     '#aaaaaa',
+                backgroundColor: 'transparent',
+                borderWidth:     1.5,
+                borderDash:      [5, 4],
+                pointRadius:     conProyeccion ? [...refData.map(() => 2), 0] : 2,
+                tension:         0.3,
+            });
+
+            if (conProyeccion && proyRef !== null) {
+                const refDash = nulls.slice();
+                refDash[refDash.length - 2] = refData[refData.length - 1];
+                refDash[refDash.length - 1] = proyRef;
+                datasets.push({
+                    label:           '_' + refLabel,
+                    data:            refDash,
+                    borderColor:     '#aaaaaa',
+                    backgroundColor: 'transparent',
+                    borderWidth:     1.5,
+                    borderDash:      [5, 4],
+                    pointRadius:     refDash.map((v, i) => i === refDash.length - 1 ? 3 : 0),
+                    tension:         0.3,
+                });
+            }
+        }
+
         new Chart(canvas.getContext('2d'), {
             type: 'line',
-            data: { labels: years, datasets },
+            data: { labels: labelsExt, datasets },
             options: {
                 responsive:          true,
                 maintainAspectRatio: true,
@@ -852,12 +949,18 @@ window.visorProject.utilsGraficos = {
                     y: { beginAtZero: false }
                 },
                 plugins: {
-                    legend: { position: 'bottom' },
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            filter: item => !item.text.startsWith('_'),
+                        },
+                    },
                     tooltip: {
                         mode:      'index',
                         intersect: false,
                         callbacks: {
                             label: ctx => {
+                                if (ctx.dataset.label.startsWith('_')) return null;
                                 const v = ctx.parsed.y;
                                 return ` ${ctx.dataset.label}: ${v !== null ? v.toFixed(2) : '—'}`;
                             }
@@ -875,22 +978,29 @@ window.visorProject.utilsGraficos = {
             ? '—'
             : parseFloat(v).toFixed(2);
 
+        const tableYears  = conProyeccion ? [...years, proyYear + '*'] : years;
+        const myDataExt   = conProyeccion ? [...myData, proyMy]        : myData;
+        const refDataExt  = (refData && conProyeccion) ? [...refData, proyRef] : refData;
+
         let html = '<table class="linea-ext-tabla__table">';
         html += '<thead><tr><th></th>'
-            + years.map(y => `<th>${y}</th>`).join('')
+            + tableYears.map(y => `<th>${y}</th>`).join('')
             + '</tr></thead><tbody>';
 
         html += `<tr><th>${registro.etiqueta}</th>`
-            + myData.map(v => `<td>${fmt(v)}</td>`).join('')
+            + myDataExt.map(v => `<td>${fmt(v)}</td>`).join('')
             + '</tr>';
 
-        if (refData) {
+        if (refDataExt) {
             html += `<tr><th>${refLabel}</th>`
-                + refData.map(v => `<td>${fmt(v)}</td>`).join('')
+                + refDataExt.map(v => `<td>${fmt(v)}</td>`).join('')
                 + '</tr>';
         }
 
         html += '</tbody></table>';
+        if (conProyeccion) {
+            html += '<p class="grafico-fuente-dato" style="margin-top:4px">* Estimación: población / viviendas disponibles</p>';
+        }
         tablaEl.innerHTML = html;
     },
 

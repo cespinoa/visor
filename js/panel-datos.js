@@ -40,67 +40,42 @@
       const esquema = [
 
         { 
-          tituloBloque: "La transformación del modelo turístico",
-          //~ intro: "",
-          destino: '#ficha-contenido',
-          elementos: [
-            { tipo: 'longtext', id: 'afluencia-plazas-ocupacion', ancho: '12', ambito: ['canarias', 'isla']  },
-            { tipo: 'grafico', id: 'llegadas-vs-plazas',    ancho: '12', ambito: ['canarias', 'isla'] },
-            { tipo: 'tabla',   id: 'historico-llegadas-plazas-ocupacion', ancho: '12', ambito: ['canarias', 'isla'] },
-            { tipo: 'longtext', id: 'turistas-reglados-vs-vacacionales', ancho: '12', ambito: ['canarias', 'isla'] },
-            { tipo: 'grafico', id: 'reglado-vs-vacacional-abs', ancho: '12', ambito: ['canarias', 'isla'] },
-            { tipo: 'grafico', id: 'reglado-vs-vacacional',     ancho: '12', ambito: ['canarias', 'isla'] },
-            { tipo: 'tabla',   id: 'turismo-reglado-vs-vacacional', ancho: '12', ambito: ['canarias', 'isla'] },
-
-            
-            { tipo: 'longtext', id: 'distribucion-plazas-vacacionales', ancho: '6' },
-            { tipo: 'tabla', id: 'distribucion-plazas-vacacionales', ancho: '6' },
-
-            { tipo: 'longtext', id: 'distribucion-plazas-regladas', ancho: '6' },
-            { tipo: 'tabla', id: 'distribucion-plazas-regladas', ancho: '6' },
-
-            { tipo: 'longtext', id: 'plazas-zona-residencial-por-tipo', ancho: '6' },
-            { tipo: 'tabla', id: 'plazas-turisticas-zona-residencial', ancho: '6' },
-
-            { tipo: 'longtext', id: 'plazas-zona-turistica-por-tipo', ancho: '6' },
-            { tipo: 'tabla', id: 'plazas-turisticas-zona-turistica', ancho: '6'},
-
-            { tipo: 'longtext', id: 'deslocalizacion-actividad-turistica', ancho: '6' },
-            { tipo: 'tabla', id: 'oferta-alojativa-por-zona-ambito', ancho: '6' },
-
-            { tipo: 'longtext', id: 'transformacion-del-alojamiento', ancho: '6' },
-            { tipo: 'tabla', id: 'oferta-alojativa', ancho: '6'},
-
-
-            { tipo: 'longtext', id: 'impacto-modelo-turistico', ancho: '12' },
-            
-            
-            
-            
-            
-            
-          ]
-        },
-
-         { 
           tituloBloque: "Situación de la vivienda",
           destino: '#ficha-contenido',
           elementos: [
+            
+            
+            //Hogares por núcleos familiares
             { tipo: 'longtext', id: 'hogares-nucleos', ancho: '6' },
             { tipo: 'tabla', id: 'ficha-hogares-por-nucleos', ancho: '6' },
+            //Déficit calculado a partir de los hogares por núcleos familiares
             { tipo: 'longtext', id: 'hogares-nucleos-2', ancho: '6' },
             { tipo: 'tabla', id: 'ficha-hogares-por-nucleos-deficit', ancho: '6' },
-
-            { tipo: 'grafico', id: 'hogares-tipo-linea', ancho: '8', ambito: 'canarias' },
-            { tipo: 'tabla',   id: 'hogares-tipo-tabla', ancho: '12', ambito: 'canarias' },
-
-            { tipo: 'longtext', id: 'tamanyo-medio-hogares', ancho: '6' },
-            { tipo: 'grafico', id: 'personas-por-hogar', ancho: '6' },
+            // Análisis de las desviaciones de la ECEPOV
+            { tipo: 'longtext', id: 'desviacion-ecepov', ancho: '12'},
+            //Parque de viviendas
+            { tipo: 'longtext', id: 'parque-de-viviendas', ancho: '6' },
+            { tipo: 'tabla', id: 'parque-viviendas', ancho: '6' },
+            { tipo: 'longtext', id: 'viviendas-construidas', ancho: '6', ambito: 'canarias' },
+            { tipo: 'tabla', id: 'viviendas-terminadas-canarias', ancho: '6', ambito: 'canarias' },
+            // Validación del censo de viviendas // Colocar en un colapsible
+            //~ { tipo: 'longtext', id: 'diferencia-censo-ecepov', ancho: '12', ambito: 'canarias'  },
+            //~ { tipo: 'tabla', id: 'diferencia-ecepov-consumo', ancho: '12', ambito: 'canarias' },
+            // Vivendas necesarias
+            { tipo: 'longtext', id: 'viviendas-necesarias', ancho: '12'},
+            // Evolución del déficit de viviendas
+            { tipo: 'longtext', id: 'evolucion-deficit-viviendas', ancho: '6'},
+            { tipo: 'tabla', id: 'evolucion-deficit-de-viviendas', ancho: '6', ambito: ['isla', 'municipio']},
+            { tipo: 'tabla', id: 'evolucion-deficit-de-viviendas-canarias', ancho: '6', ambito: 'canarias'},
+            // Déficit consolidado de viviendas
+            { tipo: 'longtext', id: 'deficit-consolidado', ancho: '6'},
+            { tipo: 'tabla', id: 'deficit-consolidado', ancho: '6', ambito: ['isla', 'municipio']},
+            { tipo: 'tabla', id: 'deficit-consolidado-canarias', ancho: '6', ambito: 'canarias'},
 
             
-
-            
-            { tipo: 'longtext', id: 'tamanyo-medio-hogar', ancho: '12' },
+            { tipo: 'longtext', id: 'tamanyo-medio-hogares', ancho: '12' },
+            { tipo: 'grafico', id: 'personas-por-hogar-proyeccion', ancho: '6' },
+            { tipo: 'longtext', id: 'tamanyo-medio-hogar', ancho: '6' },
             
             { tipo: 'grafico', id: 'hogar-ccaa-barras',    ancho: '6', ambito: 'canarias' },
             { tipo: 'grafico', id: 'hogar-ccaa-pendiente',  ancho: '6', ambito: 'canarias'  },
@@ -108,11 +83,17 @@
 
             
 
-            { tipo: 'longtext', id: 'parque-de-viviendas', ancho: '6' },
-            { tipo: 'tabla', id: 'parque-viviendas', ancho: '6' },
+            { tipo: 'longtext', id: 'hogares-nucleos-3', ancho: '4'},
+            { tipo: 'grafico', id: 'hogares-tipo-linea', ancho: '8'},
+            { tipo: 'tabla',   id: 'hogares-tipo-tabla', ancho: '12'},
 
-            { tipo: 'longtext', id: 'viviendas-construidas', ancho: '6', ambito: 'canarias' },
-            { tipo: 'tabla', id: 'viviendas-terminadas-canarias', ancho: '6', ambito: 'canarias' },
+            
+
+            
+            
+            
+
+
 
             
             { tipo: 'longtext', id: 'disponibilidad-vivienda', ancho: '12' },
@@ -120,8 +101,7 @@
             
             { tipo: 'tabla', id: 'viviendas-habituales-mas-terminadas', ancho: '6', ambito: 'canarias' },
             { tipo: 'tabla', id: 'viviendas-necesarias', ancho: '6' },
-            { tipo: 'tabla', id: 'deficit-de-viviendas', ancho: '6', ambito: ['isla', 'municipio'] },
-            { tipo: 'tabla', id: 'deficit-de-viviendas-canarias', ancho: '6', ambito: 'canarias' },
+            
             
             
             { tipo: 'longtext', id: 'construccion-viviendas-vs-crecimiento-poblacion', ancho: '12', ambito: 'canarias' },
@@ -148,6 +128,51 @@
           ]
         },
 
+        { 
+          tituloBloque: "Presión humana",
+          //~ intro: "Resumen de los indicadores clave de intensidad y presión turística en el ámbito seleccionado.",
+          destino: '#ficha-contenido',
+          elementos: [
+            { tipo: 'longtext', id: 'pte-intro', ancho: '12'},
+            { tipo: 'longtext', id: 'pte-tipo', ancho: '6'},
+            { tipo: 'tabla', id: 'poblacion-turistica-equivalente', ancho: '6' },
+            { tipo: 'longtext', id: 'rit-por-tipo', ancho: '6'},
+            { tipo: 'tabla', id: 'intensidad-turistica', ancho: '6' },
+            { tipo: 'longtext', id: 'carga-poblacional', ancho: '6' },
+            { tipo: 'tabla', id: 'presion-humana', ancho: '6' },
+          ]
+        },
+
+        { 
+          tituloBloque: "La transformación del modelo turístico",
+          //~ intro: "",
+          destino: '#ficha-contenido',
+          elementos: [
+            { tipo: 'longtext', id: 'afluencia-plazas-ocupacion', ancho: '12', ambito: ['canarias', 'isla']  },
+            { tipo: 'grafico', id: 'llegadas-vs-plazas',    ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'tabla',   id: 'historico-llegadas-plazas-ocupacion', ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'longtext', id: 'turistas-reglados-vs-vacacionales', ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'grafico', id: 'reglado-vs-vacacional-abs', ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'grafico', id: 'reglado-vs-vacacional',     ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'tabla',   id: 'turismo-reglado-vs-vacacional', ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'longtext', id: 'distribucion-plazas-vacacionales', ancho: '6' },
+            { tipo: 'tabla', id: 'distribucion-plazas-vacacionales', ancho: '6' },
+            { tipo: 'longtext', id: 'distribucion-plazas-regladas', ancho: '6' },
+            { tipo: 'tabla', id: 'distribucion-plazas-regladas', ancho: '6' },
+            { tipo: 'longtext', id: 'plazas-zona-residencial-por-tipo', ancho: '6' },
+            { tipo: 'tabla', id: 'plazas-turisticas-zona-residencial', ancho: '6' },
+            { tipo: 'longtext', id: 'plazas-zona-turistica-por-tipo', ancho: '6' },
+            { tipo: 'tabla', id: 'plazas-turisticas-zona-turistica', ancho: '6'},
+            { tipo: 'longtext', id: 'deslocalizacion-actividad-turistica', ancho: '6' },
+            { tipo: 'tabla', id: 'oferta-alojativa-por-zona-ambito', ancho: '6' },
+            { tipo: 'longtext', id: 'transformacion-del-alojamiento', ancho: '6' },
+            { tipo: 'tabla', id: 'oferta-alojativa', ancho: '6'},
+            { tipo: 'longtext', id: 'impacto-modelo-turistico', ancho: '12' },
+          ]
+        },
+
+        
+
         
       
         { 
@@ -165,18 +190,7 @@
           ]
         },
 
-        { 
-          tituloBloque: "Presión humana",
-          intro: "Resumen de los indicadores clave de intensidad y presión turística en el ámbito seleccionado.",
-          destino: '#ficha-contenido',
-          elementos: [
-            { tipo: 'tabla', id: 'poblacion-turistica-equivalente', ancho: '6' },
-            { tipo: 'tabla', id: 'intensidad-turistica', ancho: '6' },
-            { tipo: 'tabla', id: 'carga-poblacional', ancho: '6' },
-            { tipo: 'tabla', id: 'presion-humana', ancho: '6' },
-            
-          ]
-        },
+        
        
         { 
           tituloBloque: "Datos principales",
@@ -197,6 +211,8 @@
               window.visorProject.utilsTablas.calcularTurismoDerivadoUltimo(props);
           drupalSettings.visorProject['$hogar_derivado_ultimo'] =
               window.visorProject.utilsTablas.calcularHogarDerivadoUltimo(props);
+          drupalSettings.visorProject['$ecepov_derivado_ultimo'] =
+              window.visorProject.utilsTablas.calcularEcepovDerivadoUltimo(props);
       }
 
       // Llamamos al compositor para que haga todo el trabajo sucio
