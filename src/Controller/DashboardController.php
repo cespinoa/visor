@@ -137,6 +137,7 @@ final class DashboardController extends ControllerBase {
             '$historico_personas_hogar_ccaa' => $historico_personas_hogar_ccaa,
             '$historico_viviendas_terminadas' => $historico_viviendas_terminadas,
             '$historico_poblacion' => $historico_poblacion,
+            '$detalle_poblacion' => $this->getDetallePoblacion(),
             '$censo_viviendas_no_habituales' => $censo_viviendas_no_habituales,
             '$historico_estancia_media' => $historico_estancia_media,
             '$ech_hogares_tipo_agrupada' => $ech_hogares_tipo_agrupada,
@@ -485,14 +486,13 @@ final class DashboardController extends ControllerBase {
 
   public function getHistoricoPoblacion() {
     $conn = Database::getConnection('default', 'mapa_data');
-    
-    // Traemos toda la vista que creamos en Postgres
-    $results = $conn->select('poblacion', 'h')                                                                                                                    
-      ->fields('h')                                                                                                                                        
-      ->condition('ambito', 'canarias')                    
-      ->condition('year', 2000, '>')                                                                                                                                               
-      ->orderBy('year', 'ASC')                                                                                                                                                               
-      ->execute()                                                                                                                                                                            
+
+    $results = $conn->select('poblacion', 'h')
+      ->fields('h')
+      ->condition('ambito', 'canarias')
+      ->condition('year', 2000, '>')
+      ->orderBy('year', 'ASC')
+      ->execute()
       ->fetchAll();
 
     $dataset = [];
@@ -500,8 +500,33 @@ final class DashboardController extends ControllerBase {
       $key = $row->year;
       $dataset[$key] = $row->valor;
     }
-  
-    return $dataset;  
+
+    return $dataset;
+  }
+
+  public function getDetallePoblacion() {
+    $conn = Database::getConnection('default', 'mapa_data');
+
+    $results = $conn->select('poblacion', 'h')
+      ->fields('h', ['ambito', 'isla_id', 'municipio_id', 'year', 'valor'])
+      ->condition('year', 2000, '>')
+      ->orderBy('ambito', 'ASC')
+      ->orderBy('year', 'ASC')
+      ->execute()
+      ->fetchAll();
+
+    $dataset = [];
+    foreach ($results as $row) {
+      $dataset[] = [
+        'ambito'       => $row->ambito,
+        'isla_id'      => $row->isla_id,
+        'municipio_id' => $row->municipio_id,
+        'year'         => (int) $row->year,
+        'valor'        => (int) $row->valor,
+      ];
+    }
+
+    return $dataset;
   }
 
   public function getNombreSiluetas() {

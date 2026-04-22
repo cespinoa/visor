@@ -302,6 +302,18 @@ Datasets escritos en `drupalSettings.visorProject`:
 
 La convención de prefijo `$` distingue los datasets calculados en JS de los inyectados por PHP. El sistema de longtexts (`_prefetchLongtexts`) envía automáticamente todos los `$`-prefijados al servidor, strippeando el `$` para que en PHP sean accesibles como `extra['pob_viv_ultimo']`.
 
+### Dataset `$detalle_poblacion` (`DashboardController.php`)
+
+Array de objetos `[{ambito, isla_id, municipio_id, year, valor}]` con la población de todas las entidades (canarias, islas y municipios) desde 2001. Fuente: tabla `poblacion` en PostgreSQL.
+
+A diferencia de `$historico_poblacion` (plano, solo Canarias, alimenta `prepararDatosDerivados`), este dataset está diseñado para uso en longtexts en cualquier ámbito. El resolvedor filtra automáticamente por la entidad activa.
+
+```
+{{ detalle_poblacion.valor }}                         → entidad activa, año más reciente
+{{ detalle_poblacion.valor | y:2021 }}               → entidad activa en 2021
+{{ detalle_poblacion.valor | y:2021 | e:Lanzarote }} → Lanzarote en 2021
+```
+
 ### Dataset `$turismo_derivado_ultimo` (`utils-tablas.js` → `calcularTurismoDerivadoUltimo`)
 
 Se calcula en `panel-datos.js` antes de `_prefetchLongtexts` y se almacena en `drupalSettings.visorProject['$turismo_derivado_ultimo']`. Devuelve un objeto plano dependiente del ámbito activo (canarias o isla). Claves disponibles en longtexts:
@@ -601,6 +613,20 @@ Los nodos de tipo `longtext` **deben editarse siempre en modo fuente HTML**, nun
 - Inserta `&nbsp;` entre tokens dentro de `[[ ]]` → rompe la regex de seguridad del resolver aritmético.
 
 El `InformeController` normaliza entidades HTML dentro de `{% %}` y `[[ ]]` como defensa en profundidad, pero la práctica correcta es editar siempre en modo fuente.
+
+### Formatos disponibles en `{{ campo | formato }}`
+
+| Formato | Resultado | Cuándo usarlo |
+|---|---|---|
+| `anyo` | `2021` (sin separador de miles) | Años — `{{ pob_viv_ultimo.anyo \| anyo }}` |
+| `entero` | `1.234.567` | Cifras enteras con separador de miles |
+| `decimal_0` | `1.235` | Igual que entero |
+| `decimal_1` | `1,2` | Un decimal |
+| `decimal_2` | `1,23` | Dos decimales (default para campos numéricos) |
+| `porcentaje_0/1/2` | `12%` / `12,3%` / `12,34%` | Porcentajes |
+| *(sin formato)* | entero si es entero, `decimal_2` si no | Auto |
+
+**Importante:** los campos cuyo valor es un año deben usar `\| anyo` explícitamente; sin él se formatea como número y aparece `2.021`.
 
 ## Convenciones propias
 

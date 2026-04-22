@@ -565,7 +565,7 @@ final class InformeController extends ControllerBase {
   /**
    * Formatea un valor numérico o de cadena según el formato indicado.
    *
-   * Formatos soportados: entero, decimal_0/1/2, porcentaje_0/1/2.
+   * Formatos soportados: anyo, entero, decimal_0/1/2, porcentaje_0/1/2.
    * Sin formato: entero si el valor es entero, 2 decimales si no lo es.
    */
   private function formatearValor(mixed $valor, string $formato): string {
@@ -576,6 +576,7 @@ final class InformeController extends ControllerBase {
     $num = (float) $valor;
 
     return match ($formato) {
+      'anyo'         => (string) (int) $num,
       'entero'       => number_format($num, 0, ',', '.'),
       'decimal_0'    => number_format($num, 0, ',', '.'),
       'decimal_1'    => number_format($num, 1, ',', '.'),
