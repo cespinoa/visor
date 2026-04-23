@@ -165,6 +165,7 @@
 
         const uniqueId = `canvas-${item.id}-${Math.floor(Math.random() * 10000)}`;
         const instanciaConfig = { ...config, canvasId: uniqueId };
+        if (item.sinTabla) instanciaConfig.sinTabla = true;
 
         // 1. Renderizar contenedor base
         const graficoDOM = window.visorProject.utilsGraficos.crearContenedorGrafico(instanciaConfig, datosFinales, item);

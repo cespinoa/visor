@@ -753,11 +753,13 @@ window.visorProject.utilsGraficos = {
         body.classList.add(bodyClasses[config.tipo] || 'body-linea-ext');
         body.appendChild(canvas);
 
-        // Placeholder de tabla (se rellena en dibujarLineaExt)
-        const tablaDiv = document.createElement('div');
-        tablaDiv.id        = config.canvasId + '-tabla';
-        tablaDiv.className = 'linea-ext-tabla';
-        contenedor.appendChild(tablaDiv);
+        // Placeholder de tabla (omitido si sinTabla)
+        if (!config.sinTabla && !(config.config && config.config.sinTabla)) {
+            const tablaDiv = document.createElement('div');
+            tablaDiv.id        = config.canvasId + '-tabla';
+            tablaDiv.className = 'linea-ext-tabla';
+            contenedor.appendChild(tablaDiv);
+        }
 
         if (config.fuente || config.fecha) {
             const p = document.createElement('p');
@@ -1696,7 +1698,7 @@ window.visorProject.utilsGraficos = {
         });
 
         // ── Tabla de datos para PDF ──────────────────────────────────────────
-        if (cfg.sinTabla) return;
+        if (cfg.sinTabla || config.sinTabla) return;
         const tablaEl = document.getElementById(config.canvasId + '-tabla');
         if (!tablaEl) return;
 
