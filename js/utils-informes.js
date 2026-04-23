@@ -90,6 +90,9 @@
           case 'linea-turismo':     utils.dibujarLineaTurismo(config, datosRaiz);    break;
           case 'barras-ccaa-ext':   utils.dibujarBarrasCCAA(config, datosRaiz);     break;
           case 'pendiente-ccaa-ext': utils.dibujarPendienteCCAA(config, datosRaiz); break;
+          case 'pendiente-censos':   utils.dibujarPendienteCensos(config, datosRaiz); break;
+          case 'pendiente-pob-viv':  utils.dibujarPendientePobViv(config, datosRaiz); break;
+          case 'area-presion-humana': utils.dibujarAreaPresionHumana(config, datosRaiz); break;
           case 'line':
           case 'area':
           case 'bar':    utils.dibujarSeries(config, datos);     break;
