@@ -100,6 +100,7 @@
                 // no sobre una columna estrecha.
                 const anchoColumna = item['ancho-pdf'] ? '12' : item.ancho;
                 const columna = this.crearColumna(anchoColumna);
+                if (item.tipo === 'salto_pagina') columna.classList.add('salto-pagina-forzado');
                 const contenido = this.fabricarElemento(item, props);
                 if (contenido) {
                     columna.appendChild(contenido);
