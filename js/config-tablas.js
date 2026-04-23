@@ -49,6 +49,7 @@ window.CONFIG_TABLAS = {
         tipo:   'variacion-presion-humana',
         titulo: 'Variación de la presión humana respecto a 2019',
         fuente: 'Padrón Municipal · ISTAC (E16028B) · Registro General Turístico',
+        notas:  'Valores: media anual de personas presentes. La tabla de indicadores muestra la presión en la fecha del snapshot, que puede diferir de la media anual.',
     },
 
     'historico-presion-humana': {

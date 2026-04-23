@@ -1824,6 +1824,12 @@
     _inyectarFuente: function(wrapper, config) {
         const div = document.createElement('div');
         div.className = 'tabla-fuente';
+        if (config.notas) {
+            const p = document.createElement('p');
+            p.className = 'tabla-nota-metodologica';
+            p.textContent = config.notas;
+            div.appendChild(p);
+        }
         if (config.fuente || config.fecha) {
             const p = document.createElement('p');
             p.className = 'tabla-fuente-dato';
