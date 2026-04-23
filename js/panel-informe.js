@@ -64,6 +64,44 @@
             { tipo: 'longtext', id: 'intro-general', ancho: '12' },
           ],
         },
+
+        { 
+          tituloBloque: "La transformacion del modelo turístico",
+          destino,
+          clases: ['dashboard-main-reglado-a-no-reglado', 'salto-antes'],
+          elementos: [ 
+            //{ tipo: 'longtext', id: 'impacto-modelo-turistico', ancho: '12' },
+            { tipo: 'longtext', id: 'afluencia-plazas-ocupacion', ancho: '12', ambito: ['canarias', 'isla']  },
+            { tipo: 'grafico', id: 'llegadas-vs-plazas',    ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'tabla',   id: 'historico-llegadas-plazas-ocupacion', ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'longtext', id: 'turistas-reglados-vs-vacacionales', ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'grafico', id: 'reglado-vs-vacacional-abs', ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'grafico', id: 'reglado-vs-vacacional',     ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'tabla',   id: 'turismo-reglado-vs-vacacional', ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'longtext', id: 'distribucion-plazas-vacacionales', ancho: '6' },
+            { tipo: 'tabla', id: 'distribucion-plazas-vacacionales', ancho: '6' },
+            { tipo: 'longtext', id: 'distribucion-plazas-regladas', ancho: '6' },
+            { tipo: 'tabla', id: 'distribucion-plazas-regladas', ancho: '6' },
+            { tipo: 'longtext', id: 'plazas-zona-residencial-por-tipo', ancho: '6' },
+            { tipo: 'tabla', id: 'plazas-turisticas-zona-residencial', ancho: '6' },
+            { tipo: 'longtext', id: 'plazas-zona-turistica-por-tipo', ancho: '6' },
+            { tipo: 'tabla', id: 'plazas-turisticas-zona-turistica', ancho: '6'},
+            { tipo: 'longtext', id: 'deslocalizacion-actividad-turistica', ancho: '6' },
+            { tipo: 'tabla', id: 'oferta-alojativa-por-zona-ambito', ancho: '6' },
+            { tipo: 'longtext', id: 'transformacion-del-alojamiento', ancho: '6' },
+            { tipo: 'tabla', id: 'oferta-alojativa', ancho: '6'},
+            { tipo: 'longtext', id: 'impacto-modelo-turistico', ancho: '12' },
+          ]
+        },
+
+
+
+
+
+
+
+
+        
         { 
           tituloBloque: "Evolución de la vivienda vacacional",
           destino,
@@ -162,13 +200,13 @@
             { tipo: 'longtext', id: 'hogares-nucleos', ancho: '12' },
             { tipo: 'tabla', id: 'ficha-hogares-por-nucleos', ancho: '6' },
             { tipo: 'tabla', id: 'ficha-hogares-por-nucleos-deficit', ancho: '6' },
-            { tipo: 'longtext', id: 'disponibilidad-vivienda', ancho: '12' },
+            //{ tipo: 'longtext', id: 'disponibilidad-vivienda', ancho: '12' },
             { tipo: 'tabla', id: 'parque-viviendas', ancho: '6' },
             { tipo: 'tabla', id: 'viviendas-terminadas-canarias', ancho: '6', ambito: 'canarias' },
             { tipo: 'tabla', id: 'viviendas-habituales-mas-terminadas', ancho: '6', ambito: 'canarias' },
             { tipo: 'tabla', id: 'viviendas-necesarias', ancho: '6' },
-            { tipo: 'tabla', id: 'deficit-de-viviendas', ancho: '6', ambito: ['isla', 'municipio'] },
-            { tipo: 'tabla', id: 'deficit-de-viviendas-canarias', ancho: '6', ambito: 'canarias' },
+            //{ tipo: 'tabla', id: 'deficit-de-viviendas', ancho: '6', ambito: ['isla', 'municipio'] },
+            //{ tipo: 'tabla', id: 'deficit-de-viviendas-canarias', ancho: '6', ambito: 'canarias' },
             { tipo: 'salto' },
             { tipo: 'tabla', id: 'presion-vv-sobre-vivienda', ancho: '6'}
           ],
