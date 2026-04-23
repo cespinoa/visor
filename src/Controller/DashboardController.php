@@ -137,13 +137,14 @@ final class DashboardController extends ControllerBase {
             '$historico_personas_hogar_ccaa' => $historico_personas_hogar_ccaa,
             '$historico_viviendas_terminadas' => $historico_viviendas_terminadas,
             '$historico_poblacion' => $historico_poblacion,
-            '$detalle_poblacion' => $this->getDetallePoblacion(),
+            '$detalle_poblacion' => $this->addVariaciones($this->getDetallePoblacion(), 2019),
             '$censo_viviendas_no_habituales' => $censo_viviendas_no_habituales,
             '$historico_estancia_media' => $historico_estancia_media,
             '$ech_hogares_tipo_agrupada' => $ech_hogares_tipo_agrupada,
             '$ech_hogares_tipo_variacion' => $ech_hogares_tipo_variacion,
-            '$historico_pte_reglada' => $this->getHistoricoPteReglada(),
-            '$historico_pte_vacacional' => $this->getHistoricoPteVacacional(),
+            '$historico_pte_reglada' => $this->addVariaciones($this->getHistoricoPteReglada(), 2019),
+            '$historico_pte_vacacional' => $this->addVariaciones($this->getHistoricoPteVacacional(), 2019),
+            '$historico_presion_total' => $this->getPresionTotal(),
           ],
         ],
       ],
@@ -578,6 +579,76 @@ final class DashboardController extends ControllerBase {
     }
 
     return $dataset;
+  }
+
+  /**
+   * Enriquece un dataset con variación absoluta y porcentual respecto a un año base.
+   * Añade los campos 'var_base' y 'var_base_porc' a cada registro.
+   */
+  private function addVariaciones(array $dataset, int $baseYear): array {
+    $base = [];
+    foreach ($dataset as $row) {
+      if ((int) $row['year'] === $baseYear) {
+        $key = ($row['ambito'] ?? '') . '|' . ($row['isla_id'] ?? '') . '|' . ($row['municipio_id'] ?? '');
+        $base[$key] = $row['valor'];
+      }
+    }
+    return array_map(function (array $row) use ($base, $baseYear) {
+      $key = ($row['ambito'] ?? '') . '|' . ($row['isla_id'] ?? '') . '|' . ($row['municipio_id'] ?? '');
+      $baseVal = $base[$key] ?? null;
+      if ($baseVal !== null && $baseVal != 0) {
+        $row['var_' . $baseYear]       = $row['valor'] - $baseVal;
+        $row['var_' . $baseYear . '_porc'] = round(($row['valor'] - $baseVal) / $baseVal * 100, 1);
+      }
+      else {
+        $row['var_' . $baseYear]           = null;
+        $row['var_' . $baseYear . '_porc'] = null;
+      }
+      return $row;
+    }, $dataset);
+  }
+
+  /**
+   * Construye el dataset de presión humana total (población + PTE reglada + PTE vacacional)
+   * para cada entidad y año desde 2019, con variaciones respecto a 2019.
+   */
+  public function getPresionTotal(): array {
+    $pob   = $this->getDetallePoblacion();
+    $pteR  = $this->getHistoricoPteReglada();
+    $pteV  = $this->getHistoricoPteVacacional();
+
+    $toMap = function (array $ds): array {
+      $map = [];
+      foreach ($ds as $r) {
+        $key = ($r['ambito'] ?? '') . '|' . ($r['isla_id'] ?? '') . '|' . ($r['municipio_id'] ?? '');
+        $map[$key][$r['year']] = $r;
+      }
+      return $map;
+    };
+
+    $pobMap  = $toMap($pob);
+    $pteRMap = $toMap($pteR);
+    $pteVMap = $toMap($pteV);
+
+    $dataset = [];
+    foreach ($pteRMap as $key => $years) {
+      [$ambito, $isla_id, $municipio_id] = explode('|', $key);
+      foreach ($years as $year => $rR) {
+        $rP = $pobMap[$key][$year]  ?? null;
+        $rV = $pteVMap[$key][$year] ?? null;
+        if ($rP === null || $rV === null) continue;
+        $dataset[] = [
+          'ambito'       => $ambito,
+          'isla_id'      => $isla_id ?: null,
+          'municipio_id' => $municipio_id ?: null,
+          'year'         => $year,
+          'valor'        => (int) $rP['valor'] + (int) $rR['valor'] + (int) $rV['valor'],
+        ];
+      }
+    }
+
+    usort($dataset, fn($a, $b) => $a['year'] <=> $b['year']);
+    return $this->addVariaciones($dataset, 2019);
   }
 
   public function getNombreSiluetas() {
