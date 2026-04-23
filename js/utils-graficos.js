@@ -14,7 +14,7 @@ window.visorProject.utilsGraficos = {
         if (config.tipo === 'radar') {
             return this.crearContenedorRadar(config, datosRaw, opciones);
         }
-        if (['linea-ext', 'linea-multi-ext', 'linea-turismo', 'barras-ccaa-ext', 'pendiente-ccaa-ext', 'pendiente-pob-viv', 'pendiente-censos'].includes(config.tipo)) {
+        if (['linea-ext', 'linea-multi-ext', 'linea-turismo', 'barras-ccaa-ext', 'pendiente-ccaa-ext', 'pendiente-pob-viv', 'pendiente-censos', 'area-presion-humana'].includes(config.tipo)) {
             return this.crearContenedorLineaExt(config, opciones);
         }
 
@@ -2017,6 +2017,122 @@ window.visorProject.utilsGraficos = {
         tablaEl.innerHTML = html;
     },
 
+    dibujarAreaPresionHumana: function(config, registro) {
+        const canvas = document.getElementById(config.canvasId);
+        if (!canvas || !registro) return;
+
+        const vp     = drupalSettings.visorProject || {};
+        const ambito = registro.ambito;
+        const islaId = String(registro.isla_id || '');
+        const muniId = String(registro.municipio_id || '');
+
+        const filtrar = (ds) => {
+            const arr = Array.isArray(ds) ? ds : [];
+            if (ambito === 'canarias') return arr.filter(r => r.ambito === 'canarias');
+            if (ambito === 'isla')     return arr.filter(r => r.ambito === 'isla' && String(r.isla_id) === islaId);
+            return arr.filter(r => r.ambito === 'municipio' && String(r.municipio_id) === muniId);
+        };
+
+        const toMap = arr => Object.fromEntries(filtrar(arr).map(r => [String(r.year), r.valor]));
+        const pobMap  = toMap(vp['$detalle_poblacion']        || []);
+        const pteRMap = toMap(vp['$historico_pte_reglada']    || []);
+        const pteVMap = toMap(vp['$historico_pte_vacacional'] || []);
+
+        const years = [...new Set([
+            ...Object.keys(pobMap),
+            ...Object.keys(pteRMap),
+            ...Object.keys(pteVMap),
+        ])].filter(y => y >= '2019' && y <= '2025').sort();
+
+        if (!years.length) return;
+
+        const get = (map, y) => { const v = parseFloat(map[y]); return isNaN(v) ? null : v; };
+
+        const pobData  = years.map(y => get(pobMap, y));
+        const pteRData = years.map(y => get(pteRMap, y));
+        const pteVData = years.map(y => get(pteVMap, y));
+
+        const fmt = v => v != null ? Math.round(v).toLocaleString('es-ES') : '—';
+
+        new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: years,
+                datasets: [
+                    {
+                        label:           'Población',
+                        data:            pobData,
+                        backgroundColor: 'rgba(100,100,100,0.55)',
+                        borderColor:     '#666666',
+                        borderWidth:     1,
+                        stack:           'presion',
+                    },
+                    {
+                        label:           'PTE reglada',
+                        data:            pteRData,
+                        backgroundColor: 'rgba(237,109,109,0.75)',
+                        borderColor:     '#c53030',
+                        borderWidth:     1,
+                        stack:           'presion',
+                    },
+                    {
+                        label:           'PTE vacacional',
+                        data:            pteVData,
+                        backgroundColor: 'rgba(167,0,0,0.8)',
+                        borderColor:     '#a70000',
+                        borderWidth:     1,
+                        stack:           'presion',
+                    },
+                ],
+            },
+            options: {
+                responsive:          true,
+                maintainAspectRatio: true,
+                aspectRatio:         2.5,
+                scales: {
+                    x: { stacked: true },
+                    y: {
+                        stacked:      true,
+                        beginAtZero:  false,
+                        ticks: {
+                            callback: v => Math.round(v).toLocaleString('es-ES'),
+                        },
+                    },
+                },
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        mode:      'index',
+                        intersect: false,
+                        callbacks: {
+                            label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`,
+                            footer: items => {
+                                const total = items.reduce((s, i) => s + (i.parsed.y || 0), 0);
+                                return `Total: ${fmt(total)}`;
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        // ── Tabla de datos ───────────────────────────────────────────────────
+        const tablaEl = document.getElementById(config.canvasId + '-tabla');
+        if (!tablaEl) return;
+
+        let html = '<table class="linea-ext-tabla__table">';
+        html += '<thead><tr><th></th>' + years.map(y => `<th>${y}</th>`).join('') + '</tr></thead><tbody>';
+        [
+            { label: 'Población',       data: pobData },
+            { label: 'PTE reglada',     data: pteRData },
+            { label: 'PTE vacacional',  data: pteVData },
+        ].forEach(s => {
+            html += `<tr><th>${s.label}</th>` + s.data.map(v => `<td>${fmt(v)}</td>`).join('') + '</tr>';
+        });
+        html += '</tbody></table>';
+        tablaEl.innerHTML = html;
+    },
+
     activarObservador: function(elemento, config, datos) {
         const self = this; 
         const observer = new IntersectionObserver((entries) => {
@@ -2060,6 +2176,9 @@ window.visorProject.utilsGraficos = {
                             break;
                         case 'pendiente-censos':
                             self.dibujarPendienteCensos(config, Array.isArray(datos) ? datos[datos.length - 1] : datos);
+                            break;
+                        case 'area-presion-humana':
+                            self.dibujarAreaPresionHumana(config, Array.isArray(datos) ? datos[datos.length - 1] : datos);
                             break;
                     }
                     observer.unobserve(entry.target);

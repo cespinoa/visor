@@ -137,7 +137,8 @@
     background-color: #f9f9f9 !important;
 }
 
-.fila-resaltada td {
+.fila-resaltada td,
+.fila-resaltada th {
     border-top: 2px solid #444 !important;
     border-bottom: 2px solid #444 !important;
     color: #000;
@@ -319,9 +320,50 @@
     transform: rotate(-45deg);
 }
 
+.tabla-colapsible .tabla-titulo {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.tabla-colapsible .tabla-toggle-icon {
+    margin-left: auto;
+    padding-left: 0.75em;
+}
+
+.tabla-tipo-icon {
+    font-size: 1.05rem;
+    opacity: 0.55;
+    margin-right: 0.45em;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
 .tabla-colapsada table,
-.tabla-colapsada .tabla-footer-acciones {
+.tabla-colapsada .tabla-footer-acciones,
+.tabla-colapsada .tabla-fuente {
     display: none;
+}
+
+.tabla-fuente {
+    padding: 0 16px 10px;
+    margin-top: 6px;
+}
+
+.tabla-fuente-dato {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #888;
+    font-style: italic;
+}
+
+.grafico-fuente-dato {
+    margin: 0px;
+    padding: 0 8px 8px;
+    font-size: 0.78rem;
+    color: #888;
+    font-style: italic;
+    text-align: center;
 }
 
 .acciones-tabla {

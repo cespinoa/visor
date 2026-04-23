@@ -1071,6 +1071,85 @@
     },
 
     /**
+     * Tabla histórica de presión humana: población + PTE reglada + PTE vacacional
+     * con variación acumulada desde 2019 para cada componente.
+     */
+    crearTablaHistoricoPresionHumana: function(config, props) {
+        const vp     = drupalSettings.visorProject || {};
+        const fmt    = window.visorProject.utils.formatearDato;
+        const ambito = props.ambito;
+        const islaId = String(props.isla_id || '');
+        const muniId = String(props.municipio_id || '');
+
+        const filtrar = (ds) => {
+            const arr = Array.isArray(ds) ? ds : [];
+            if (ambito === 'canarias') return arr.filter(r => r.ambito === 'canarias');
+            if (ambito === 'isla')     return arr.filter(r => r.ambito === 'isla' && String(r.isla_id) === islaId);
+            return arr.filter(r => r.ambito === 'municipio' && String(r.municipio_id) === muniId);
+        };
+
+        const pobArr  = filtrar(vp['$detalle_poblacion']       || []);
+        const pteRArr = filtrar(vp['$historico_pte_reglada']   || []);
+        const pteVArr = filtrar(vp['$historico_pte_vacacional'] || []);
+
+        const toMap = arr => Object.fromEntries(arr.map(r => [String(r.year), r.valor]));
+        const pobMap  = toMap(pobArr);
+        const pteRMap = toMap(pteRArr);
+        const pteVMap = toMap(pteVArr);
+
+        const BASE = '2019';
+        // Años: unión de las tres fuentes, filtrados a >= 2019 y <= 2025
+        const years = [...new Set([
+            ...Object.keys(pobMap),
+            ...Object.keys(pteRMap),
+            ...Object.keys(pteVMap),
+        ])].filter(y => y >= BASE && y <= '2025').sort();
+
+        if (!years.length) return null;
+
+        const fmtVar = (v, base) => {
+            if (v == null || base == null || base === 0) return '—';
+            const pct = ((v - base) / base) * 100;
+            const signo = pct >= 0 ? '+' : '';
+            return signo + fmt(pct, 'decimal_1') + ' %';
+        };
+
+        const pobBase  = parseFloat(pobMap[BASE])  || null;
+        const pteRBase = parseFloat(pteRMap[BASE]) || null;
+        const pteVBase = parseFloat(pteVMap[BASE]) || null;
+
+        const dataset = years.map(y => {
+            const pob  = pobMap[y]  != null ? parseFloat(pobMap[y])  : null;
+            const pteR = pteRMap[y] != null ? parseFloat(pteRMap[y]) : null;
+            const pteV = pteVMap[y] != null ? parseFloat(pteVMap[y]) : null;
+
+            return {
+                etiqueta:    y,
+                esDestacada: y === BASE,
+                celdas: [
+                    { valor: pob  != null ? fmt(pob,  'entero') : '—', clase: 'col-dato' },
+                    { valor: fmtVar(pob, pobBase),                      clase: 'col-dato' },
+                    { valor: pteR != null ? fmt(pteR, 'entero') : '—', clase: 'col-dato' },
+                    { valor: fmtVar(pteR, pteRBase),                    clase: 'col-dato' },
+                    { valor: pteV != null ? fmt(pteV, 'entero') : '—', clase: 'col-dato' },
+                    { valor: fmtVar(pteV, pteVBase),                    clase: 'col-dato' },
+                ],
+            };
+        });
+
+        dataset._cabecerasTabla = [
+            'Año',
+            'Población', 'Δ acum.',
+            'PTE reglada', 'Δ acum.',
+            'PTE vacacional', 'Δ acum.',
+        ];
+        dataset._columnasCSV = dataset._cabecerasTabla;
+        dataset._datosPuros  = this.aplanarParaCSV(dataset);
+
+        return this.crearTabla(config, dataset);
+    },
+
+    /**
      * Tabla histórica de turismo: turistas totales, plazas regladas, tasa de
      * ocupación y estancia media, con variación acumulada desde baseYear.
      */

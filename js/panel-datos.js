@@ -73,7 +73,7 @@
             { tipo: 'tabla', id: 'deficit-consolidado-canarias', ancho: '6', ambito: 'canarias'},
 
             
-            { tipo: 'longtext', id: 'tamanyo-medio-hogares', ancho: '12' },
+            { tipo: 'longtext', id: 'actualizacion-tamanyo-medio-hogares', ancho: '12' },
             { tipo: 'grafico', id: 'personas-por-hogar-proyeccion', ancho: '6' },
             { tipo: 'longtext', id: 'tamanyo-medio-hogar', ancho: '6' },
             
@@ -96,15 +96,26 @@
 
 
             
-            { tipo: 'longtext', id: 'disponibilidad-vivienda', ancho: '12' },
+            //~ {
+                //~ tituloBloque: 'Población y vivienda',
+                //~ destino: '#panel-graficos-contenido',
+                //~ notas: 'Hogares necesarios = Δ población / 2,6 (personas por hogar media). ' +
+                       //~ 'Saldo acumulado = viviendas terminadas acumuladas − hogares necesarios acumulados. ' +
+                       //~ 'Saldo positivo: producción supera la demanda demográfica. Saldo negativo: déficit estructural.',
+                //~ elementos: [
+                    
+                    //~ { tipo: 'tabla',   id: 'historico-pob-viv',            ancho: '12' },
+                //~ ],
+            //~ },
             
             
-            { tipo: 'tabla', id: 'viviendas-habituales-mas-terminadas', ancho: '6', ambito: 'canarias' },
-            { tipo: 'tabla', id: 'viviendas-necesarias', ancho: '6' },
+            //~ { tipo: 'tabla', id: 'viviendas-habituales-mas-terminadas', ancho: '6', ambito: 'canarias' },
+            //~ { tipo: 'tabla', id: 'viviendas-necesarias', ancho: '6' },
             
             
             
             { tipo: 'longtext', id: 'construccion-viviendas-vs-crecimiento-poblacion', ancho: '12', ambito: 'canarias' },
+            { tipo: 'grafico', id: 'poblacion-vivienda-pendiente', ancho: '12' },
             { tipo: 'tabla', id: 'historico-pob-viv', ancho: '12'},
             
             
@@ -140,6 +151,8 @@
             { tipo: 'tabla', id: 'intensidad-turistica', ancho: '6' },
             { tipo: 'longtext', id: 'carga-poblacional', ancho: '6' },
             { tipo: 'tabla', id: 'presion-humana', ancho: '6' },
+            { tipo: 'grafico', id: 'presion-humana-historica', ancho: '12', ambito: ['canarias', 'isla'] },
+            { tipo: 'tabla',   id: 'historico-presion-humana', ancho: '12', ambito: ['canarias', 'isla'] },
           ]
         },
 

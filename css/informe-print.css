@@ -384,11 +384,13 @@ tr.fila-destacada td {
 
 /* Tablas colapsibles: en el PDF siempre expandidas */
 .tabla-colapsada table,
-.tabla-colapsada .tabla-footer-acciones {
+.tabla-colapsada .tabla-footer-acciones,
+.tabla-colapsada .tabla-fuente {
     display: revert !important;
 }
 
-.tabla-toggle-icon {
+.tabla-toggle-icon,
+.tabla-tipo-icon {
     display: none !important;
 }
 

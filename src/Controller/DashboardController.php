@@ -142,6 +142,8 @@ final class DashboardController extends ControllerBase {
             '$historico_estancia_media' => $historico_estancia_media,
             '$ech_hogares_tipo_agrupada' => $ech_hogares_tipo_agrupada,
             '$ech_hogares_tipo_variacion' => $ech_hogares_tipo_variacion,
+            '$historico_pte_reglada' => $this->getHistoricoPteReglada(),
+            '$historico_pte_vacacional' => $this->getHistoricoPteVacacional(),
           ],
         ],
       ],
@@ -501,6 +503,55 @@ final class DashboardController extends ControllerBase {
       $dataset[$key] = $row->valor;
     }
 
+    return $dataset;
+  }
+
+  public function getHistoricoPteReglada() {
+    $conn = Database::getConnection('default', 'mapa_data');
+    $results = $conn->query("
+      SELECT ambito, isla_id, municipio_id, year,
+             ROUND(SUM(pte_reglada)) AS valor
+      FROM pte_reglada
+      WHERE year > 2018
+        AND ambito IN ('canarias', 'isla', 'municipio')
+      GROUP BY ambito, isla_id, municipio_id, year
+      ORDER BY ambito, year
+    ")->fetchAll();
+
+    $dataset = [];
+    foreach ($results as $row) {
+      $dataset[] = [
+        'ambito'       => $row->ambito,
+        'isla_id'      => $row->isla_id,
+        'municipio_id' => $row->municipio_id,
+        'year'         => (int) $row->year,
+        'valor'        => (int) $row->valor,
+      ];
+    }
+    return $dataset;
+  }
+
+  public function getHistoricoPteVacacional() {
+    $conn = Database::getConnection('default', 'mapa_data');
+    $results = $conn->query("
+      SELECT ambito, isla_id, municipio_id, year,
+             ROUND(SUM(ptev * dias_mes) / 365.0) AS valor
+      FROM pte_vacacional
+      WHERE year < 2026
+      GROUP BY ambito, isla_id, municipio_id, year
+      ORDER BY ambito, year
+    ")->fetchAll();
+
+    $dataset = [];
+    foreach ($results as $row) {
+      $dataset[] = [
+        'ambito'       => $row->ambito,
+        'isla_id'      => $row->isla_id,
+        'municipio_id' => $row->municipio_id,
+        'year'         => (int) $row->year,
+        'valor'        => (int) $row->valor,
+      ];
+    }
     return $dataset;
   }
 

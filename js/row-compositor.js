@@ -343,6 +343,13 @@
             return tablaDOM;
         }
 
+        // Tabla histórico presión humana: población + PTE reglada + PTE vacacional
+        if (config.tipo === 'historico-presion-humana') {
+            const tablaDOM = motorTablas.crearTablaHistoricoPresionHumana(config, props);
+            if (tablaDOM) this.añadirFuncionalidadFullscreen(tablaDOM);
+            return tablaDOM;
+        }
+
         // Tabla censal de viviendas no habituales por isla
         if (config.tipo === 'censos-islas') {
             const tablaDOM = motorTablas.crearTablaCensosIslas(config);
@@ -350,9 +357,16 @@
             return tablaDOM;
         }
 
+        // Tabla comparativa censo viviendas vs ECEPOV hogares por isla
+        if (config.tipo === 'diferencia-ecepov') {
+            const tablaDOM = motorTablas.crearTablaEcepovDiferencia(config);
+            if (tablaDOM) this.añadirFuncionalidadFullscreen(tablaDOM);
+            return tablaDOM;
+        }
+
         // Tabla desde drupalSettings: no pasa por el dataSelector de snapshot
-        if (config.fuente) {
-            const datosRaw = (drupalSettings.visorProject || {})[config.fuente];
+        if (config.datos) {
+            const datosRaw = (drupalSettings.visorProject || {})[config.datos];
             if (!datosRaw) return null;
             const dataset = motorTablas.prepararDatasetFuente(config, datosRaw);
             if (!dataset || dataset.length === 0) return null;

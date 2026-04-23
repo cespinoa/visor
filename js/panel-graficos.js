@@ -27,17 +27,7 @@
 
     _esquemaCanarias: function() {
         return [
-            {
-                tituloBloque: 'Población y vivienda',
-                destino: '#panel-graficos-contenido',
-                notas: 'Hogares necesarios = Δ población / 2,6 (personas por hogar media). ' +
-                       'Saldo acumulado = viviendas terminadas acumuladas − hogares necesarios acumulados. ' +
-                       'Saldo positivo: producción supera la demanda demográfica. Saldo negativo: déficit estructural.',
-                elementos: [
-                    { tipo: 'grafico', id: 'poblacion-vivienda-pendiente', ancho: '12' },
-                    //~ { tipo: 'tabla',   id: 'historico-pob-viv',            ancho: '12' },
-                ],
-            },
+            
             {
                 tituloBloque: 'Síntesis de indicadores por isla',
                 destino: '#panel-graficos-contenido',

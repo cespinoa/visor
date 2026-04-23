@@ -77,6 +77,14 @@ window.CONFIG_GRAFICOS = {
         fecha: '2021',
     },
 
+    'presion-humana-historica': {
+        tipo:   'area-presion-humana',
+        titulo: 'Evolución de la presión humana (2019–2025)',
+        config: {},
+        fuente: 'Padrón Municipal · ISTAC (E16028B) · Registro General Turístico',
+        fecha:  '2025',
+    },
+
     'llegadas-vs-plazas': {
         tipo:   'linea-multi-ext',
         titulo: 'Llegadas, plazas regladas, ocupación y estancia media (base 2010=100)',
