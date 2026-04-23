@@ -1118,10 +1118,15 @@
         const pteRBase = parseFloat(pteRMap[BASE]) || null;
         const pteVBase = parseFloat(pteVMap[BASE]) || null;
 
+        const COVID_YEARS = ['2020', '2021'];
+
         const dataset = years.map(y => {
             const pob  = pobMap[y]  != null ? parseFloat(pobMap[y])  : null;
             const pteR = pteRMap[y] != null ? parseFloat(pteRMap[y]) : null;
             const pteV = pteVMap[y] != null ? parseFloat(pteVMap[y]) : null;
+
+            const varPteR = COVID_YEARS.includes(y) ? '—' : fmtVar(pteR, pteRBase);
+            const varPteV = COVID_YEARS.includes(y) ? '—' : fmtVar(pteV, pteVBase);
 
             return {
                 etiqueta:    y,
@@ -1130,9 +1135,9 @@
                     { valor: pob  != null ? fmt(pob,  'entero') : '—', clase: 'col-dato' },
                     { valor: fmtVar(pob, pobBase),                      clase: 'col-dato' },
                     { valor: pteR != null ? fmt(pteR, 'entero') : '—', clase: 'col-dato' },
-                    { valor: fmtVar(pteR, pteRBase),                    clase: 'col-dato' },
+                    { valor: varPteR,                                   clase: 'col-dato' },
                     { valor: pteV != null ? fmt(pteV, 'entero') : '—', clase: 'col-dato' },
-                    { valor: fmtVar(pteV, pteVBase),                    clase: 'col-dato' },
+                    { valor: varPteV,                                   clase: 'col-dato' },
                 ],
             };
         });
