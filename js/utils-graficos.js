@@ -2060,10 +2060,10 @@ window.visorProject.utilsGraficos = {
                 labels: years,
                 datasets: [
                     {
-                        label:           'Población',
-                        data:            pobData,
-                        backgroundColor: 'rgba(100,100,100,0.55)',
-                        borderColor:     '#666666',
+                        label:           'PTE vacacional',
+                        data:            pteVData,
+                        backgroundColor: 'rgba(167,0,0,0.8)',
+                        borderColor:     '#a70000',
                         borderWidth:     1,
                         stack:           'presion',
                     },
@@ -2076,10 +2076,10 @@ window.visorProject.utilsGraficos = {
                         stack:           'presion',
                     },
                     {
-                        label:           'PTE vacacional',
-                        data:            pteVData,
-                        backgroundColor: 'rgba(167,0,0,0.8)',
-                        borderColor:     '#a70000',
+                        label:           'Población',
+                        data:            pobData,
+                        backgroundColor: 'rgba(100,100,100,0.55)',
+                        borderColor:     '#666666',
                         borderWidth:     1,
                         stack:           'presion',
                     },
@@ -2100,7 +2100,7 @@ window.visorProject.utilsGraficos = {
                     },
                 },
                 plugins: {
-                    legend: { position: 'bottom' },
+                    legend: { position: 'bottom', reverse: true },
                     tooltip: {
                         mode:      'index',
                         intersect: false,
