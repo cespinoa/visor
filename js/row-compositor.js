@@ -146,6 +146,12 @@
           return br; // sin columna envolvente
         }
 
+        case 'salto_pagina': {
+          const sp = document.createElement('div');
+          sp.className = 'w-100 salto-pagina-forzado';
+          return sp; // sin columna envolvente
+        }
+
         default:
           console.warn(`Tipo de elemento no soportado: ${item.tipo}`);
       }
