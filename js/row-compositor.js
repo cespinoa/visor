@@ -61,8 +61,20 @@
     },
 
     procesarElementos: function(elementos, $contenedorParent, props) {
+        let $fila = $contenedorParent;
         elementos.forEach(item => {
             if (!this._ambitoPermitido(item, props)) return;
+
+            // Salto de página: abre una nueva fila con break-before:page.
+            // Los elementos siguientes se renderizan en esa nueva fila,
+            // que WeasyPrint interpretará como inicio de página nueva.
+            if (item.tipo === 'salto_pagina') {
+                const nuevaFila = document.createElement('div');
+                nuevaFila.className = 'row salto-pagina-forzado';
+                $fila[0].parentElement.appendChild(nuevaFila);
+                $fila = jQuery(nuevaFila);
+                return;
+            }
 
             if (item.tipo === 'pack') {
                 const columnaPack = this.crearColumna(item.ancho);
@@ -92,19 +104,15 @@
 
                 packWrapper.appendChild(packBody);
                 columnaPack.appendChild(packWrapper);
-                $contenedorParent.append(columnaPack);
-            } 
+                $fila.append(columnaPack);
+            }
             else {
-                // Si el elemento tiene ancho-pdf, la columna ocupa el ancho
-                // completo para que el porcentaje se calcule sobre la página,
-                // no sobre una columna estrecha.
                 const anchoColumna = item['ancho-pdf'] ? '12' : item.ancho;
                 const columna = this.crearColumna(anchoColumna);
-                if (item.tipo === 'salto_pagina') columna.classList.add('salto-pagina-forzado');
                 const contenido = this.fabricarElemento(item, props);
                 if (contenido) {
                     columna.appendChild(contenido);
-                    $contenedorParent.append(columna);
+                    $fila.append(columna);
                 }
             }
         });

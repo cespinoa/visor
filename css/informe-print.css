@@ -228,13 +228,9 @@
     break-before: page;
 }
 
-/* Elemento inline de salto de página forzado (tipo: 'salto_pagina' en el esquema) */
+/* Nueva fila que arranca en página nueva (tipo: 'salto_pagina' en el esquema) */
 .salto-pagina-forzado {
     break-before: page;
-    margin: 0 !important;
-    padding: 0 !important;
-    height: 0 !important;
-    overflow: hidden;
 }
 
 /* Clase utilitaria: fuerza salto después del bloque */
