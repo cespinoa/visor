@@ -46,10 +46,9 @@
           //~ }
         //~ });
 
-        this.procesarElementos(bloque.elementos, $filaInterna, props);
-
-        // 4. Ensamblamos: Contenido -> Body del Wrapper -> Destino Final
-        jQuery(wrapper.body).append($filaInterna);
+        const $body = jQuery(wrapper.body);
+        $body.append($filaInterna);
+        this.procesarElementos(bloque.elementos, $filaInterna, $body, props);
         $destinoGlobal.append(wrapper.elemento);
       });
     },
@@ -60,7 +59,12 @@
         return permitidos.includes(props.ambito);
     },
 
-    procesarElementos: function(elementos, $contenedorParent, props) {
+    procesarElementos: function(elementos, $contenedorParent, $body, props) {
+        // Compatibilidad: si se llama sin $body (3 args), el tercero es props
+        if (typeof $body !== 'object' || !$body.jquery) {
+            props  = $body;
+            $body  = null;
+        }
         let $fila = $contenedorParent;
         elementos.forEach(item => {
             if (!this._ambitoPermitido(item, props)) return;
@@ -71,7 +75,7 @@
             if (item.tipo === 'salto_pagina') {
                 const nuevaFila = document.createElement('div');
                 nuevaFila.className = 'row salto-pagina-forzado';
-                $fila[0].parentElement.appendChild(nuevaFila);
+                ($body || $fila.parent()).append(nuevaFila);
                 $fila = jQuery(nuevaFila);
                 return;
             }
