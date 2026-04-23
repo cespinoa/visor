@@ -1074,6 +1074,65 @@
      * Tabla histórica de presión humana: población + PTE reglada + PTE vacacional
      * con variación acumulada desde 2019 para cada componente.
      */
+    crearTablaVariacionPresionHumana: function(config, props) {
+        const vp     = drupalSettings.visorProject || {};
+        const fmt    = window.visorProject.utils.formatearDato;
+        const ambito = props.ambito;
+        const islaId = String(props.isla_id || '');
+        const muniId = String(props.municipio_id || '');
+
+        const filtrar = (ds) => {
+            const arr = Array.isArray(ds) ? ds : [];
+            if (ambito === 'canarias') return arr.filter(r => r.ambito === 'canarias');
+            if (ambito === 'isla')     return arr.filter(r => r.ambito === 'isla' && String(r.isla_id) === islaId);
+            return arr.filter(r => r.ambito === 'municipio' && String(r.municipio_id) === muniId);
+        };
+
+        const get2019  = arr => arr.find(r => r.year == 2019) || null;
+        const getLatest = arr => arr.length ? arr.reduce((a, b) => b.year > a.year ? b : a) : null;
+
+        const series = [
+            { label: 'PTE vacacional', data: filtrar(vp['$historico_pte_vacacional'] || []) },
+            { label: 'PTE reglada',    data: filtrar(vp['$historico_pte_reglada']    || []) },
+            { label: 'Población',      data: filtrar(vp['$detalle_poblacion']         || []) },
+            { label: 'Total',          data: filtrar(vp['$historico_presion_total']   || []), destacada: true },
+        ];
+
+        const fmtDelta = v => {
+            if (v == null) return '—';
+            return (v >= 0 ? '+' : '') + fmt(v, 'entero');
+        };
+        const fmtPorc = v => {
+            if (v == null) return '—';
+            return (v >= 0 ? '+' : '') + fmt(Math.abs(v), 'decimal_1') + ' %';
+        };
+
+        // Año actual: el más reciente disponible en el dataset total
+        const latestTotal = getLatest(series[3].data);
+        const actualYear  = latestTotal ? latestTotal.year : '—';
+
+        const dataset = series.map(serie => {
+            const base   = get2019(serie.data);
+            const latest = getLatest(serie.data);
+            return {
+                etiqueta:    serie.label,
+                esDestacada: serie.destacada || false,
+                celdas: [
+                    { valor: base   ? fmt(base.valor,   'entero') : '—', clase: 'col-dato' },
+                    { valor: latest ? fmt(latest.valor, 'entero') : '—', clase: 'col-dato' },
+                    { valor: latest ? fmtDelta(latest.var_2019)         : '—', clase: 'col-dato' },
+                    { valor: latest ? fmtPorc(latest.var_2019_porc)     : '—', clase: 'col-dato' },
+                ],
+            };
+        });
+
+        dataset._cabecerasTabla = ['', '2019', String(actualYear), 'Δ', 'Δ %'];
+        dataset._columnasCSV    = dataset._cabecerasTabla;
+        dataset._datosPuros     = this.aplanarParaCSV(dataset);
+
+        return this.crearTabla(config, dataset);
+    },
+
     crearTablaHistoricoPresionHumana: function(config, props) {
         const vp     = drupalSettings.visorProject || {};
         const fmt    = window.visorProject.utils.formatearDato;

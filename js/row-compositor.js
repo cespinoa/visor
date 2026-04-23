@@ -343,6 +343,13 @@
             return tablaDOM;
         }
 
+        // Tabla variación presión humana: 2019 vs actual por componente
+        if (config.tipo === 'variacion-presion-humana') {
+            const tablaDOM = motorTablas.crearTablaVariacionPresionHumana(config, props);
+            if (tablaDOM) this.añadirFuncionalidadFullscreen(tablaDOM);
+            return tablaDOM;
+        }
+
         // Tabla histórico presión humana: población + PTE reglada + PTE vacacional
         if (config.tipo === 'historico-presion-humana') {
             const tablaDOM = motorTablas.crearTablaHistoricoPresionHumana(config, props);

@@ -45,6 +45,12 @@ window.CONFIG_TABLAS = {
         fecha: '2021',
     },
 
+    'variacion-presion-humana': {
+        tipo:   'variacion-presion-humana',
+        titulo: 'Variación de la presión humana respecto a 2019',
+        fuente: 'Padrón Municipal · ISTAC (E16028B) · Registro General Turístico',
+    },
+
     'historico-presion-humana': {
         tipo:   'historico-presion-humana',
         titulo: 'Presión humana: población y PTE (2019–2025)',
