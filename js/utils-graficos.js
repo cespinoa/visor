@@ -668,7 +668,9 @@ window.visorProject.utilsGraficos = {
         const horizontal = chart.config?.options?.indexAxis === 'y';
         const UMBRAL     = 22;
 
+        const skipDatasets = chart.config?.options?.plugins?.visorDatalabels?.skipDatasets || [];
         chart.data.datasets.forEach((dataset, datasetIndex) => {
+            if (skipDatasets.includes(datasetIndex)) return;
             const meta = chart.getDatasetMeta(datasetIndex);
             if (meta.hidden || meta.type !== 'bar') return;
 
@@ -692,7 +694,9 @@ window.visorProject.utilsGraficos = {
                     + (unidades && !unidades.includes('%') && !dataset._base100 ? '\u00a0' + unidades : '');
 
                 ctx.save();
-                ctx.font = '600 ' + (horizontal ? '20' : '30') + 'px Arial, sans-serif';
+                const fontSize = chart.config?.options?.plugins?.visorDatalabels?.fontSize
+                    || (horizontal ? 20 : 30);
+                ctx.font = '600 ' + fontSize + 'px Arial, sans-serif';
 
                 if (horizontal) {
                     // Barras horizontales: etiqueta dentro/fuera del extremo derecho
@@ -2102,6 +2106,8 @@ window.visorProject.utilsGraficos = {
                     },
                 },
                 plugins: {
+                    // Excluir datasets 1 y 2 del renderizador genérico de etiquetas
+                    visorDatalabels: { fontSize: 10, skipDatasets: [1, 2] },
                     legend: { position: 'bottom' },
                     tooltip: {
                         mode:      'index',
@@ -2116,6 +2122,41 @@ window.visorProject.utilsGraficos = {
                     },
                 },
             },
+            plugins: [{
+                id: 'presionHumanaLabels',
+                afterDraw: function(ch) {
+                    const c        = ch.ctx;
+                    const pobMeta  = ch.getDatasetMeta(0);
+                    const pteRMeta = ch.getDatasetMeta(1);
+                    const pteVMeta = ch.getDatasetMeta(2);
+                    if (!pobMeta.data.length) return;
+
+                    // Y de referencia para PTE reglada: borde superior de la 1ª barra de población
+                    const refY = pobMeta.data[0].y;
+
+                    c.save();
+                    c.textAlign    = 'center';
+                    c.textBaseline = 'bottom';
+                    c.font         = 'bold 10px Arial, sans-serif';
+                    c.fillStyle    = '#333333';
+
+                    // PTE reglada: todas al mismo nivel, tocando el borde superior de población
+                    pteRMeta.data.forEach((bar, i) => {
+                        const val = ch.data.datasets[1].data[i];
+                        if (val == null) return;
+                        c.fillText(fmt(val), bar.x, refY);
+                    });
+
+                    // PTE vacacional: 15px por encima del tope de la barra completa
+                    pteVMeta.data.forEach((bar, i) => {
+                        const val = ch.data.datasets[2].data[i];
+                        if (val == null) return;
+                        c.fillText(fmt(val), bar.x, bar.y - 8);
+                    });
+
+                    c.restore();
+                },
+            }],
         });
 
         // ── Tabla de datos ───────────────────────────────────────────────────
